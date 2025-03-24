@@ -5,29 +5,28 @@
 
 ## Description
 
-Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique où les héros ne sont pas toujours à la hauteur de leur réputation. Plongez dans des donjons remplis de dangers et de surprises, où chaque décision peut mener à des situations aussi épiques que ridicules. Parce que certains héros auraient mieux fait de rester anonymes !
+Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique.
 
 ## Fonctionnalités
 
-- **Exploration de Donjons :** Parcourez des niveaux générés avec soin, remplis de pièges et de trésors.
-- **Combats Simples mais Amusants :** Affrontez des ennemis avec un système de combat accessible et plein d'humour.
+- **Exploration de Donjons :** Parcourez des niveaux remplis de pièges et de trésors.
+- **Combats Simples:** Affrontez des ennemis avec un système de combat inspireré des jeux de rôle.
 - **Personnages Hauts en Couleur :** Incarnez des héros aux capacités uniques et aux personnalités... particulières.
-- **Aucune Installation Nécessaire :** Jouez directement dans votre navigateur sans rien installer !
+- **Aucune Installation Nécessaire :** Jouez directement dans votre navigateur !
 
 ## Technologies Utilisées
 
-- **HTML5, CSS, JavaScript :** Pour une expérience de jeu fluide et accessible.
+- **HTML, CSS, JavaScript :**
 - **Phaser :** Framework JavaScript pour les jeux 2D.
 
 ## Comment Jouer
 
-1. **Accédez au jeu** en ouvrant le lien suivant dans votre navigateur : [Jouer à Marteaux & Mandales](URL_DU_JEU)
-2. **Utilisez les touches fléchées** pour déplacer votre personnage.
-3. **Interagissez avec les objets et les ennemis** pour progresser dans les niveaux.
+1. **Accédez au jeu** en ouvrant le lien suivant dans votre navigateur : [Jouer à Marteaux & Mandales](URL_DU_JEU_A_INSERER)
+2. **Utilisez les touches ZQSD ou les touches fléchées** pour déplacer votre personnage.
+3. **Interagissez avec des objets et des ennemis** pour progresser dans les niveaux.
 
-## Arborescence du Projet
+## Arborescence du Projet(a compléter)
 
-Voici la structure du projet pour vous aider à naviguer dans les fichiers :
 ```
 dungeon-crawler/
 │
@@ -74,7 +73,7 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ## Contact
 
-Pour toute question ou suggestion, contactez-nous à [votre-email@example.com](mailto:votre-email@example.com).
+## Pour toute question ou suggestion, contactez-nous à [votre-email@example.com](mailto:votre-email@example.com).
 
 ---
 
