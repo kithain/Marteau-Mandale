@@ -28,7 +28,7 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique où les 
 ## Arborescence du Projet
 
 Voici la structure du projet pour vous aider à naviguer dans les fichiers :
-
+```
 dungeon-crawler/
 │
 ├── index.html                # Fichier HTML principal
@@ -57,7 +57,7 @@ dungeon-crawler/
 │   └── level2.json           # Fichier JSON pour le niveau 2
 │
 └── README.md                 # Fichier README pour la documentation du projet
-
+```
 ## Contribuer
 
 Les contributions sont les bienvenues ! Si vous souhaitez ajouter de nouvelles fonctionnalités ou améliorer le jeu, n'hésitez pas à :
