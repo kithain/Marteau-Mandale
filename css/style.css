@@ -1,63 +1,98 @@
+@font-face {
+  font-family: 'AncientGods';
+  src: url('../assets/fonts/TheAncientGods.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background-image: url('../assets/images/background.jpg');
-    background-size: cover;
-    background-position: center;
-    position: relative;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background: transparent;
 }
-body::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: -1;
-}
+
 #particles-js {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
+
+body::before {
+  content: "";
+  background-image: url('../assets/images/background.jpg');
+  background-size: cover;
+  background-position: center;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
 #game-container {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    color: white;
-    padding-top: 20px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 15px;
+  max-width: 400px;
+  margin: auto;
+  margin-top: 40px;
 }
+
+h1 {
+  font-size: 2.5em;
+  margin: 0 0 10px;
+}
+
+.subtitle {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.runic {
+  font-family: 'AncientGods', serif;
+  letter-spacing: 1px;
+}
+
 #login-form {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.7);
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
+
+#login-form label {
+  margin: 10px 0 5px;
+  text-align: left;
+}
+
 #login-form input {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
 }
+
 #login-form button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: #ffcc00;
-    color: white;
-    cursor: pointer;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #5d4037;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#login-form button:hover {
+  background-color: #8d6e63;
 }
