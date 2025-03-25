@@ -2,16 +2,14 @@ from flask import Flask, request, jsonify, send_from_directory
 import json
 import os
 
-app = Flask(__name__, static_folder='../', static_url_path='')
+app = Flask(__name__, static_folder='.', static_url_path='')
 
-USER_DB = 'users.json'
-
-# Charger ou initialiser les utilisateurs
-if not os.path.exists(USER_DB):
-    with open(USER_DB, 'w') as f:
-        json.dump({}, f)
+USER_DB = 'users.json'  # Le fichier sera créé à la racine
 
 def load_users():
+    if not os.path.exists(USER_DB):
+        with open(USER_DB, 'w') as f:
+            json.dump({}, f)
     with open(USER_DB, 'r') as f:
         return json.load(f)
 
@@ -21,7 +19,7 @@ def save_users(users):
 
 @app.route('/')
 def serve_index():
-    return send_from_directory('../', 'index.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/login', methods=['POST'])
 def login():
