@@ -35,7 +35,7 @@ body::before {
   z-index: -1;
 }
 
-#game-container {
+#auth-container {
   position: relative;
   z-index: 1;
   display: flex;
