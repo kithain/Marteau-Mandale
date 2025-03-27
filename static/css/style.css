@@ -1,0 +1,108 @@
+@font-face {
+  font-family: 'AncientGods';
+  src: url('../assets/fonts/TheAncientGods.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background: transparent;
+}
+
+#particles-js {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+body::before {
+  content: "";
+  background-image: url('../assets/images/background.jpg');
+  background-size: cover;
+  background-position: center;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+#auth-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 15px;
+  max-width: 400px;
+  margin: auto;
+  margin-top: 40px;
+}
+
+h1 {
+  font-size: 2.5em;
+  margin: 0 0 10px;
+}
+
+.subtitle {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.runic {
+  font-family: 'MedievalSharp', serif;
+  letter-spacing: 1px;
+}
+
+.logo-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.logo {
+  max-width: 200px;
+  height: auto;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#login-form label {
+  margin: 10px 0 5px;
+  text-align: left;
+}
+
+#login-form input {
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+}
+
+#login-form button {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #5d4037;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#login-form button:hover {
+  background-color: #8d6e63;
+}
