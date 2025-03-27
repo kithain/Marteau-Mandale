@@ -26,7 +26,7 @@ body, html {
 
 body::before {
   content: "";
-  background-image: url('../assets/images/background.jpg');
+  background-image: url('../img/background.jpg');
   background-size: cover;
   background-position: center;
   position: fixed;
@@ -105,4 +105,53 @@ h1 {
 
 #login-form button:hover {
   background-color: #8d6e63;
+}
+
+#class-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+#class-selector img {
+  width: 200px;
+  height: auto;
+  border: 2px solid white;
+  border-radius: 10px;
+}
+#map-container {
+  width: 1024px;  /* ou plus selon ton besoin */
+  height: 768px;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 2px solid white;
+  margin-top: 20px;
+}
+
+#map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 64px);
+  gap: 1px;
+}
+.tile {
+  border: 1px solid #5e3d1f; /* brun parchemin */
+  box-sizing: border-box;
+  box-shadow: inset 0 0 2px #2e1a0f, 0 1px 2px rgba(0,0,0,0.4);
+  border-radius: 4px;
+  filter: brightness(0.95) sepia(0.3);
+}
+
+/* Exemple de style */
+.tile.herbe {
+  background-color: green;
+}
+
+.tile.arbre {
+  background-color: darkgreen;
+}
+
+.tile.départ {
+  background-color: gold;
 }

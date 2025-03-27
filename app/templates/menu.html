@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Menu - Marteaux & Mandales</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body>
+  <!-- Fond de particules -->
+  <div id="particles-js"></div>
+
+  <!-- En-tête avec logo -->
+  <header class="logo-container">
+    <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
+  </header>
+
+  <!-- Contenu principal -->
+  <div id="auth-container">
+    <h1 class="runic">Bienvenue {{ username }} !</h1>
+    <p class="subtitle">Menu principal</p>
+
+    <!-- Sélection visuelle de la classe -->
+    <form action="{{ url_for('routes.nouvelle_partie') }}" method="POST">
+      <div id="class-selector">
+        <button type="button" id="prev-class">←</button>
+        <img id="class-image" src="{{ url_for('static', filename='img/classes/paladin.png') }}" alt="Classe" />
+        <button type="button" id="next-class">→</button>
+      </div>
+
+      <input type="hidden" name="classe" id="selected-class" value="Paladin">
+      <button type="submit">Commencer l'aventure</button>
+    </form>
+
+    <!-- Charger une partie -->
+    <form action="{{ url_for('routes.charger_partie') }}" method="GET" style="margin-top: 20px;">
+      <button type="submit">Charger une partie</button>
+    </form>
+
+    <!-- Déconnexion -->
+    <form action="{{ url_for('routes.logout') }}" method="GET" style="margin-top: 20px;">
+      <button type="submit">Déconnexion</button>
+    </form>
+  </div>
+
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/particles-config.js') }}"></script>
+
+  <!-- Script de sélection de classe -->
+  <script>
+    const classes = ['Paladin', 'Mage', 'Voleur', 'Barbare'];
+    let index = 0;
+
+    const classImage = document.getElementById('class-image');
+    const selectedClass = document.getElementById('selected-class');
+
+    function updateClassDisplay() {
+      const currentClass = classes[index];
+      classImage.src = `/static/img/classes/${currentClass.toLowerCase()}.png`;
+      selectedClass.value = currentClass;
+    }
+
+    document.getElementById('prev-class').onclick = () => {
+      index = (index - 1 + classes.length) % classes.length;
+      updateClassDisplay();
+    };
+
+    document.getElementById('next-class').onclick = () => {
+      index = (index + 1) % classes.length;
+      updateClassDisplay();
+    };
+  </script>
+</body>
+</html>

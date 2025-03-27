@@ -12,12 +12,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 "type": ["image"],
                 "image": [
                     {
-                        "src": "assets/images/spark1.png",
+                        "src": "/static/img/spark1.png",
                         "width": 32,
                         "height": 32
                     },
                     {
-                        "src": "assets/images/spark2.png",
+                        "src": "/static/img/spark2.png",
                         "width": 32,
                         "height": 32
                     }
