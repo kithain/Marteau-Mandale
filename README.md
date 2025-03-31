@@ -3,34 +3,31 @@ _"Les Légendes Oubliées (et pas sans raison)" – Parce que certains héros au
 
 ![Logo du Jeu](app/static/img/logo.jpg)
 
-## Description
+## 📖 Présentation
 
-Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé sur Flask et jouable dans le navigateur.
+**Marteau & Mandale** est un jeu web en pixel art inspiré des mécaniques de Donjons & Dragons (D20). Développé en Python avec Flask, ce projet propose :
 
-## Fonctionnalités
+- Une interface en ligne avec création/connexion de compte
+- Un système de classes jouables (Paladin, Mage, Barbare, Voleur)
+- Une carte exploratoire dynamique (vue 5x5 centrée sur le joueur)
+- Des combats contre des monstres aléatoires
+- Des talents, cooldowns, effets visuels et système de mana
+- Des sauvegardes locales pour chaque joueur
 
-- 🗺️ **Exploration de Donjons** : Parcourez des niveaux remplis de pièges et de trésors.
-- ⚔️ **Combats Simples** : Affrontez des ennemis dans un style RPG.
-- 😂 **Personnages Hauts en Couleur** : Héros aux capacités uniques et dialogues absurdes.
-- 💾 **Sauvegardes Utilisateurs** : Connexion, inscription, et sauvegardes individuelles.
-- 🌟 **Effets Visuels** : Particules animées avec tsparticles.
+---
 
-## Technologies Utilisées
+## 🧰 Technologies
 
-- **Flask** : Backend Python léger.
-- **HTML, CSS, JS** : Pour l'interface utilisateur.
-- **tsparticles** : Effet d'étincelles.
-- **bcrypt** : Pour le hachage des mots de passe.
-- **Jinja2** : Moteur de templates Flask.
+- Python 3.9+
+- Flask
+- HTML5 / CSS3
+- JavaScript (vanilla)
+- JSON (pour les données de jeu)
+- [Tiled](https://www.mapeditor.org/) (pour les cartes)
 
-## Comment Jouer
+---
 
-1. Lance le serveur Flask (`python app.py` ou `flask run`)
-2. Ouvre le navigateur sur `http://localhost:5000`
-3. Crée un compte ou connecte-toi
-4. Lance une nouvelle partie ou charge ta sauvegarde
-
-## Arborescence du Projet
+## 📁 Arborescence principale
 
 ```
 ├── Marteau-Mandale                     # Dossier racine du projet Flask "Marteau & Mandale"
@@ -110,18 +107,58 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 └── favicon.ico                        # Icône redondante à celle du dossier static/img (compatibilité ?)
 ```
 
-## Contribution
+---
 
-- Forkez le projet
-- Créez une branche (`git checkout -b feature/ma-feature`)
-- Committez (`git commit -m 'Ajout de ...'`)
-- Poussez (`git push origin feature/ma-feature`)
-- Ouvrez une Pull Request
+## 🧙 Classes jouables
 
-## Licence
-
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE).
+- **🛡️ Paladin** – Guerrier défensif
+- **🔥 Mage** – Lanceuse de sorts à distance
+- **🏹 Voleur** – Archer agile
+- **💪 Barbare** – DPS de mêlée brutal
 
 ---
 
-🎲 Amusez-vous bien dans **Marteaux & Mandales** ! Et rappelez-vous : même les héros ont le droit de se tromper (souvent).
+## 💾 Système de sauvegarde
+
+Chaque joueur possède un fichier de sauvegarde dans le dossier `save_data/`.
+
+---
+
+## 🧟 Gestion des monstres
+
+- Données dans `static/monstres/monstres.json`
+- Talents dans `static/monstres/talents_monstres.json`
+- Rencontres définies par carte dans `maps/rencontres_*.json`
+
+---
+
+## ⚔️ Mécaniques de jeu
+
+- Vue 5x5 centrée sur le joueur
+- Talents avec cooldown et mana
+- Effets visuels configurables par JSON
+
+---
+
+## 🚀 Lancer le jeu
+
+```bash
+python -m venv venv
+source venv/bin/activate  # ou .\venv\Scripts\activate sur Windows
+pip install -r requirements.txt
+python app.py
+```
+
+---
+
+## 📜 Licence
+
+Ce projet est sous licence **MIT** — voir le fichier [LICENSE](LICENSE).
+
+---
+
+## 👾 Crédits
+
+- Code, graphismes, maps : [Ton nom ici]
+- Tileset : *Sprite-coline-0003* (via Tiled)
+- Framework : [Flask](https://flask.palletsprojects.com/)
