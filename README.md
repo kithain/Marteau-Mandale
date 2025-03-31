@@ -33,74 +33,81 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 ## Arborescence du Projet
 
 ```
-├── Marteau-Mandale/                  # Racine du projet
+├── Marteau-Mandale                     # Dossier racine du projet Flask "Marteau & Mandale"
 │
-│   ├── LICENSE                       # Fichier de licence du projet (ex: MIT, GPL...)
-│   ├── README.md                     # Documentation du projet (Markdown)
-│   ├── README.txt                    # (Probablement ancien) README en texte simple
-│   ├── favicon.ico                   # Icône par défaut pour navigateurs (racine)
+│   ├── LICENSE                         # Licence du projet (ex: MIT, GPL), définit les conditions d’utilisation
+│   ├── README.md                       # Documentation principale du projet (format Markdown)
 │
-│   ├── app/                          # Dossier principal de l'application Flask
+│   ├── app/                            # Dossier principal de l'application Flask
 │   │
-│   │   ├── __init__.py               # Initialise le module Flask (crée app, etc.)
-│   │   ├── routes.py                 # Toutes les routes HTTP (login, menu, jeu, etc.)
-│   │   ├── utils.py                  # Fonctions utilitaires (ex: chargement de données, etc.)
-│   │   ├── users.json                # Fichier de comptes utilisateurs (login / password hashés ?)
+│   │   ├── __init__.py                 # Initialise l'application Flask (création de l'objet `app`, configuration)
 │   │
-│   │   ├── __pycache__/              # Fichiers Python compilés (.pyc)
-│   │   │   └── *.cpython-39.pyc      # Générés automatiquement par Python
+│   │   ├── __pycache__/                # Cache Python automatique (fichiers compilés .pyc)
+│   │   │   ├── __init__.cpython-39.pyc
+│   │   │   ├── routes.cpython-39.pyc
+│   │   │   └── utils.cpython-39.pyc
 │   │
-│   │   ├── templates/                # Templates HTML utilisés par Flask (Jinja2)
-│   │   │   ├── index.html            # Page de connexion / inscription
-│   │   │   ├── menu.html             # Menu principal (choix classe, nouvelle partie, etc.)
-│   │   │   └── jeu.html              # Interface principale du jeu
+│   │   ├── routes.py                   # Définition des routes Flask (pages, logique HTTP)
 │   │
-│   │   ├── static/                   # Contenu statique servi par Flask (CSS, JS, images…)
+│   │   ├── static/                     # Fichiers statiques (images, CSS, JS, JSON de données)
 │   │   │
 │   │   │   ├── css/
-│   │   │   │   └── style.css         # Feuille de style principale du site
+│   │   │   │   └── style.css           # Feuille de style principale (design, couleurs, mise en page)
+│   │   │
+│   │   │   ├── img/                    # Ressources graphiques (illustrations du jeu)
+│   │   │   │   ├── background.jpg      # Fond d’écran du jeu
+│   │   │   │   ├── classes/            # Portraits des classes jouables
+│   │   │   │   │   ├── barbare.png
+│   │   │   │   │   ├── mage.png
+│   │   │   │   │   ├── paladin.png
+│   │   │   │   │   └── voleur.png
+│   │   │   │   ├── favicon.ico         # Icône du site web
+│   │   │   │   ├── fumee.png           # Image de brume (effet visuel en overlay)
+│   │   │   │   ├── logo.jpg            # Logo du jeu
+│   │   │   │   ├── monstres/           # Illustrations des ennemis
+│   │   │   │   │   ├── gobelin.png
+│   │   │   │   │   └── slime.png
+│   │   │   │   ├── spark1.png          # Effet visuel de particule (étincelle)
+│   │   │   │   └── spark2.png          # Variante de particule
 │   │   │
 │   │   │   ├── js/
-│   │   │   │   ├── game.js           # Scripts JS utilisés dans le jeu (mouvement, mana, etc.)
-│   │   │   │   └── particles-config.js # Configuration du système de particules (tsParticles)
+│   │   │   │   ├── game.js             # Script principal du jeu (déplacements, mana, talents...)
+│   │   │   │   └── utils.js            # Scripts utilitaires JS (login, interface...)
 │   │   │
-│   │   │   ├── img/                  # Images utilisées dans le jeu
-│   │   │   │   ├── background.jpg        # Fond de l'application
-│   │   │   │   ├── fumee.png             # Image utilisée pour l'effet de brume/parallax
-│   │   │   │   ├── logo.jpg              # Logo du jeu
-│   │   │   │   ├── favicon.ico           # Icône du site
-│   │   │   │   ├── spark1.png / spark2.png # Particules feu/étincelles
-│   │   │   │   └── classes/              # Illustrations des classes jouables
-│   │   │   │       ├── barbare.png
-│   │   │   │       ├── mage.png
-│   │   │   │       ├── paladin.png
-│   │   │   │       └── voleur.png
+│   │   │   ├── maps/                   # Cartes de jeu générées via Tiled
+│   │   │   │   ├── Sprite-coline-0003.png  # Image du tileset
+│   │   │   │   ├── Sprite-coline-0003.tsx  # Définition Tiled du tileset
+│   │   │   │   ├── map1.json               # Carte principale jouable (format JSON)
+│   │   │   │   └── rencontres_map1.json    # Configuration des rencontres aléatoires (PNJ, monstres)
 │   │   │
-│   │   │   ├── maps/                 # Cartes générées avec Tiled (format JSON)
-│   │   │   │   ├── map1.json              # Carte principale jouable
-│   │   │   │   ├── Sprite-coline-0003.png # Tileset graphique utilisé
-│   │   │   │   ├── Sprite-coline-0003.tsx # Définition du tileset pour Tiled
-│   │   │   │   └── rencontres_map1.json   # Configuration des rencontres aléatoires pour cette carte
+│   │   │   ├── monstres/
+│   │   │   │   ├── monstres.json           # Données des ennemis (nom, stats, image, talents...)
+│   │   │   │   └── talents_monstres.json   # Capacités spécifiques aux monstres
 │   │   │
-│   │   │   ├── monstres/            # Fichiers liés aux monstres
-│   │   │   │   ├── monstres.json         # Données des monstres
-│   │   │   │   └── talents_monstres.json # Talents utilisables par les monstres
-│   │   │
-│   │   │   └── talents/             # Talents des classes jouables
+│   │   │   └── talents/                # Talents de chaque classe jouable
 │   │   │       ├── barbare_talents.json
 │   │   │       ├── mage_talents.json
 │   │   │       ├── paladin_talents.json
 │   │   │       └── voleur_talents.json
+│   │
+│   │   ├── templates/                 # Pages HTML servies par Flask (Jinja2)
+│   │   │   ├── index.html             # Page d’accueil (login / création de compte)
+│   │   │   ├── jeu.html               # Interface du jeu (affichage de la carte, HUD…)
+│   │   │   └── menu.html              # Menu principal (nouvelle partie, chargement...)
+│   │
+│   │   ├── users.json                 # Comptes utilisateurs (login + mot de passe hashé ou non)
+│   │   └── utils.py                   # Fonctions utilitaires backend (gestion JSON, joueurs, classes...)
 │
-│   ├── app.py                       # Script principal qui lance l'app Flask (app.run)
-│   ├── requirements.txt             # Liste des dépendances à installer (Flask, etc.)
+│   ├── app.py                         # Point d’entrée de l’application Flask (app.run())
 │
-│   └── save_data/                   # Sauvegardes de parties utilisateurs (format JSON)
-│       ├── xxxxx.json
-│       ├── xxxxx.json
-│       ├── xxxx.json
-│       └── xxxx.json
-
+│   └── save_data/                     # Sauvegardes de parties utilisateurs
+│       ├── user1.json                 # Sauvegarde d'un joueur
+│       ├── user2.json
+│       ├── test.json                  # Données de test
+│       └── user3.json
+│
+├── README.txt                         # Ancienne version du README ? (format texte brut)
+└── favicon.ico                        # Icône redondante à celle du dossier static/img (compatibilité ?)
 ```
 
 ## Contribution
