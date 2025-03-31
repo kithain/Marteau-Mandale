@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Marteaux & Mandales</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+</head>
+<header class="logo-container">
+  <img src="assets/images/logo.png" alt="Logo Marteau Mandale" class="logo" />
+</header>
+<script>
+document.getElementById('login-btn').onclick = async () => {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const response = await fetch('/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ username, password })
+  });
+  const result = await response.json();
+  alert(result.message);
+};
+
+document.getElementById('register-btn').onclick = async () => {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const response = await fetch('/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ username, password })
+  });
+  const result = await response.json();
+  alert(result.message);
+};
+</script>
+<body>
+  <!-- Fond de particules -->
+  <div id="particles-js"></div>
+
+  <!-- Contenu du jeu -->
+  <div id="auth-container">
+    <h1 class="runic">Marteaux & Mandales</h1>
+    <p class="subtitle">Les Légendes Oubliées (et pas sans raison)</p>
+
+    <form id="login-form">
+		<label for="username">Nom d'utilisateur :</label>
+		<input type="text" id="username" name="username" required />
+	
+		<label for="password">Mot de passe :</label>
+		<input type="password" id="password" name="password" required />
+
+		<button type="button" id="login-btn">Se connecter</button>
+		<button type="button" id="register-btn">Création de compte</button>
+    </form>
+  </div>
+
+  <!-- Scripts Particules -->
+ <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <script src="js/particles-config.js"></script>
+
+</body>
+</html>
