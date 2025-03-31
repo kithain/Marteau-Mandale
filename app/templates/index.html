@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Marteaux & Mandales</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <meta charset="UTF-8">
+    <title>Marteaux & Mandales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/img/favicon.ico">
 </head>
 <body>
   <!-- Fond de particules -->
@@ -16,7 +16,7 @@
     <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
   </header>
 
-  <!-- Contenu du jeu -->
+  <!-- Contenu d'authentification -->
   <div id="auth-container">
     <h1 class="runic">Marteaux & Mandales</h1>
     <p class="subtitle">Les Légendes Oubliées (et pas sans raison)</p>
@@ -33,20 +33,21 @@
     </form>
   </div>
 
-  <!-- Scripts Particules -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/particles-config.js') }}"></script>
 
-  <!-- Script de gestion du login/register -->
   <script>
     document.getElementById('login-btn').onclick = async () => {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+
       const response = await fetch('/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+
       const result = await response.json();
       alert(result.message);
       if (response.ok && result.redirect) {
@@ -57,11 +58,13 @@
     document.getElementById('register-btn').onclick = async () => {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+
       const response = await fetch('/register', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+
       const result = await response.json();
       alert(result.message);
     };

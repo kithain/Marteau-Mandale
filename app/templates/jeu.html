@@ -1,82 +1,190 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8"/>
   <title>Jeu - Marteaux & Mandales</title>
+  <link rel="icon" href="/static/img/favicon.ico">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+  <style>
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+    }
+  </style>
 </head>
 <body>
-  <div id="particles-js"></div>
+<div id="particles-js"></div>
 
-  <header class="logo-container">
-    <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
-  </header>
+<header class="logo-container">
+  <img class="logo" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale">
+</header>
 
-  <div id="auth-container">
-    <h1 class="runic">Bienvenue dans l'aventure, {{ username }} !</h1>
-    <div id="map-container"></div>
+<div id="auth-container">
+  <h1 class="runic">Bienvenue dans l'aventure, {{ username }} !</h1>
 
-    <form action="{{ url_for('routes.logout') }}" method="GET" style="margin-top: 20px;">
-      <button type="submit">Retour au menu</button>
-    </form>
+  <div id="mana-bar" style="height: 20px; width: 200px; border: 2px solid white; background: #222; margin: 10px auto; position: relative;">
+    <div id="mana-fill" style="height: 100%; width: 100%; background: #4286f4; transition: width 0.3s ease;"></div>
   </div>
 
-  <!-- Particules -->
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/particles-config.js') }}"></script>
+  <div id="map-container"><div id="map-inner"></div></div>
 
-  <!-- Carte + Joueur -->
-  <script>
-    const playerClass = "{{ classe }}";  // récupéré via render_template dans routes.py
-    const playerStartX = 0;
-    const playerStartY = 0;
+  <div id="talents-container" style="margin-top:20px; text-align:center;">
+    <h2 class="runic">Talents disponibles</h2>
+    <div id="talents-buttons"></div>
+  </div>
 
-    fetch("{{ url_for('static', filename='maps/map1.json') }}")
-      .then(response => response.json())
-      .then(mapData => {
-        const tileset = mapData.tilesets[0];
-        const tilesetImage = new Image();
-        const tilesetPath = "{{ url_for('static', filename='maps/') }}" + tileset.source.replace(".tsx", ".png");
+  <form action="{{ url_for('routes.logout') }}" method="GET" style="margin-top: 20px;">
+    <button type="submit">Retour au menu</button>
+  </form>
+</div>
 
-        tilesetImage.onload = () => {
-          renderMap(mapData, tilesetImage, tileset.firstgid);
-        };
-        tilesetImage.src = tilesetPath;
-      })
-      .catch(error => console.error("Erreur carte :", error));
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/particles-config.js') }}"></script>
+<script>
+const playerClass = "{{ classe }}";
+const talents = {{ save_data.talents | tojson }};
+let playerMana = 100;
+const maxMana = 100;
+let cooldowns = {};
+let playerX = 0;
+let playerY = 0;
+const tileSize = 64;
+const blockedTiles = new Set();
 
-    function renderMap(data, image, firstgid) {
-      const container = document.getElementById("map-container");
-      container.innerHTML = '';
-      const originalTileSize = data.tilewidth;
-      const scale = 4;
-      const displayTileSize = originalTileSize * scale;
+const keyMap = {
+  "&": 0, "é": 1, '"': 2, "'": 3,
+  "(": 4, "-": 5, "è": 6, "_": 7,
+  "ç": 8, "à": 9
+};
 
-      const width = data.width;
-      const height = data.height;
-      const tiles = data.layers[0].data;
+function updateManaBar() {
+  const manaFill = document.getElementById("mana-fill");
+  const percent = (playerMana / maxMana) * 100;
+  manaFill.style.width = percent + "%";
+}
 
-      container.style.width = `${width * displayTileSize}px`;
-      container.style.height = `${height * displayTileSize}px`;
-      container.style.position = 'relative';
+function getBlockedKey(x, y) {
+  return `${x},${y}`;
+}
 
-      const cols = image.width / originalTileSize;
+function movePlayer() {
+  const player = document.getElementById('player');
+  if (!player) return;
+  player.style.left = `${playerX * tileSize}px`;
+  player.style.top = `${playerY * tileSize}px`;
+  document.getElementById("map-inner").style.transform = `translate(${-((playerX - 2) * tileSize)}px, ${-((playerY - 2) * tileSize)}px)`;
+}
 
-      const FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-      const FLIPPED_VERTICALLY_FLAG   = 0x40000000;
-      const FLIPPED_DIAGONALLY_FLAG   = 0x20000000;
-      const GID_MASK = ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
+function utiliserTalent(talent, index = null) {
+  if (cooldowns[talent.name]) return;
+  if (playerMana < talent.cost) return;
+
+  playerMana -= talent.cost;
+  updateManaBar();
+
+  const player = document.getElementById("player");
+
+  // Si le talent modifie l'opacité du joueur (ex: Furtivité)
+if (talent.opacity !== undefined) {
+  const originalOpacity = player.style.opacity;
+  player.style.opacity = talent.opacity;
+
+  setTimeout(() => {
+    player.style.opacity = originalOpacity || "1";
+  }, talent.cooldown || 3000);
+}
+
+  // Scintillement
+  const originalFilter = player.style.filter;
+  player.style.filter = `drop-shadow(0 0 6px ${talent.color || 'white'})`;
+  player.style.transition = "filter 0.2s ease";
+  setTimeout(() => {
+    player.style.filter = originalFilter;
+  }, 500);
+
+  // Texte flottant
+  const text = document.createElement("div");
+  text.textContent = talent.effectText || "Effet!";
+  text.style.position = "absolute";
+  text.style.left = "50%";
+  text.style.top = "-10px";
+  text.style.transform = "translateX(-50%)";
+  text.style.color = talent.color || "white";
+  text.style.fontWeight = "bold";
+  text.style.fontSize = "18px";
+  text.style.textShadow = "0 0 5px black";
+  text.style.animation = "floatUp 1s ease-out forwards";
+  player.appendChild(text);
+  setTimeout(() => text.remove(), 1000);
+
+  // Cooldown bouton
+  if (index !== null) {
+    const btn = document.getElementById(`talent-btn-${index}`);
+    btn.disabled = true;
+    btn.textContent = `⌛ ${talent.name}`;
+    cooldowns[talent.name] = true;
+    setTimeout(() => {
+      cooldowns[talent.name] = false;
+      btn.disabled = false;
+      btn.textContent = `${index + 1}. ${talent.name}`;
+    }, talent.cooldown || 3000);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  const index = keyMap[e.key];
+  if (index !== undefined && talents.talents[index]) {
+    utiliserTalent(talents.talents[index], index);
+  }
+
+  let newX = playerX;
+  let newY = playerY;
+  if (e.key === 'ArrowUp') newY--;
+  if (e.key === 'ArrowDown') newY++;
+  if (e.key === 'ArrowLeft') newX--;
+  if (e.key === 'ArrowRight') newX++;
+
+  const isOut = newX < 0 || newY < 0 || newX >= 15 || newY >= 15;
+  const isBlocked = blockedTiles.has(getBlockedKey(newX, newY));
+  if (!isOut && !isBlocked) {
+    playerX = newX;
+    playerY = newY;
+    movePlayer();
+  }
+});
+
+const talentButtons = document.getElementById('talents-buttons');
+talents.talents.forEach((talent, index) => {
+  const btn = document.createElement('button');
+  btn.id = `talent-btn-${index}`;
+  btn.textContent = `${index + 1}. ${talent.name}`;
+  btn.onclick = () => utiliserTalent(talent, index);
+  talentButtons.appendChild(btn);
+});
+
+fetch("{{ url_for('static', filename='maps/map1.json') }}")
+  .then(res => res.json())
+  .then(mapData => {
+    const container = document.getElementById("map-inner");
+    const tileset = mapData.tilesets[0];
+    const originalTileSize = mapData.tilewidth;
+    const scale = 4;
+    const displayTileSize = originalTileSize * scale;
+    const width = mapData.width;
+    const tiles = mapData.layers[0].data;
+
+    const tilesetImage = new Image();
+    tilesetImage.src = "{{ url_for('static', filename='maps/') }}" + tileset.source.replace(".tsx", ".png");
+
+    tilesetImage.onload = () => {
+      const cols = tilesetImage.width / originalTileSize;
 
       tiles.forEach((rawGid, index) => {
         if (rawGid === 0) return;
-
-        const flipped_h = (rawGid & FLIPPED_HORIZONTALLY_FLAG) !== 0;
-        const flipped_v = (rawGid & FLIPPED_VERTICALLY_FLAG) !== 0;
-        const flipped_d = (rawGid & FLIPPED_DIAGONALLY_FLAG) !== 0;
+        const GID_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
         const gid = rawGid & GID_MASK;
-
-        const id = gid - firstgid;
+        const id = gid - tileset.firstgid;
         const sx = (id % cols) * originalTileSize;
         const sy = Math.floor(id / cols) * originalTileSize;
 
@@ -85,123 +193,51 @@
         tile.style.width = tile.style.height = `${displayTileSize}px`;
         tile.style.position = 'absolute';
 
-        const x = (index % width) * displayTileSize;
-        const y = Math.floor(index / width) * displayTileSize;
-        tile.style.left = `${x}px`;
-        tile.style.top = `${y}px`;
+        const x = index % width;
+        const y = Math.floor(index / width);
+        tile.style.left = `${x * tileSize}px`;
+        tile.style.top = `${y * tileSize}px`;
 
-        tile.style.backgroundImage = `url(${image.src})`;
+        tile.style.backgroundImage = `url(${tilesetImage.src})`;
         tile.style.backgroundPosition = `-${sx * scale}px -${sy * scale}px`;
-        tile.style.backgroundSize = `${image.width * scale}px ${image.height * scale}px`;
+        tile.style.backgroundSize = `${tilesetImage.width * scale}px ${tilesetImage.height * scale}px`;
 
-        let transform = '';
-        if (flipped_d) {
-          if (flipped_h && flipped_v) transform = 'rotate(90deg)';
-          else if (flipped_h) transform = 'rotate(270deg) scaleX(-1)';
-          else if (flipped_v) transform = 'rotate(90deg) scaleX(-1)';
-          else transform = 'rotate(270deg)';
-        } else {
-          const scaleX = flipped_h ? -1 : 1;
-          const scaleY = flipped_v ? -1 : 1;
-          transform = `scale(${scaleX}, ${scaleY})`;
-        }
-
-        tile.style.transform = transform;
-        container.appendChild(tile);
+        document.getElementById("map-inner").appendChild(tile);
       });
 
-      // Affichage du joueur
-      const player = document.createElement('div');
-      player.id = 'player';
-      player.style.width = player.style.height = `${displayTileSize}px`;
-      player.style.position = 'absolute';
-      player.style.left = `${playerStartX * displayTileSize}px`;
-      player.style.top = `${playerStartY * displayTileSize}px`;
-      player.style.backgroundImage = `url(/static/img/classes/${playerClass.toLowerCase()}.png)`;
-      player.style.backgroundSize = 'contain';
-      player.style.backgroundRepeat = 'no-repeat';
-      player.style.zIndex = '10';
-      container.appendChild(player);
-    }
-  </script>
+      // Position joueur
+      const spawn = mapData.layers.find(l => l.name === "player_start").objects[0];
+      playerX = Math.floor(spawn.x / mapData.tilewidth);
+      playerY = Math.floor(spawn.y / mapData.tileheight);
 
-<script>
-  let playerX = 0;
-  let playerY = 0;
-  let blockedTiles = new Set();
-  let tileSize = 64;
-
-  function movePlayer() {
-    const player = document.getElementById('player');
-    player.style.left = `${playerX * tileSize}px`;
-    player.style.top = `${playerY * tileSize}px`;
-  }
-
-  function getBlockedTileKey(x, y) {
-    return `${x},${y}`;
-  }
-
-  fetch("{{ url_for('static', filename='maps/map1.json') }}")
-    .then(response => response.json())
-    .then(mapData => {
-      const tileset = mapData.tilesets[0];
-      const tilesetImage = new Image();
-      const tilesetPath = "{{ url_for('static', filename='maps/') }}" + tileset.source.replace(".tsx", ".png");
-
-      // Position initiale du joueur
-      const spawnLayer = mapData.layers.find(l => l.name === "player_start" && l.type === "objectgroup");
-      if (spawnLayer) {
-        const playerSpawn = spawnLayer.objects.find(obj => obj.name === "player");
-        if (playerSpawn) {
-          playerX = Math.floor(playerSpawn.x / mapData.tilewidth);
-          playerY = Math.floor(playerSpawn.y / mapData.tileheight);
-        }
-      }
-
-      // Obstacles (tile layer)
+      // Obstacle layer
       const obstacleLayer = mapData.layers.find(l => l.name === "obstacles" && l.type === "tilelayer");
       if (obstacleLayer) {
         obstacleLayer.data.forEach((val, idx) => {
           if (val !== 0) {
             const x = idx % mapData.width;
             const y = Math.floor(idx / mapData.width);
-            blockedTiles.add(getBlockedTileKey(x, y));
+            blockedTiles.add(getBlockedKey(x, y));
           }
         });
       }
 
-      tilesetImage.onload = () => {
-        renderMap(mapData, tilesetImage, tileset.firstgid);
-        movePlayer();
-      };
-      tilesetImage.src = tilesetPath;
+      // Ajout joueur
+      const player = document.createElement('div');
+      player.id = 'player';
+      player.style.width = player.style.height = `${displayTileSize}px`;
+      player.style.position = 'absolute';
+      player.style.backgroundImage = `url(/static/img/classes/${playerClass.toLowerCase()}.png)`;
+      player.style.backgroundSize = 'contain';
+      player.style.backgroundRepeat = 'no-repeat';
+      player.style.zIndex = '10';
+      document.getElementById("map-inner").appendChild(player);
 
-      document.addEventListener('keydown', (e) => {
-        let newX = playerX;
-        let newY = playerY;
+      movePlayer();
+    };
+  });
 
-        switch (e.key) {
-          case 'ArrowUp':    newY--; break;
-          case 'ArrowDown':  newY++; break;
-          case 'ArrowLeft':  newX--; break;
-          case 'ArrowRight': newX++; break;
-          default: return;
-        }
-
-        const mapWidth = mapData.width;
-        const mapHeight = mapData.height;
-
-        const isOutOfBounds = newX < 0 || newY < 0 || newX >= mapWidth || newY >= mapHeight;
-        const isBlocked = blockedTiles.has(getBlockedTileKey(newX, newY));
-
-        if (!isOutOfBounds && !isBlocked) {
-          playerX = newX;
-          playerY = newY;
-          movePlayer();
-        }
-      });
-    });
+updateManaBar();
 </script>
-
 </body>
 </html>

@@ -1,0 +1,95 @@
+{
+  "class": "Barbare",
+  "talents": [
+    {
+      "id": "rage_berserker",
+      "name": "Rage du Berserker",
+      "description": "Augmente temporairement les dégâts infligés de 15%.",
+      "cost": 2,
+      "cooldown": 8000,
+      "color": "#ff4500",
+      "effectText": "ATK UP"
+    },
+    {
+      "id": "tourbillon",
+      "name": "Tourbillon",
+      "description": "Inflige des dégâts modérés à tous les ennemis proches.",
+      "cost": 2,
+      "cooldown": 5000,
+      "color": "#dc143c",
+      "effectText": "TOURBILLON !"
+    },
+    {
+      "id": "cri_guerre",
+      "name": "Cri de Guerre",
+      "description": "Augmente légèrement la puissance des alliés proches pendant 10 secondes.",
+      "cost": 1,
+      "cooldown": 10000,
+      "color": "#ffa500",
+      "effectText": "BUFF ALLIÉS"
+    },
+    {
+      "id": "peau_fer",
+      "name": "Peau de Fer",
+      "description": "Augmente temporairement la résistance physique de 20%.",
+      "cost": 2,
+      "cooldown": 7000,
+      "color": "#00ced1",
+      "effectText": "DEF UP"
+    },
+    {
+      "id": "charge_brutale",
+      "name": "Charge Brutale",
+      "description": "Charge vers l'ennemi, l’étourdissant brièvement.",
+      "cost": 1,
+      "cooldown": 4000,
+      "color": "#ff6347",
+      "effectText": "ÉTOURDI !"
+    },
+    {
+      "id": "coups_frenetiques",
+      "name": "Coups Frénétiques",
+      "description": "Chaque attaque réussie augmente la vitesse d’attaque pendant 5 secondes.",
+      "cost": 2,
+      "cooldown": 6000,
+      "color": "#ff1493",
+      "effectText": "VIT. ATQ ↑"
+    },
+    {
+      "id": "resistance_sauvage",
+      "name": "Résistance Sauvage",
+      "description": "Réduit les dégâts critiques reçus de 25%.",
+      "cost": 1,
+      "cooldown": 9000,
+      "color": "#8a2be2",
+      "effectText": "ANTI-CRIT"
+    },
+    {
+      "id": "execution",
+      "name": "Exécution",
+      "description": "Inflige des dégâts accrus sur les ennemis à faible santé.",
+      "cost": 2,
+      "cooldown": 5000,
+      "color": "#ff0000",
+      "effectText": "CRITIQUE !"
+    },
+    {
+      "id": "endurance_primitive",
+      "name": "Endurance Primitive",
+      "description": "Augmente les points de vie maximum de 10%.",
+      "cost": 1,
+      "cooldown": 12000,
+      "color": "#32cd32",
+      "effectText": "PV MAX +"
+    },
+    {
+      "id": "fracasse_armure",
+      "name": "Fracasse-armure",
+      "description": "Réduit l’armure de l’ennemi touché pour une courte durée.",
+      "cost": 2,
+      "cooldown": 5000,
+      "color": "#b22222",
+      "effectText": "ARMURE -"
+    }
+  ]
+}

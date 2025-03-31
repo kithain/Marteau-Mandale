@@ -121,37 +121,83 @@ h1 {
   border: 2px solid white;
   border-radius: 10px;
 }
+
+/* === MAP === */
 #map-container {
-  width: 1024px;  /* ou plus selon ton besoin */
+  width: 1024px;
   height: 768px;
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.6);
   border: 2px solid white;
   margin-top: 20px;
+  position: relative;
 }
 
-#map {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, 64px);
-  gap: 1px;
-}
+/* Chaque tuile de la map */
 .tile {
-  border: 1px solid #5e3d1f; /* brun parchemin */
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
   box-sizing: border-box;
+  border: 1px solid #5e3d1f; /* bordure style parchemin */
   box-shadow: inset 0 0 2px #2e1a0f, 0 1px 2px rgba(0,0,0,0.4);
   border-radius: 4px;
   filter: brightness(0.95) sepia(0.3);
 }
 
-/* Exemple de style */
-.tile.herbe {
-  background-color: green;
-}
-
-.tile.arbre {
-  background-color: darkgreen;
-}
 
 .tile.départ {
   background-color: gold;
+}
+
+/* Joueur */
+#player {
+  z-index: 10;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+}
+
+
+/* Nouveau conteneur de caméra centrée */
+#map-container {
+  width: 320px; /* 5 tuiles * 64px */
+  height: 320px;
+  overflow: hidden;
+  position: relative;
+  margin: 20px auto;
+  border: 2px solid white;
+  background-color: rgba(0,0,0,0.6);
+}
+
+#map-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.tile {
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+}
+
+
+@keyframes floatUp {
+  0% {
+    top: 0;
+    opacity: 1;
+  }
+  100% {
+    top: -30px;
+    opacity: 0;
+  }
 }

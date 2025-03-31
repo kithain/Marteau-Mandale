@@ -1,0 +1,95 @@
+{
+  "class": "Paladin",
+  "talents": [
+    {
+      "id": "defense_sacree",
+      "name": "Défense Sacrée",
+      "description": "Augmente l'armure de 10%.",
+      "cost": 1,
+      "cooldown": 5000,
+      "color": "#ffd700",
+      "effectText": "🛡 DEF+"
+    },
+    {
+      "id": "bouclier_divin",
+      "name": "Bouclier Divin",
+      "description": "Bloque entièrement une attaque toutes les 3 attaques reçues.",
+      "cost": 2,
+      "cooldown": 10000,
+      "color": "#f0e68c",
+      "effectText": "🛡 Immunité"
+    },
+    {
+      "id": "aura_protectrice",
+      "name": "Aura Protectrice",
+      "description": "Réduit les dégâts subis par tous les alliés proches de 5%.",
+      "cost": 2,
+      "cooldown": 8000,
+      "color": "#add8e6",
+      "effectText": "✨ Aura"
+    },
+    {
+      "id": "jugement_vertueux",
+      "name": "Jugement Vertueux",
+      "description": "Attaque infligeant des dégâts et réduisant légèrement l’attaque de l’adversaire.",
+      "cost": 1,
+      "cooldown": 6000,
+      "color": "#e6e6fa",
+      "effectText": "⚔ Jugement"
+    },
+    {
+      "id": "resistance_mal",
+      "name": "Résistance au Mal",
+      "description": "Immunité contre les effets négatifs (poison, brûlure).",
+      "cost": 2,
+      "cooldown": 9000,
+      "color": "#98fb98",
+      "effectText": "☣ Immunité"
+    },
+    {
+      "id": "renouveau",
+      "name": "Renouveau",
+      "description": "Régénère lentement la vie au fil du temps.",
+      "cost": 1,
+      "cooldown": 7000,
+      "color": "#00fa9a",
+      "effectText": "💖 Régén"
+    },
+    {
+      "id": "choc_sacre",
+      "name": "Choc Sacré",
+      "description": "Assomme brièvement l'ennemi lors d’une attaque puissante.",
+      "cost": 2,
+      "cooldown": 6000,
+      "color": "#ffdead",
+      "effectText": "⚡ Étourdi"
+    },
+    {
+      "id": "voeu_croise",
+      "name": "Vœu du Croisé",
+      "description": "Augmente légèrement les dégâts des alliés proches pendant 10 secondes.",
+      "cost": 1,
+      "cooldown": 8000,
+      "color": "#ffb6c1",
+      "effectText": "🛡 Soutien"
+    },
+    {
+      "id": "frappe_justiciere",
+      "name": "Frappe Justicière",
+      "description": "Inflige des dégâts bonus proportionnels à la santé perdue par l’adversaire.",
+      "cost": 2,
+      "cooldown": 6000,
+      "color": "#ffa500",
+      "effectText": "⚔ Justice"
+    },
+    {
+      "id": "gardien_fidele",
+      "name": "Gardien Fidèle",
+      "description": "Prend 50% des dégâts destinés à un allié faible en vie pendant 5 secondes.",
+      "cost": 2,
+      "cooldown": 12000,
+      "color": "#6495ed",
+      "effectText": "🛡 Gardien"
+    }
+  ]
+}

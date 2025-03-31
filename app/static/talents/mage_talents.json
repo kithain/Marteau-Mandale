@@ -1,0 +1,95 @@
+{
+  "class": "Mage",
+  "talents": [
+    {
+      "id": "boule_feu",
+      "name": "Boule de Feu",
+      "description": "Inflige des dégâts importants à distance.",
+      "cost": 1,
+      "cooldown": 4000,
+      "color": "#ff4500",
+      "effectText": "🔥 Feu !"
+    },
+    {
+      "id": "barriere_arcanique",
+      "name": "Barrière Arcanique",
+      "description": "Génère un bouclier absorbant une quantité modérée de dégâts.",
+      "cost": 2,
+      "cooldown": 7000,
+      "color": "#00ced1",
+      "effectText": "🛡 Bouclier"
+    },
+    {
+      "id": "nova_givre",
+      "name": "Nova de Givre",
+      "description": "Ralentit considérablement les ennemis proches pendant 5 secondes.",
+      "cost": 2,
+      "cooldown": 6000,
+      "color": "#87cefa",
+      "effectText": "❄ Ralentis"
+    },
+    {
+      "id": "canalisation_magique",
+      "name": "Canalisation Magique",
+      "description": "Régénère rapidement du mana hors combat.",
+      "cost": 1,
+      "cooldown": 8000,
+      "color": "#7fffd4",
+      "effectText": "+💧 Mana"
+    },
+    {
+      "id": "eclair_arcanes",
+      "name": "Éclair des Arcanes",
+      "description": "Dégâts moyens ignorant 20% de la résistance magique ennemie.",
+      "cost": 1,
+      "cooldown": 4000,
+      "color": "#dda0dd",
+      "effectText": "⚡ Arcanes"
+    },
+    {
+      "id": "meteore",
+      "name": "Météore",
+      "description": "Projectile infligeant des dégâts en zone importants après un délai.",
+      "cost": 2,
+      "cooldown": 10000,
+      "color": "#ff6347",
+      "effectText": "💥 Impact"
+    },
+    {
+      "id": "enchantement_puissance",
+      "name": "Enchantement de Puissance",
+      "description": "Augmente les dégâts des sorts de 15% pendant 10 secondes.",
+      "cost": 2,
+      "cooldown": 9000,
+      "color": "#ff69b4",
+      "effectText": "🔺 Puissance"
+    },
+    {
+      "id": "invocation_elementaire",
+      "name": "Invocation Élémentaire",
+      "description": "Invoque temporairement un familier élémentaire.",
+      "cost": 2,
+      "cooldown": 12000,
+      "color": "#20b2aa",
+      "effectText": "👾 Invocation"
+    },
+    {
+      "id": "teleportation_rapide",
+      "name": "Téléportation Rapide",
+      "description": "Permet d'esquiver instantanément une attaque.",
+      "cost": 1,
+      "cooldown": 5000,
+      "color": "#eeeeee",
+      "effectText": "🌀 Esquive"
+    },
+    {
+      "id": "explosion_magique",
+      "name": "Explosion Magique",
+      "description": "Dégâts de zone autour du Mage repoussant les ennemis proches.",
+      "cost": 2,
+      "cooldown": 7000,
+      "color": "#ff00ff",
+      "effectText": "💫 Explosion"
+    }
+  ]
+}

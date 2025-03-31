@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"map1.json"
+        }
+    },
  "height":15,
  "infinite":false,
  "layers":[

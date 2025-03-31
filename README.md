@@ -33,33 +33,56 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 ## Arborescence du Projet
 
 ```
-Marteau-Mandale/
-├── LICENSE                       # Licence MIT du projet
-├── README.md                     # Documentation du projet (version complète générée)
-├── app.py                        # Fichier principal pour lancer l'application Flask
-├── requirements.txt              # Liste des dépendances Python (Flask, bcrypt, etc.)
-├── save_data/                    # Dossier des fichiers de sauvegarde des joueurs
-│   └── (ex: joueur1.json)        # Sauvegardes individuelles par utilisateur
-├── app/                          # Dossier principal de l'application Flask
-│   ├── __init__.py               # Initialise l'application Flask et le blueprint
-│   ├── routes.py                 # Contient les routes (login, register, menu, jeu)
-│   ├── utils.py                  # Fonctions utilitaires : hash de mot de passe, etc.
-│   ├── users.json                # Fichier contenant les utilisateurs enregistrés
-│   ├── static/                   # Fichiers statiques (images, JS, CSS)
-│   │   ├── css/
-│   │   │   └── style.css         # Feuille de style principale
-│   │   ├── js/
-│   │   │   └── particles-config.js # Script JS pour les effets d'étincelles
-│   │   └── img/                  # Images du jeu
-│   │       ├── background.jpg    # Fond d'écran
-│   │       ├── logo.jpg          # Logo du jeu
-│   │       ├── spark1.png        # Image pour particules
-│   │       └── spark2.png        # Image pour particules
-│   └── templates/                # Templates HTML (rendus par Flask via Jinja2)
-│       ├── index.html            # Page de connexion/inscription
-│       ├── menu.html             # Page du menu principal (nouvelle partie, charger)
-│       └── jeu.html              # Interface du jeu (à venir)
-```
+📁 Marteau-Mandale/
+│
+├── 📄 app.py                   # Script principal pour lancer Flask
+├── 📄 requirements.txt         # Dépendances Python
+│
+├── 📁 app                      # Dossier contenant les modules Flask
+│   ├── 📄 __init__.py          # Initialisation du module Flask
+│   ├── 📄 routes.py            # Routes HTTP du jeu
+│   ├── 📄 utils.py             # Fonctions utilitaires générales
+│   ├── 📄 users.json           # Données des utilisateurs
+│   │
+│   ├── 📁 templates            # Templates HTML pour les pages
+│   │   ├── 📄 index.html       # Page d'accueil (connexion, inscription)
+│   │   ├── 📄 menu.html        # Page du menu principal
+│   │   └── 📄 jeu.html         # Interface du jeu
+│   │
+│   └── 📁 static               # Fichiers statiques (CSS, JS, Images)
+│       │
+│       ├── 📁 css
+│       │   └── 📄 style.css    # Style principal de l'application
+│       │
+│       ├── 📁 js
+│       │   └── 📄 particles-config.js  # Scripts JS complémentaires
+│       │
+│       ├── 📁 img              # Images générales du jeu
+│       │   ├── 📁 classes
+│       │   │   ├── 📄 paladin.png
+│       │   │   ├── 📄 mage.png
+│       │   │   ├── 📄 voleur.png
+│       │   │   └── 📄 barbare.png
+│       │   ├── 📄 background.jpg
+│       │   ├── 📄 logo.jpg
+│       │   └── 📄 favicon.ico
+│       │
+│       ├── 📁 maps             # Cartes générées avec Tiled
+│       │   ├── 📄 map1.json
+│       │   ├── 📄 Sprite-coline-0003.tsx
+│       │   └── 📄 Sprite-coline-0003.png
+│       │
+│       └── 📁 talents          # ⚠️ NOUVEAU dossier pour les talents des classes
+│           ├── 📄 paladin_talents.json   # Talents du Paladin
+│           ├── 📄 mage_talents.json      # Talents du Mage
+│           ├── 📄 voleur_talents.json    # Talents du Voleur
+│           └── 📄 barbare_talents.json   # Talents du Barbare
+│
+├── 📁 save_data                # Stockage des données sauvegardées
+│   └── 📄 partie1.json         # Exemple de fichier de sauvegarde d'une partie
+│
+├── 📄 README.md                # Description et documentation du projet
+└── 📄 LICENSE                  # Licence du projet
 
 ## Contribution
 
