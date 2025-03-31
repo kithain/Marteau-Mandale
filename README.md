@@ -33,32 +33,74 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 ## Arborescence du Projet
 
 ```
-Marteau-Mandale/
-├── LICENSE                       # Licence MIT du projet
-├── README.md                     # Documentation du projet (version complète générée)
-├── app.py                        # Fichier principal pour lancer l'application Flask
-├── requirements.txt              # Liste des dépendances Python (Flask, bcrypt, etc.)
-├── save_data/                    # Dossier des fichiers de sauvegarde des joueurs
-│   └── (ex: joueur1.json)        # Sauvegardes individuelles par utilisateur
-├── app/                          # Dossier principal de l'application Flask
-│   ├── __init__.py               # Initialise l'application Flask et le blueprint
-│   ├── routes.py                 # Contient les routes (login, register, menu, jeu)
-│   ├── utils.py                  # Fonctions utilitaires : hash de mot de passe, etc.
-│   ├── users.json                # Fichier contenant les utilisateurs enregistrés
-│   ├── static/                   # Fichiers statiques (images, JS, CSS)
-│   │   ├── css/
-│   │   │   └── style.css         # Feuille de style principale
-│   │   ├── js/
-│   │   │   └── particles-config.js # Script JS pour les effets d'étincelles
-│   │   └── img/                  # Images du jeu
-│   │       ├── background.jpg    # Fond d'écran
-│   │       ├── logo.jpg          # Logo du jeu
-│   │       ├── spark1.png        # Image pour particules
-│   │       └── spark2.png        # Image pour particules
-│   └── templates/                # Templates HTML (rendus par Flask via Jinja2)
-│       ├── index.html            # Page de connexion/inscription
-│       ├── menu.html             # Page du menu principal (nouvelle partie, charger)
-│       └── jeu.html              # Interface du jeu (à venir)
+├── Marteau-Mandale/                  # Racine du projet
+│
+│   ├── LICENSE                       # Fichier de licence du projet (ex: MIT, GPL...)
+│   ├── README.md                     # Documentation du projet (Markdown)
+│   ├── README.txt                    # (Probablement ancien) README en texte simple
+│   ├── favicon.ico                   # Icône par défaut pour navigateurs (racine)
+│
+│   ├── app/                          # Dossier principal de l'application Flask
+│   │
+│   │   ├── __init__.py               # Initialise le module Flask (crée app, etc.)
+│   │   ├── routes.py                 # Toutes les routes HTTP (login, menu, jeu, etc.)
+│   │   ├── utils.py                  # Fonctions utilitaires (ex: chargement de données, etc.)
+│   │   ├── users.json                # Fichier de comptes utilisateurs (login / password hashés ?)
+│   │
+│   │   ├── __pycache__/              # Fichiers Python compilés (.pyc)
+│   │   │   └── *.cpython-39.pyc      # Générés automatiquement par Python
+│   │
+│   │   ├── templates/                # Templates HTML utilisés par Flask (Jinja2)
+│   │   │   ├── index.html            # Page de connexion / inscription
+│   │   │   ├── menu.html             # Menu principal (choix classe, nouvelle partie, etc.)
+│   │   │   └── jeu.html              # Interface principale du jeu
+│   │
+│   │   ├── static/                   # Contenu statique servi par Flask (CSS, JS, images…)
+│   │   │
+│   │   │   ├── css/
+│   │   │   │   └── style.css         # Feuille de style principale du site
+│   │   │
+│   │   │   ├── js/
+│   │   │   │   ├── game.js           # Scripts JS utilisés dans le jeu (mouvement, mana, etc.)
+│   │   │   │   └── particles-config.js # Configuration du système de particules (tsParticles)
+│   │   │
+│   │   │   ├── img/                  # Images utilisées dans le jeu
+│   │   │   │   ├── background.jpg        # Fond de l'application
+│   │   │   │   ├── fumee.png             # Image utilisée pour l'effet de brume/parallax
+│   │   │   │   ├── logo.jpg              # Logo du jeu
+│   │   │   │   ├── favicon.ico           # Icône du site
+│   │   │   │   ├── spark1.png / spark2.png # Particules feu/étincelles
+│   │   │   │   └── classes/              # Illustrations des classes jouables
+│   │   │   │       ├── barbare.png
+│   │   │   │       ├── mage.png
+│   │   │   │       ├── paladin.png
+│   │   │   │       └── voleur.png
+│   │   │
+│   │   │   ├── maps/                 # Cartes générées avec Tiled (format JSON)
+│   │   │   │   ├── map1.json              # Carte principale jouable
+│   │   │   │   ├── Sprite-coline-0003.png # Tileset graphique utilisé
+│   │   │   │   ├── Sprite-coline-0003.tsx # Définition du tileset pour Tiled
+│   │   │   │   └── rencontres_map1.json   # Configuration des rencontres aléatoires pour cette carte
+│   │   │
+│   │   │   ├── monstres/            # Fichiers liés aux monstres
+│   │   │   │   ├── monstres.json         # Données des monstres
+│   │   │   │   └── talents_monstres.json # Talents utilisables par les monstres
+│   │   │
+│   │   │   └── talents/             # Talents des classes jouables
+│   │   │       ├── barbare_talents.json
+│   │   │       ├── mage_talents.json
+│   │   │       ├── paladin_talents.json
+│   │   │       └── voleur_talents.json
+│
+│   ├── app.py                       # Script principal qui lance l'app Flask (app.run)
+│   ├── requirements.txt             # Liste des dépendances à installer (Flask, etc.)
+│
+│   └── save_data/                   # Sauvegardes de parties utilisateurs (format JSON)
+│       ├── xxxxx.json
+│       ├── xxxxx.json
+│       ├── xxxx.json
+│       └── xxxx.json
+
 ```
 
 ## Contribution
