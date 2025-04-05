@@ -8,28 +8,6 @@
          "name":"player_start",
          "objects":[
                 {
-                 "height":8.00000000000001,
-                 "id":1,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":7.03125,
-                 "x":94.7032117033799,
-                 "y":120.531360349756
-                }, 
-                {
-                 "height":20.4472843450479,
-                 "id":2,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":15.0664200437195,
-                 "x":104.819236589877,
-                 "y":137.534891541954
-                }, 
-                {
                  "height":15.8356237675222,
                  "id":3,
                  "name":"",
@@ -68,7 +46,7 @@
          "name":"Calque 1",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":16,
          "x":0,
          "y":0
