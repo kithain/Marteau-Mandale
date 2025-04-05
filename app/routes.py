@@ -115,7 +115,8 @@ def nouvelle_partie():
         "statistiques": stats_par_classe[classe],
         "inventaire": [],
         "talents": load_talents(classe),
-        "position": {"x": 0, "y": 0}
+        "position": {"x": 0, "y": 0},
+        "carte": "P7"  # carte de depart !
     }
 
     os.makedirs(SAVE_DIR, exist_ok=True)

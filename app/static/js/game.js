@@ -257,6 +257,7 @@ function initialiserTalents() {
 document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', handleKeydown);
   updateManaBar();
+  chargerNouvelleCarte(window.PLAYER_MAP || "P1");
   chargerNouvelleCarte("P7"); // <-- la map de départ
   initialiserTalents();
 });
