@@ -4,58 +4,51 @@ import os
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Création d'un Blueprint Flask nommé 'routes'
+# === Import des fonctions utilitaires ===
+from .utils import (
+    generer_rencontre,
+    charger_monstres,
+    charger_talents_monstres
+)
+
+# === Création du blueprint Flask ===
 bp = Blueprint('routes', __name__)
 
-# Chemins vers les fichiers de données utilisateurs et sauvegardes
+# === Chemins de fichiers ===
 USERS_FILE = os.path.join(os.path.dirname(__file__), 'users.json')
 SAVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'save_data')
 
-# ===== Fonctions utilitaires pour les utilisateurs =====
+# === Fonctions utilisateurs ===
 
 def load_users():
-    """Charge les données des utilisateurs depuis un fichier JSON."""
     if not os.path.exists(USERS_FILE):
         return {}
     with open(USERS_FILE, 'r') as f:
         return json.load(f)
 
-
 def save_users(users):
-    """Sauvegarde les données des utilisateurs vers un fichier JSON."""
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f)
 
-
-# ===== Chargement des talents =====
 def load_talents(classe):
-    """Charge les talents de la classe spécifiée depuis un fichier JSON."""
     talents_path = os.path.join(os.path.dirname(__file__), 'static', 'talents', f'{classe.lower()}_talents.json')
     with open(talents_path, 'r') as file:
         return json.load(file)
 
-
-# ===== Routes de navigation =====
+# === Routes ===
 
 @bp.route('/')
 def home():
-    """Affiche la page d'accueil (connexion/inscription)."""
     return render_template('index.html')
-
 
 @bp.route('/menu')
 def menu():
-    """Affiche le menu principal après la connexion."""
     if 'username' not in session:
         return redirect(url_for('routes.home'))
     return render_template('menu.html', username=session['username'])
 
-
-# ===== Routes pour la gestion des utilisateurs =====
-
 @bp.route('/register', methods=['POST'])
 def register():
-    """Route pour créer un nouveau compte utilisateur."""
     data = request.get_json()
     username = data.get('username', '').strip()
     password = data.get('password', '').strip()
@@ -76,10 +69,8 @@ def register():
 
     return jsonify({"message": "Compte créé avec succès !"})
 
-
 @bp.route('/login', methods=['POST'])
 def login():
-    """Route pour connecter un utilisateur existant."""
     data = request.get_json()
     username = data.get('username', '').strip()
     password = data.get('password', '').strip()
@@ -94,19 +85,13 @@ def login():
     session['username'] = username
     return jsonify({"message": "Connexion réussie !", "redirect": url_for('routes.menu')})
 
-
 @bp.route('/logout')
 def logout():
-    """Route pour déconnecter l'utilisateur actuel."""
     session.pop('username', None)
     return redirect(url_for('routes.home'))
 
-
-# ===== Routes pour les parties =====
-
 @bp.route('/nouvelle-partie', methods=['POST'])
 def nouvelle_partie():
-    """Crée une nouvelle partie avec une classe choisie par l'utilisateur."""
     if 'username' not in session:
         return redirect(url_for('routes.home'))
 
@@ -141,16 +126,12 @@ def nouvelle_partie():
 
     return redirect(url_for('routes.jeu'))
 
-
 @bp.route('/charger-partie')
 def charger_partie():
-    """Charge une partie existante (fonctionnalité à implémenter)."""
     return "Fonctionnalité à venir !", 200
-
 
 @bp.route('/jeu')
 def jeu():
-    """Charge et affiche la page du jeu avec les données utilisateur sauvegardées."""
     if 'username' not in session:
         return redirect(url_for('routes.home'))
 
@@ -169,3 +150,27 @@ def jeu():
     rows = [map_data['layers'][0]['data'][i:i + map_data['width']] for i in range(0, len(map_data['layers'][0]['data']), map_data['width'])]
 
     return render_template('jeu.html', username=username, rows=rows, classe=save_data["classe"], save_data=save_data)
+
+@bp.route('/api/rencontre')
+def api_rencontre():
+    try:
+        x = int(request.args.get("x", 0))
+        y = int(request.args.get("y", 0))
+        carte = request.args.get("carte", "map1")
+
+        monstre_id = generer_rencontre(x, y, carte)
+        if not monstre_id:
+            return jsonify({"monstre": None})
+
+        monstres = charger_monstres()
+        talents_monstres = charger_talents_monstres()
+
+        monstre = next((m for m in monstres if m["id"] == monstre_id), None)
+        if not monstre:
+            return jsonify({"monstre": None})
+
+        monstre["talents"] = [talents_monstres[t] for t in monstre.get("talents", [])]
+        return jsonify({"monstre": monstre})
+    except Exception as e:
+        print(f"[ERREUR API /rencontre] {e}")
+        return jsonify({"monstre": None, "error": str(e)}), 500

@@ -1,0 +1,19 @@
+{
+  "zones": [
+    {
+      "x": [0, 5],
+      "y": [0, 5],
+      "rencontres": [
+        { "monstre_id": "slime_vert", "probabilite": 70 },
+        { "monstre_id": "gobelin", "probabilite": 30 }
+      ]
+    },
+    {
+      "x": [6, 10],
+      "y": [0, 5],
+      "rencontres": [
+        { "monstre_id": "gobelin", "probabilite": 100 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "slime_vert",
+    "nom": "Slime Vert",
+    "pv": 30,
+    "attaque": 5,
+    "defense": 1,
+    "experience": 10,
+    "image": "slime.png",
+    "talents": ["corrosion"]
+  },
+  {
+    "id": "gobelin",
+    "nom": "Gobelin",
+    "pv": 50,
+    "attaque": 8,
+    "defense": 2,
+    "experience": 20,
+    "image": "gobelin.png",
+    "talents": ["coup_vif", "esquive"]
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "corrosion": {
+    "nom": "Corrosion",
+    "description": "Réduit l’armure de la cible.",
+    "cooldown": 5000,
+    "color": "#4CAF50",
+    "effectText": "⚠ Corrosion"
+  },
+  "coup_vif": {
+    "nom": "Coup Vif",
+    "description": "Attaque rapide, chance de critique.",
+    "cooldown": 4000,
+    "color": "#FF4500",
+    "effectText": "💢 Critique"
+  },
+  "esquive": {
+    "nom": "Esquive",
+    "description": "Évite la prochaine attaque.",
+    "cooldown": 6000,
+    "color": "#CCCCCC",
+    "effectText": "💨 Esquive"
+  }
+}
