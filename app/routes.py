@@ -157,9 +157,13 @@ def jeu():
 @bp.route('/api/rencontre')
 def api_rencontre():
     try:
-        x = int(request.args.get("x", 0))
-        y = int(request.args.get("y", 0))
-        carte = request.args.get("carte", "map1")
+        try:
+            x = int(request.args.get("x", "0"))
+            y = int(request.args.get("y", "0"))
+        except ValueError:
+            return jsonify({"monstre": None, "error": "Coordonnées invalides"}), 400
+
+        carte = request.args.get("carte", "P1")
 
         monstre_id = generer_rencontre(x, y, carte)
         if not monstre_id:
@@ -170,10 +174,12 @@ def api_rencontre():
 
         monstre = next((m for m in monstres if m["id"] == monstre_id), None)
         if not monstre:
-            return jsonify({"monstre": None})
+            return jsonify({"monstre": None, "error": "Monstre introuvable"}), 404
 
         monstre["talents"] = [talents_monstres[t] for t in monstre.get("talents", [])]
         return jsonify({"monstre": monstre})
+
     except Exception as e:
-        print(f"[ERREUR API /rencontre] {e}")
+        print(f"[ERREUR API /rencontre] {e} | x={request.args.get('x')} y={request.args.get('y')} carte={request.args.get('carte')}")
         return jsonify({"monstre": None, "error": str(e)}), 500
+
