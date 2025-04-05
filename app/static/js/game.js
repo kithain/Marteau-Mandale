@@ -5,8 +5,11 @@ const maxMana = 100;
 let cooldowns = {};
 let playerX = 0;
 let playerY = 0;
+let currentMap = "A1"; // par défaut
+let exitZones = [];
 const tileSize = 64;
 const blockedTiles = new Set();
+
 
 const keyMap = {
   "&": 0, "é": 1, '"': 2, "'": 3,
@@ -133,14 +136,18 @@ function handleKeydown(e) {
     playerY = newY;
     movePlayer();
     verifierRencontre();
+	detecterSortie();
   }
 }
 
-function chargerMap() {
-  fetch("/static/maps/map1.json")
+function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
+  currentMap = nomMap;
+  fetch(`/static/maps/${nomMap}.json`)
     .then(res => res.json())
     .then(mapData => {
       const container = document.getElementById("map-inner");
+      container.innerHTML = ''; // reset l'ancienne map
+
       const tileset = mapData.tilesets[0];
       const originalTileSize = mapData.tilewidth;
       const scale = 4;
@@ -179,10 +186,8 @@ function chargerMap() {
           container.appendChild(tile);
         });
 
-        const spawn = mapData.layers.find(l => l.name === "player_start").objects[0];
-        playerX = Math.floor(spawn.x / mapData.tilewidth);
-        playerY = Math.floor(spawn.y / mapData.tileheight);
-
+        // 🔁 Blocages
+        blockedTiles.clear();
         const obstacleLayer = mapData.layers.find(l => l.name === "obstacles" && l.type === "tilelayer");
         if (obstacleLayer) {
           obstacleLayer.data.forEach((val, idx) => {
@@ -194,6 +199,33 @@ function chargerMap() {
           });
         }
 
+        // 🔄 Sorties
+        const sortieLayer = mapData.layers.find(l => l.name === "sorties" && l.type === "objectgroup");
+        exitZones = sortieLayer ? sortieLayer.objects.map(o => ({
+          x: Math.floor(o.x / mapData.tilewidth),
+          y: Math.floor(o.y / mapData.tileheight),
+          width: Math.floor(o.width / mapData.tilewidth),
+          height: Math.floor(o.height / mapData.tileheight),
+          destination: o.properties.find(p => p.name === "destination")?.value,
+          spawnX: o.properties.find(p => p.name === "spawnX")?.value ?? 0,
+          spawnY: o.properties.find(p => p.name === "spawnY")?.value ?? 0,
+        })) : [];
+
+        // 🔰 Point de départ
+        if (spawnX === null || spawnY === null) {
+          const spawn = mapData.layers.find(l => l.name === "player_start")?.objects?.[0];
+          if (!spawn) {
+            alert("Pas de point de départ !");
+            return;
+          }
+          spawnX = Math.floor(spawn.x / mapData.tilewidth);
+          spawnY = Math.floor(spawn.y / mapData.tileheight);
+        }
+
+        playerX = spawnX;
+        playerY = spawnY;
+
+        // 🧍 Affichage du joueur
         const player = document.createElement('div');
         player.id = 'player';
         player.style.width = player.style.height = `${displayTileSize}px`;
@@ -209,6 +241,7 @@ function chargerMap() {
     });
 }
 
+
 function initialiserTalents() {
   const talentButtons = document.getElementById('talents-buttons');
   talents.talents.forEach((talent, index) => {
@@ -220,10 +253,11 @@ function initialiserTalents() {
   });
 }
 
+// Appel initial
 document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', handleKeydown);
   updateManaBar();
-  chargerMap();
+  chargerNouvelleCarte("P7"); // <-- la map de départ
   initialiserTalents();
 });
 
@@ -243,3 +277,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 });
+
+function detecterSortie() {
+  const sortie = exitZones.find(zone =>
+    playerX >= zone.x &&
+    playerX < zone.x + zone.width &&
+    playerY >= zone.y &&
+    playerY < zone.y + zone.height
+  );
+
+  if (sortie) {
+    console.log(`🚪 Passage vers ${sortie.destination}`);
+    chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
+  }
+}
