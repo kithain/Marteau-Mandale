@@ -144,6 +144,8 @@ def jeu():
 
     with open(save_path, 'r') as f:
         save_data = json.load(f)
+    
+    save_data.setdefault("carte", "P1")  # ← protection ultime
 
     return render_template(
         'jeu.html',
