@@ -144,13 +144,13 @@ def jeu():
     with open(save_path, 'r') as f:
         save_data = json.load(f)
 
-    with open(os.path.join(os.path.dirname(__file__), 'static', 'maps', 'map1.json')) as f:
-        map_data = json.load(f)
-
-    rows = [map_data['layers'][0]['data'][i:i + map_data['width']] for i in range(0, len(map_data['layers'][0]['data']), map_data['width'])]
-
-    return render_template('jeu.html', username=username, rows=rows, classe=save_data["classe"], save_data=save_data)
-
+    return render_template(
+        'jeu.html',
+        username=username,
+        classe=save_data["classe"],
+        save_data=save_data
+    )
+    
 @bp.route('/api/rencontre')
 def api_rencontre():
     try:
