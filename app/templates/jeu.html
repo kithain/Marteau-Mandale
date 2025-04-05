@@ -47,7 +47,7 @@
 <script>
   window.PLAYER_CLASS = "{{ classe }}";
   window.PLAYER_TALENTS = {{ save_data.talents | tojson }};
-  window.PLAYER_MAP = "{{ save_data.get('carte', 'P1') }}";
+  window.PLAYER_MAP = "{{ save_data.get('carte', 'P1') | safe }}";
 </script>
 
 <!-- JS principaux -->
