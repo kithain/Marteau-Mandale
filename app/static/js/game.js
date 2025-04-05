@@ -142,7 +142,7 @@ function handleKeydown(e) {
 
 function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
   currentMap = nomMap;
-  fetch(`/static/maps/${nomMap}.json`)
+  fetch(`/static/maps/${nomMap}.tmj`)
     .then(res => res.json())
     .then(mapData => {
       const container = document.getElementById("map-inner");
@@ -156,10 +156,10 @@ function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
       const tiles = mapData.layers[0].data;
 
       const tilesetImage = new Image();
-      tilesetImage.src = "/static/maps/" + tileset.source.replace(".tsx", ".png");
+      tilesetImage.src = "/static/maps/Sprite-foret.png";
 
       tilesetImage.onload = () => {
-        const cols = tilesetImage.width / originalTileSize;
+        const cols = tileset.columns || (tilesetImage.width / originalTileSize);
 
         tiles.forEach((rawGid, index) => {
           if (rawGid === 0) return;
