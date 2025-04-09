@@ -10,8 +10,11 @@ let attaqueInterval = null;
 export function demarrerCombat(monstreData, pvInitial) {
   monstre = monstreData;
   pv = pvInitial;
-  creerMonstreVisuel(monstre.image);
-  attaqueInterval = setInterval(attaqueJoueur, 2000);
+  // Générer un id unique et l'enregistrer dans l'objet monstre
+  const uniqueId = `${monstreData.id}-${Date.now()}`;
+  monstre.uniqueId = uniqueId;
+  creerMonstreVisuel(monstreData.image, uniqueId);
+  attaqueInterval = setInterval(attaqueJoueur, 5000);
 }
 
 function attaqueJoueur() {
@@ -36,41 +39,54 @@ function attaqueJoueur() {
     }
   }
 
-export function recevoirDegats(valeur = 1) {
-  if (!monstre) return;
-  pv -= valeur;
+  export function recevoirDegats(uniqueId, valeur = 1) {
+    // Vérifie si le monstre avec cet uniqueId existe dans l'objet global
+    if (!window.monstresActifs || !window.monstresActifs[uniqueId]) return;
+    
+    // Met à jour les PV du monstre
+    window.monstresActifs[uniqueId].pv -= valeur;
+    console.log(`Le monstre ${window.monstresActifs[uniqueId].data.nom} (ID: ${uniqueId}) reçoit ${valeur} dégâts. PV restant: ${window.monstresActifs[uniqueId].pv}`);
 
-  const monstreDiv = document.getElementById("combat-monstre");
-  if (monstreDiv) {
-    monstreDiv.style.filter = "brightness(150%)";
-    setTimeout(() => monstreDiv.style.filter = "", 300);
+  
+    const monstreDiv = window.monstresActifs[uniqueId].element;
+    if (monstreDiv) {
+      monstreDiv.style.filter = "brightness(150%)";
+      setTimeout(() => monstreDiv.style.filter = "", 300);
+    }
+  
+    // Si les PV sont épuisés, on déclenche la fin du combat pour ce monstre
+    if (window.monstresActifs[uniqueId].pv === 0) {
+      console.log(`✅ Le ${window.monstresActifs[uniqueId].data.nom} est vaincu !`);
+      finCombat(uniqueId);
+    }
   }
+  
 
-  if (pv <= 0) {
-    console.log(`✅ Le ${monstre.nom} est vaincu !`);
-    finCombat();
+  export function finCombat(uniqueId) {
+    const monstre = window.monstresActifs[uniqueId];
+    if (!monstre) return;
+    
+    const monstreDiv = monstre.element;
+    if (monstreDiv) {
+      // Applique l'animation de disparition
+      monstreDiv.classList.add("fade-out");
+      monstreDiv.addEventListener('animationend', () => {
+      monstreDiv.remove();
+      });
+    }
+    // Supprime le monstre de l'objet global
+    delete window.monstresActifs[uniqueId];
   }
-}
+  
 
-export function finCombat() {
-  clearInterval(attaqueInterval);
-  attaqueInterval = null;
-  monstre = null;
-
-  const monstreDiv = document.getElementById("combat-monstre");
-  if (monstreDiv) {
-    monstreDiv.classList.add("fade-out");
-    setTimeout(() => monstreDiv.remove(), 500);
-  }
-}
-
-function creerMonstreVisuel(image) {
+function creerMonstreVisuel(image, uniqueId, posX = 0, posY = 0) {
   const monstreDiv = document.createElement('div');
-  monstreDiv.id = 'combat-monstre';
+  monstreDiv.id = uniqueId ? `combat-monstre-${uniqueId}` : 'combat-monstre';
   monstreDiv.className = 'monstre';
-  monstreDiv.style.width = monstreDiv.style.height = `64px`;
-  monstreDiv.style.left = `${0}px`; // à ajuster selon position
-  monstreDiv.style.top = `${0}px`;
+  monstreDiv.style.width = '64px';
+  monstreDiv.style.height = '64px';
+  monstreDiv.style.left = `${posX * 64}px`;
+  monstreDiv.style.top = `${posY * 64}px`;
   monstreDiv.style.backgroundImage = `url(/static/img/monstres/${image})`;
   document.getElementById("map-inner").appendChild(monstreDiv);
 }

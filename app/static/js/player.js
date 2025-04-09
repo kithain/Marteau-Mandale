@@ -11,8 +11,8 @@ export let cooldowns = {};
 export let combatActif = false;
 export let monstreActuel = null;
 export let pvMonstre = 0;
-import { recevoirDegats } from './monstre.js';
-import { afficherMobDegats } from './utils.js';
+// import { recevoirDegats } from './monstre.js';
+// import { afficherMobDegats } from './utils.js';
 
 
 // === Fonctions utilitaires ===
@@ -20,6 +20,7 @@ export function setCombat(actif, monstre = null, pv = 0) {
   combatActif = actif;
   monstreActuel = monstre;
   pvMonstre = pv;
+  console.log(`État du combat: ${combatActif ? "En cours" : "Terminé"}. ${monstre ? `Monstre: ${monstre.nom} avec ${pv} PV` : ""}`);
 }
 
 // === Position du joueur ===
@@ -42,7 +43,7 @@ export function getPlayerY() {
   return playerPosition.y;
 }
 
-// === vie // Mana ===
+// === Vie // Mana ===
 export function updateManaBar() {
   const manaFill = document.getElementById("mana-fill");
   const percent = (playerMana / maxMana) * 100;
@@ -59,6 +60,8 @@ export function updateVieBar() {
 export function utiliserTalent(talent, index) {
   if (cooldowns[index]) return;
   if (playerMana < talent.cost) return;
+
+  console.log(`Le joueur utilise le talent: ${talent.name}`);
 
   animerAttaque();
 
@@ -101,12 +104,13 @@ export function utiliserTalent(talent, index) {
 
   // === Application des effets en combat ===
   if (combatActif && monstreActuel) {
-    // Traitement en fonction du type de talent
     switch (talent.type) {
       case "attack":
         // Appliquer les dégâts définis dans talent.damage
         pvMonstre = Math.max(0, pvMonstre - talent.damage);
-        console.log(`🩸 Le ${monstreActuel.nom} perd ${talent.damage} PV. PV restant : ${pvMonstre}`);
+        console.log(`🩸 Le ${monstreActuel.nom} reçoit ${talent.damage} dégâts. PV restant : ${pvMonstre}`);
+        // Ici, on suppose que l'élément du monstre possède l'id "combat-monstre"
+        // Dans une version avec ids dynamiques, il faudra adapter pour utiliser l'id spécifique du monstre
         const monstreDiv = document.getElementById("combat-monstre");
         if (monstreDiv) {
           monstreDiv.style.filter = "brightness(150%)";
@@ -126,7 +130,6 @@ export function utiliserTalent(talent, index) {
         }
         break;
       case "utility":
-        // Appliquer un boost temporaire : par exemple, augmenter une statistique (ici boostType et boostAmount)
         console.log(`Boost ${talent.boostType} de ${talent.boostAmount} pendant ${talent.duration} ms`);
         applyBoost(talent.boostType, talent.boostAmount, talent.duration);
         break;
@@ -204,37 +207,27 @@ function createFloatingText(text, color) {
 
 function applyBoost(boostType, amount, duration) {
   if (boostType === "evasion") {
-    // Annuler le combat pour permettre au joueur de se déplacer
     console.log(`Boost d'évasion activé : libération du combat et +${amount * 100}% d'esquive temporaire.`);
-    // On peut, par exemple, mettre à jour une statistique d'esquive ici si nécessaire
     setCombat(false);
-    // Le boost est appliqué pendant "duration" millisecondes (ici, on se contente d'afficher un message)
     setTimeout(() => {
       console.log("Le boost d'évasion est terminé.");
-      // Réinitialisation éventuelle de la statistique d'esquive, si elle avait été modifiée
     }, duration);
   } else {
-    // Pour les autres types de boost, appliquer la logique habituelle
     console.log(`Boost appliqué : ${boostType} +${amount}`);
     setTimeout(() => {
       console.log(`Le boost ${boostType} est terminé.`);
-      // Réinitialisez l'effet boost ici
     }, duration);
   }
 }
 
 function applyShield(value, duration) {
-  // Exemple de bouclier : stockez la valeur dans une variable globale et appliquez-la lors de la réception des dégâts.
   console.log(`Bouclier de ${value} points activé pendant ${duration} ms.`);
-  // Implémentation à ajuster selon votre système de combat
   setTimeout(() => {
     console.log("Bouclier expiré.");
-    // Réinitialisez le bouclier ici
   }, duration);
 }
 
 function applyStun(monstre, duration) {
-  // Exemple d'effet stun : empêcher le monstre d'agir
   if (monstre) {
     monstre.stunned = true;
     setTimeout(() => {
@@ -249,6 +242,8 @@ export function infligerDegatsAuJoueur(valeur) {
   updateVieBar();
   afficherDegats(valeur);
 
+  console.log(`Le joueur reçoit ${valeur} dégâts. PV restant: ${playerPV}`);
+  
   const player = document.getElementById("player");
   if (player) {
     player.style.filter = "brightness(50%)";
@@ -256,12 +251,11 @@ export function infligerDegatsAuJoueur(valeur) {
   }
 
   if (playerPV <= 0) {
-      setCombat(false);
-      afficherGameOver();
+    console.log("Le joueur est mort.");
+    setCombat(false);
+    afficherGameOver();
   }
 }
-
-
 
 function afficherGameOver() {
   const overlay = document.createElement("div");

@@ -39,26 +39,43 @@ export function verifierRencontre() {
     .then(data => {
       if (data.monstre) {
         const monstre = data.monstre;
-        const pv = monstre.nom === "Slime" ? 1 : monstre.nom === "Gobelin" ? 2 : 1;
+        // Utilise la valeur de points de vie défini dans ton monstre.json
+        const pv = monstre.pv;
+        
         setCombat(true, monstre, pv);
         demarrerCombat(monstre, pv);
+        
+        // Générer un identifiant unique pour cette instance
+        const uniqueId = `${monstre.id}-${Date.now()}`;
+
         const monstreDiv = document.createElement('div');
-        monstreDiv.id = "combat-monstre"; // Ajout de l'id pour pouvoir le cibler
+        // On utilise l'id unique pour différencier cet élément du DOM
+        monstreDiv.id = `monstre-${uniqueId}`;
         monstreDiv.className = 'monstre';
         monstreDiv.style.width = monstreDiv.style.height = `${tileSize}px`;
         monstreDiv.style.left = `${getPlayerX() * tileSize}px`;
         monstreDiv.style.top = `${getPlayerY() * tileSize}px`;
         monstreDiv.style.backgroundImage = `url(${IMAGE_BASE_URL}/img/monstres/${monstre.image})`;
+
         document.getElementById("map-inner").appendChild(monstreDiv);
 
-        // On applique un cooldown local après apparition
-        deplacementSansRencontre = 3; // Valeur par défaut si tu veux custom dynamiquement
+        // Stocker l'instance dans un objet global pour le suivi, si besoin
+        if (!window.monstresActifs) window.monstresActifs = {};
+        window.monstresActifs[uniqueId] = {
+          element: monstreDiv,
+          data: monstre,
+          pv: pv
+        };
+
+        // Appliquer un cooldown local pour éviter de générer trop rapidement plusieurs rencontres
+        deplacementSansRencontre = 5;
       }
     })
     .catch(error => {
       console.error('Erreur lors de la vérification des rencontres:', error);
     });
 }
+
 
 export function detecterSortie() {
   const sortie = exitZones.find(zone =>
