@@ -1,20 +1,25 @@
-/* ======= FONTS ======= */
-@font-face {
-  font-family: 'AncientGods';
-  src: url('../assets/fonts/TheAncientGods.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
+/* ======= VARIABLES CSS ======= */
+:root {
+  --primary-color: #5d4037;
+  --secondary-color: #8d6e63;
+  --background-color: rgba(0, 0, 0, 0.6);
+  --border-color: white;
+  --tile-size: 64px; /* Taille réelle des tuiles */
+  --visible-tiles: 16;
 }
 
 /* ======= GLOBAL ======= */
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;  /* Affiche le header et le main en colonne */
+  align-items: center;     /* Centre les enfants horizontalement */
   background: transparent;
+  overflow: hidden;
+  color: #e6ddc6;
 }
 
 /* ======= FOND STATIQUE (image background) ======= */
@@ -26,7 +31,7 @@ body::before {
   position: fixed;
   width: 100%;
   height: 100%;
-  z-index: -1; /* Tout au fond */
+  z-index: -1;
 }
 
 /* ======= FUMÉE / BRUME (parallax) ======= */
@@ -34,34 +39,28 @@ body::before {
   position: fixed;
   top: 0;
   left: 0;
-  width: 200%; /* Taille augmentée pour éviter que l'image se coupe */
-  height: 200%; /* Taille augmentée pour couvrir tout l'écran */
+  width: 200%;
+  height: 200%;
   background-image: url('../img/fumee.png');
-  background-repeat: repeat; /* Permet de répéter l'image */
+  background-repeat: repeat;
   background-size: cover;
-  background-position: 0 0; /* Départ de l'image en haut à gauche */
-  opacity: 0.25; /* Opacité ajustée pour l'effet de brume */
-  animation: smokeScroll 60s linear infinite, blurPulse 8s ease-in-out infinite;/* Animation de défilement infini */
-  pointer-events: none; /* Désactive l'interaction avec la fumée */
-  z-index: 0; /* Derrière les particules */
+  background-position: 0 0;
+  opacity: 0.25;
+  animation: smokeScroll 60s linear infinite, blurPulse 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes smokeScroll {
-  0% {
-    background-position: 0 0; /* Position de départ de l'image */
-  }
-  100% {
-    background-position: -800px -400px; /* ← horizontal + vertical */
-  }
+  0% { background-position: 0 0; }
+  100% { background-position: -800px -400px; }
 }
+
 @keyframes blurPulse {
-  0%, 100% {
-    filter: blur(1px);
-  }
-  50% {
-    filter: blur(3px);
-  }
+  0%, 100% { filter: blur(1px); }
+  50% { filter: blur(3px); }
 }
+
 /* ======= PARTICULES (tsParticles) ======= */
 #particles-js {
   position: fixed;
@@ -69,47 +68,76 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1; /* Les particules passent devant la fumée */
+  z-index: 1;
+}
+
+#menu-container {
+  width: 75vmin;      
+  background-color: var(--background-color);
+  border-radius: 15px;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;    /* Centre tout le texte à l'intérieur */
+  margin: 0 auto;
+  z-index: 2;
+}
+
+/* Conteneur principal : le menu est centré dans l'espace restant */
+.menu-wrapper {
+  flex: 1;              /* occupe l'espace restant */
+  width: 100%;          /* occupe toute la largeur disponible */
+  display: flex;
+  justify-content: center; /* centre horizontalement */
+  align-items: center;     /* centre verticalement */
 }
 
 /* ======= UI (container auth, menu, etc.) ======= */
 #auth-container {
-  position: relative;
-  z-index: 2; /* Toujours devant */
+  margin-top: 20px;
+  width: 75vmin;      /* 75% de la dimension la plus petite de l'écran */
+  height: 75vmin;
+  background-color: var(--background-color);
+  border-radius: 15px;
   display: flex;
   flex-direction: column;
+  justify-content: space-around;
   align-items: center;
-  justify-content: center;
-  color: white;
-  padding: 30px;
-  background-color: rgba(0, 0, 0, 0.6);
-  border-radius: 15px;
-  max-width: 400px;
-  margin: auto;
-  margin-top: 40px;
+  padding: 10px;
+  box-sizing: border-box;
+  z-index: 2;
 }
 
 h1 {
   font-size: 2.5em;
   margin: 0 0 10px;
+  color: #e6ddc6;
+  text-align: center;
 }
 
 .subtitle {
   font-size: 1.2em;
   margin-bottom: 20px;
+  color: #e6ddc6;
+  text-align: center;
 }
 
 .runic {
   font-family: 'MedievalSharp', serif;
+  color: #e6ddc6;
   letter-spacing: 1px;
 }
 
 .logo-container {
+  width: 100%;
   text-align: center;
   margin-top: 20px;
+  margin-bottom: 20px; 
+  z-index: 5;
 }
 
 .logo {
+  display: block;
+  margin: 0 auto;
   max-width: 200px;
   height: auto;
 }
@@ -124,6 +152,7 @@ h1 {
 #login-form label {
   margin: 10px 0 5px;
   text-align: left;
+  color: #e6ddc6;
 }
 
 #login-form input {
@@ -135,15 +164,15 @@ h1 {
 #login-form button {
   margin-top: 15px;
   padding: 10px;
-  background-color: #5d4037;
-  color: white;
+  background-color: var(--primary-color);
+  color: #e6ddc6;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
 #login-form button:hover {
-  background-color: #8d6e63;
+  background-color: var(--secondary-color);
 }
 
 /* ======= SÉLECTEUR DE CLASSE (menu) ======= */
@@ -153,27 +182,40 @@ h1 {
   justify-content: center;
   gap: 20px;
   margin-bottom: 20px;
+  color: #e6ddc6;
 }
 
 #class-selector img {
   width: 200px;
   height: auto;
-  border: 2px solid white;
+  border: 2px solid var(--border-color);
   border-radius: 10px;
 }
 
 /* ======= MAP (mode jeu) ======= */
 #map-container {
-  width: 320px; /* zone caméra 5x5 */
-  height: 320px;
+  /* Le conteneur de la carte prend toute la largeur du conteneur global */
+  width: 90%;
+  height: 90%;
   overflow: hidden;
   position: relative;
-  margin: 20px auto;
-  border: 2px solid white;
-  background-color: rgba(0,0,0,0.6);
+  border: 2px solid var(--border-color);
+  background-color: var(--background-color);
+  margin: 0 auto;
 }
 
+
+/* ======= MAP INNER (la carte réelle) ======= */
 #map-inner {
+  width: calc(var(--tile-size) * var(--visible-tiles));   /* taille réelle : 1024px si 64px x 16 */
+  height: calc(var(--tile-size) * var(--visible-tiles));
+  /* On calcule le facteur de dézoom :
+     - La taille du conteneur global est 75vmin.
+     - Le scale souhaité est donc : 75vmin / (var(--tile-size) * var(--visible-tiles))
+     - On limite ce scale à 1 pour ne pas dépasser le zoom 100% */
+  transform: scale(clamp(calc(75vmin / (var(--tile-size) * var(--visible-tiles))), 0, 1));
+  transform-origin: top left;
+  transition: transform 0.1s ease;
   position: absolute;
   top: 0;
   left: 0;
@@ -182,15 +224,15 @@ h1 {
 
 /* Tuile de carte */
 .tile {
-  width: 64px;
-  height: 64px;
+  width: var(--tile-size);
+  height: var(--tile-size);
   position: absolute;
   background-repeat: no-repeat;
   background-size: contain;
   image-rendering: pixelated;
   box-sizing: border-box;
   border: 1px solid #5e3d1f;
-  box-shadow: inset 0 0 2px #2e1a0f, 0 1px 2px rgba(0,0,0,0.4);
+  box-shadow: inset 0 0 2px #2e1a0f, 0 1px 2px rgba(0, 0, 0, 0.4);
   border-radius: 4px;
   filter: brightness(0.95) sepia(0.3);
 }
@@ -206,24 +248,112 @@ h1 {
   background-position: center;
   background-size: contain;
   image-rendering: pixelated;
+  width: 77px;
+  height: 100px;
+  background-size: 232px 100px;
+  transform: scale(0.83);
+  transform-origin: top left;
+  position: absolute;
 }
 
-/* Monstres (à venir) */
+/* Monstres */
 .monstre {
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   image-rendering: pixelated;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  position: absolute;
+  z-index: 5;
+
+  /* 👇 Ajoute cette ligne */
+  transition: transform 0.2s ease-in-out;
 }
 
-/* ======= Effets visuels (texte flottant, etc.) ======= */
-@keyframes floatUp {
-  0% { top: 0; opacity: 1; }
-  100% { top: -30px; opacity: 0; }
+/* Texte flottant, etc. */
+@keyframes floatUpDelayed {
+  0%   { transform: translate(-50%, -100%) translateY(0); opacity: 1; }
+  50%  { transform: translate(-50%, -100%) translateY(0); opacity: 1; }
+  100% { transform: translate(-50%, -100%) translateY(-40px); opacity: 0; }
 }
 
 .arrow {
   font-size: 2em;
   cursor: pointer;
   user-select: none;
+}
+
+@keyframes fadeOutMonstre {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+.fade-out {
+  animation: fadeOutMonstre 0.5s ease-out forwards;
+}
+
+/* ======= Barre de mana ======= */
+#mana-bar {
+  width: 80%;
+  height: 5%;
+  background-color: #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 2% auto;
+}
+#mana-fill {
+  height: 100%;
+  background-color: #007BFF;
+  width: 0;
+}
+
+#vie-bar {
+  width: 80%;
+  height: 5%;
+  background-color: #f44336;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 2% auto;
+}
+#vie-fill {
+  height: 100%;
+  background-color: #8b0000;
+  width: 100%;
+  
+}
+
+
+/* ======= Talents ======= */
+#talents-container {
+  width: 80%;
+  text-align: center;
+  margin-top: 2%;
+}
+
+#talents-buttons button {
+  margin: 5px;
+}
+
+/* ======= Bouton de retour ======= */
+form button {
+  padding: 10px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+
+@keyframes monsterShake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, 0); }
+  50% { transform: translate(5px, 0); }
+  75% { transform: translate(-5px, 0); }
+  100% { transform: translate(0, 0); }
+}
+
+.secousse-monstre {
+  animation: monsterShake 0.2s ease-in-out;
 }

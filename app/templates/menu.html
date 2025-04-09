@@ -1,47 +1,52 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Menu - Marteaux & Mandales</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <meta charset="UTF-8">
+    <title>Menu - Marteaux & Mandales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 </head>
 <body>
-  <div id="particles-js"></div>
+    <div id="particles-js"></div>
     <div id="parallax-smoke"></div>
-  <header class="logo-container">
-    <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
-  </header>
 
-  <div id="auth-container">
-    <h1 class="runic">Bienvenue {{ username }} !</h1>
-    <p class="subtitle">Menu principal</p>
+    <!-- Logo centré en haut -->
+    <header class="logo-container">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
+    </header>
 
-    <!-- Sélecteur visuel de classe -->
-    <form action="{{ url_for('routes.nouvelle_partie') }}" method="POST">
-      <label for="classe">Choisis ta classe :</label>
-      <div id="class-selector">
-        <span class="arrow" onclick="changeClass(-1)">⯇</span>
-        <img id="class-image" class="class-image" src="{{ url_for('static', filename='img/classes/paladin.png') }}" alt="Classe" />
-        <span class="arrow" onclick="changeClass(1)">⯈</span>
-      </div>
-      <input type="hidden" id="classe" name="classe" value="Paladin" />
-      <button type="submit">Commencer l'aventure</button>
-    </form>
+    <!-- Conteneur principal centré pour le contenu -->
+    <main class="menu-wrapper">
+        <div id="menu-container">
+            <h1 class="runic">Bienvenue {{ username }} !</h1>
+            <p class="subtitle">Menu principal</p>
 
-    <form action="{{ url_for('routes.charger_partie') }}" method="GET" style="margin-top: 20px;">
-      <button type="submit">Charger une partie</button>
-    </form>
+            <!-- Sélecteur visuel de classe -->
+            <form action="{{ url_for('routes.nouvelle_partie') }}" method="POST">
+                <label for="classe">Choisis ta classe :</label>
+                <div id="class-selector">
+                    <span class="arrow" onclick="changeClass(-1)">⯇</span>
+                    <img id="class-image" class="class-image" src="/static/img/classes/paladin.png" alt="Classe"
+                         style="max-width: 300px; max-height: 300px; object-fit: contain; border: 3px solid #ccc; border-radius: 12px;" />
+                    <span class="arrow" onclick="changeClass(1)">⯈</span>
+                </div>
+                <input type="hidden" id="classe" name="classe" value="Paladin" />
+                <button type="submit">Commencer l'aventure</button>
+            </form>
 
-    <form action="{{ url_for('routes.logout') }}" method="GET" style="margin-top: 20px;">
-      <button type="submit">Déconnexion</button>
-    </form>
-  </div>
+            <form action="{{ url_for('routes.charger_partie') }}" method="GET" style="margin-top: 20px;">
+                <button type="submit">Charger une partie</button>
+            </form>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+            <form action="{{ url_for('routes.logout') }}" method="GET" style="margin-top: 20px;">
+                <button type="submit">Déconnexion</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Chargement des scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

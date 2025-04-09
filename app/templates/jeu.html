@@ -1,58 +1,57 @@
+ <!-- jeu -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <title>Jeu - Marteaux & Mandales</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <meta charset="utf-8"/>
+    <title>Jeu - Marteaux & Mandales</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="particles-js"></div>
+    <div id="parallax-smoke"></div>
 
-<div id="particles-js"></div>
-<div id="parallax-smoke"></div>
-<header class="logo-container">
-  <img class="logo" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale">
-</header>
+    <div id="auth-container">
+        <h1 class="runic">Bienvenue dans l'aventure, {{ username }} !</h1>
 
-<div id="auth-container">
-  <h1 class="runic">Bienvenue dans l'aventure, {{ username }} !</h1>
+        <!-- Barre de mana -->
+        <div id="vie-bar">
+            <div id="vie-fill"></div>
+            </div>
+    
+        <div id="mana-bar">
+            <div id="mana-fill"></div>
+        </div>
+     
+        <!-- Zone de carte -->
+        <div id="map-container">
+            <div id="map-inner"></div>
+        </div>
 
-  <!-- Barre de mana -->
-  <div id="mana-bar">
-    <div id="mana-fill"></div>
-  </div>
+        <!-- Talents -->
+        <div id="talents-container">
+            <h2 class="runic">Talents disponibles</h2>
+            <div id="talents-buttons"></div>
+        </div>
 
-  <!-- Zone de carte -->
-  <div id="map-container">
-    <div id="map-inner"></div>
-  </div>
+        <!-- Bouton retour -->
+        <form action="{{ url_for('routes.logout') }}" method="GET">
+            <button type="submit">Retour au menu</button>
+        </form>
+    </div>
 
-  <!-- Talents -->
-  <div id="talents-container">
-    <h2 class="runic">Talents disponibles</h2>
-    <div id="talents-buttons"></div>
-  </div>
+    <!-- Chargement de tsParticles -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
 
-  <!-- Bouton retour -->
-  <form action="{{ url_for('routes.logout') }}" method="GET">
-    <button type="submit">Retour au menu</button>
-  </form>
-</div>
+    <!-- Variables globales transmises à JS -->
+    <script>
+        window.PLAYER_CLASS = "{{ classe }}";
+        window.PLAYER_TALENTS = {{ save_data.talents | default([]) | tojson }};
+        window.PLAYER_MAP = "{{ save_data.get('carte', 'P1') }}";
+    </script>
 
-<!-- Chargement de tsParticles -->
-<script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-
-<!-- Variables globales transmises à JS -->
-<script>
-  window.PLAYER_CLASS = "{{ classe }}";
-  window.PLAYER_TALENTS = {{ save_data.talents | tojson }};
-  window.PLAYER_MAP = "{{ save_data.get('carte', 'P1') | safe }}";
-</script>
-
-<!-- JS principaux -->
-<script src="{{ url_for('static', filename='js/game.js') }}"></script>
-<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
-
+    <!-- JS principaux -->
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

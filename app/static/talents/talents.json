@@ -1,0 +1,158 @@
+{
+  "classes": [
+    {
+      "class": "Barbare",
+      "talents": [
+        {
+          "id": "barbare_atk",
+          "name": "Charge Brutale",
+          "cost": 1,
+          "cooldown": 3000,
+          "color": "#ff0000",
+          "effectText": "BAM ! ⚔",
+          "type": "attack",
+          "damage": 1
+        },
+        {
+          "id": "barbare_util",
+          "name": "Fracasse-armure",
+          "cost": 1,
+          "cooldown": 5000,
+          "color": "#0000ff",
+          "effectText": "↑ Force 💪",
+          "type": "utility",
+          "boostType": "damage",
+          "boostAmount": 0.20,
+          "duration": 5000
+        },
+        {
+          "id": "barbare_def",
+          "name": "ANTI-CRIT",
+          "cost": 1,
+          "cooldown": 4000,
+          "color": "#00ff00",
+          "effectText": "Bouclier 🛡",
+          "type": "defense",
+          "defenseType": "stun",
+          "value": 3,
+          "duration": 4000
+        }
+      ]
+    },
+    {
+      "class": "Mage",
+      "talents": [
+        {
+          "id": "mage_atk",
+          "name": "Boule de Feu",
+          "cost": 1,
+          "cooldown": 3000,
+          "color": "#ff0000",
+          "effectText": "🔥 Feu",
+          "type": "attack",
+          "damage": 1
+        },
+        {
+          "id": "mage_util",
+          "name": "Barrière Arcanique",
+          "cost": 1,
+          "cooldown": 5000,
+          "color": "#0000ff",
+          "effectText": "↑ Mana 💧",
+          "type": "utility",
+          "boostType": "mana_regen",
+          "boostAmount": 10,
+          "duration": 5000
+        },
+        {
+          "id": "mage_def",
+          "name": "Barrière Arcanique",
+          "cost": 1,
+          "cooldown": 4000,
+          "color": "#00ff00",
+          "effectText": "Bouclier 🛡",
+          "type": "defense",
+          "defenseType": "shield",
+          "duration": 2000
+        }
+      ]
+    },
+    {
+      "class": "Paladin",
+      "talents": [
+        {
+          "id": "paladin_atk",
+          "name": "Choc Sacré",
+          "cost": 1,
+          "cooldown": 3000,
+          "color": "#ff0000",
+          "effectText": "Justice ⚔ ",
+          "type": "attack",
+          "damage": 1
+        },
+        {
+          "id": "paladin_util",
+          "name": "Jugement",
+          "cost": 1,
+          "cooldown": 5000,
+          "color": "#0000ff",
+          "effectText": "Jugement ⚖️",
+          "type": "utility",
+          "boostType": "stun",
+          "boostAmount": 0.25,
+          "duration": 5000
+        },
+        {
+          "id": "paladin_def",
+          "name": "Aura Protectrice",
+          "cost": 1,
+          "cooldown": 4000,
+          "color": "#00ff00",
+          "effectText": "Bouclier 🛡",
+          "type": "defense",
+          "defenseType": "shield",
+          "value": 4,
+          "duration": 4000
+        }
+      ]
+    },
+    {
+      "class": "Voleur",
+      "talents": [
+        {
+          "id": "voleur_atk",
+          "name": "Tir Rapide",
+          "cost": 1,
+          "cooldown": 3000,
+          "color": "#ff0000",
+          "effectText": "Tir Rapide 🏹",
+          "type": "attack",
+          "damage": 1
+        },
+        {
+          "id": "voleur_util",
+          "name": "Furtivité",
+          "cost": 1,
+          "cooldown": 5000,
+          "color": "#0000ff",
+          "effectText": "Furtif 🕵️",
+          "type": "utility",
+          "boostType": "evasion",
+          "boostAmount": 0.15,
+          "duration": 5000
+        },
+        {
+          "id": "voleur_def",
+          "name": "Flèche Empoisonnée",
+          "cost": 1,
+          "cooldown": 4000,
+          "color": "#00ff00",
+          "effectText": "Poison ☠",
+          "type": "defense",
+          "defenseType": "stun",
+          "duration": 2000
+        }
+      ]
+    }
+  ]
+}

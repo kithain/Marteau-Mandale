@@ -31,9 +31,14 @@ def save_users(users):
         json.dump(users, f)
 
 def load_talents(classe):
-    talents_path = os.path.join(os.path.dirname(__file__), 'static', 'talents', f'{classe.lower()}_talents.json')
-    with open(talents_path, 'r') as file:
-        return json.load(file)
+    talents_path = os.path.join(os.path.dirname(__file__), 'static', 'talents', 'talents.json')
+    with open(talents_path, 'r', encoding='utf-8') as file:
+        talents_data = json.load(file)
+    # Recherche des talents correspondant à la classe (insensible à la casse)
+    for item in talents_data.get("classes", []):
+        if item.get("class", "").lower() == classe.lower():
+            return item.get("talents", [])
+    return []
 
 # === Routes ===
 
@@ -144,8 +149,13 @@ def jeu():
 
     with open(save_path, 'r') as f:
         save_data = json.load(f)
-    
-    save_data.setdefault("carte", "P1")  # ← protection ultime
+
+    # === AJOUT ICI POUR FORCER LES TALENTS SI ABSENTS ===
+    if "talents" not in save_data or not save_data["talents"]:
+        print(f"[INFO] Aucune donnée de talents pour {username}, rechargement...")
+        save_data["talents"] = load_talents(save_data["classe"])
+
+    save_data.setdefault("carte", "P1")
 
     return render_template(
         'jeu.html',
@@ -153,7 +163,7 @@ def jeu():
         classe=save_data["classe"],
         save_data=save_data
     )
-    
+
 @bp.route('/api/rencontre')
 def api_rencontre():
     try:
