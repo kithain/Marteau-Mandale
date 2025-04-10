@@ -38,6 +38,7 @@
 │   │   │   ├── js
 │   │   │   │   ├── main.js
 │   │   │   │   ├── map.js
+│   │   │   │   ├── monstre.js
 │   │   │   │   ├── player.js
 │   │   │   │   └── utils.js
 │   │   │   ├── maps
@@ -176,10 +177,7 @@
 │   │   │   │   ├── monstres.json
 │   │   │   │   └── talents_monstres.json
 │   │   │   └── talents
-│   │   │       ├── barbare_talents.json
-│   │   │       ├── mage_talents.json
-│   │   │       ├── paladin_talents.json
-│   │   │       └── voleur_talents.json
+│   │   │       └── talents.json
 │   │   ├── templates
 │   │   │   ├── index.html
 │   │   │   ├── jeu.html
@@ -189,8 +187,7 @@
 │   ├── app.py
 │   ├── requirements.txt
 │   └── save_data
+
 │       └── test.json
-├── Marteau-Mandale.04.06.16.54.zip
-├── README.txt
+
 ├── favicon.ico
-└── zip_projet.sh
