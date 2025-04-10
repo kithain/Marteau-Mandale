@@ -187,7 +187,5 @@
 │   ├── app.py
 │   ├── requirements.txt
 │   └── save_data
-
 │       └── test.json
-
 ├── favicon.ico
