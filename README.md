@@ -53,34 +53,34 @@ Ouvrez ensuite [http://localhost:5000](http://localhost:5000) dans votre navigat
 
 ```
 Marteaux-Mandales/
-├── app/
-│   ├── templates/
-│   │   ├── index.html (Page de connexion)
-│   │   ├── menu.html (Menu principal)
-│   │   └── jeu.html (Interface du jeu)
-│   ├── static/
+├── app/                          # Application principale
+│   ├── templates/                # Fichiers HTML rendus via Flask
+│   │   ├── index.html            # Page d'accueil : connexion/inscription
+│   │   ├── menu.html             # Interface de sélection de classe
+│   │   └── jeu.html              # Interface du jeu avec carte, barre de vie/mana, etc.
+│   ├── static/                   # Ressources statiques (non modifiées par Flask)
 │   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── js/
-│   │   │   ├── main.js
-│   │   │   ├── player.js
-│   │   │   ├── map.js
-│   │   │   ├── monstre.js
-│   │   │   └── utils.js
-│   │   ├── img/
+│   │   │   └── style.css         # Feuilles de style principales
+│   │   ├── js/                   # Scripts JavaScript côté client
+│   │   │   ├── main.js           # Point d'entrée, initialise les pages
+│   │   │   ├── player.js         # Gestion des actions du joueur (déplacement, talents, vie/mana...)
+│   │   │   ├── map.js            # Logique liée au chargement et navigation dans les cartes
+│   │   │   ├── monstre.js        # Gestion du comportement des monstres
+│   │   │   └── utils.js          # Fonctions utilitaires JS (connexion, animations...)
+│   │   ├── img/                  # Images diverses (background, logo, personnages, monstres...)
 │   │   │   ├── logo.jpg
 │   │   │   ├── background.jpg
 │   │   │   └── ...
-│   │   ├── maps/ (Cartes générées avec Tiled)
-│   │   └── talents/
-│   ├── routes.py
-│   ├── utils.py
-│   └── users.json
-├── save_data/ (Données sauvegardées)
-├── app.py
-├── requirements.txt
-├── README.md
-└── LICENSE
+│   │   ├── maps/                 # Cartes au format TMJ (Tiled Map Editor)
+│   │   └── talents/              # Fichiers JSON des talents par classe
+│   ├── routes.py                 # Routes Flask (login, register, jeu, etc.)
+│   ├── utils.py                  # Fonctions Python de support (rencontres, monstres, talents...)
+│   └── users.json                # Stockage local des comptes utilisateurs
+├── save_data/                   # Données de sauvegarde individuelles pour chaque joueur
+├── app.py                       # Entrée principale de l'application Flask
+├── requirements.txt             # Dépendances Python du projet
+├── README.md                    # Documentation du projet
+└── LICENSE                      # Licence MIT
 ```
 
 ## 🎮 Comment Jouer
