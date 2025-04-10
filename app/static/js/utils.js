@@ -1,3 +1,4 @@
+//utils.j
 export function initConnexion() {
   const loginBtn = document.getElementById('login-btn');
   const registerBtn = document.getElementById('register-btn');
@@ -76,17 +77,6 @@ export function initSmokeAnimation() {
 export function initParticles() {
   const containerId = "particles-js";
   const container = document.getElementById(containerId);
-
-  if (!window.tsParticles) {
-    console.warn("❌ tsParticles n'est pas chargé !");
-    return;
-  }
-
-  if (!container) {
-    console.warn(`❌ Élément #${containerId} introuvable dans le DOM.`);
-    return;
-  }
-
   tsParticles.load(containerId, {
     particles: {
       number: {

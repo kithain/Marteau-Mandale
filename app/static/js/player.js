@@ -9,18 +9,14 @@ export let playerPV = 10;
 export const maxPV = 10;
 export let cooldowns = {};
 export let combatActif = false;
-export let monstreActuel = null;
-export let pvMonstre = 0;
-// import { recevoirDegats } from './monstre.js';
-// import { afficherMobDegats } from './utils.js';
 
+// Importation de la fonction qui gère les dégâts sur le monstre (centralisée dans monstre.js)
+import { recevoirDegats } from './monstre.js';
 
-// === Fonctions utilitaires ===
-export function setCombat(actif, monstre = null, pv = 0) {
+// On ne garde qu'une seule version de setCombat, qui met simplement à jour le flag du combat.
+export function setCombat(actif) {
   combatActif = actif;
-  monstreActuel = monstre;
-  pvMonstre = pv;
-  console.log(`État du combat: ${combatActif ? "En cours" : "Terminé"}. ${monstre ? `Monstre: ${monstre.nom} avec ${pv} PV` : ""}`);
+  console.log(`État du combat: ${combatActif ? "En cours" : "Terminé"}.`);
 }
 
 // === Position du joueur ===
@@ -103,43 +99,36 @@ export function utiliserTalent(talent, index) {
   }, talent.cooldown);
 
   // === Application des effets en combat ===
-  if (combatActif && monstreActuel) {
+  // Application des effets en combat
+  if (combatActif) {
     switch (talent.type) {
       case "attack":
-        // Appliquer les dégâts définis dans talent.damage
-        pvMonstre = Math.max(0, pvMonstre - talent.damage);
-        console.log(`🩸 Le ${monstreActuel.nom} reçoit ${talent.damage} dégâts. PV restant : ${pvMonstre}`);
-        // Ici, on suppose que l'élément du monstre possède l'id "combat-monstre"
-        // Dans une version avec ids dynamiques, il faudra adapter pour utiliser l'id spécifique du monstre
-        const monstreDiv = document.getElementById("combat-monstre");
-        if (monstreDiv) {
-          monstreDiv.style.filter = "brightness(150%)";
-          setTimeout(() => {
-            monstreDiv.style.filter = "";
-          }, 300);
-        }
-        if (pvMonstre <= 0) {
-          console.log(`✅ Le ${monstreActuel.nom} est vaincu !`);
-          if (monstreDiv) {
-            monstreDiv.classList.add("fade-out");
-            setTimeout(() => {
-              monstreDiv.remove();
-            }, 500);
-          }
-          setCombat(false);
-        }
+        recevoirDegats(talent.damage);
         break;
       case "utility":
-        console.log(`Boost ${talent.boostType} de ${talent.boostAmount} pendant ${talent.duration} ms`);
-        applyBoost(talent.boostType, talent.boostAmount, talent.duration);
+        if (talent.boostType === "evasion") {
+          // Plutôt que d'annuler le combat, le joueur dèche d'une case en arrière
+          console.log(`Boost d'évasion activé : Dash en arrière.`);
+          dashBackwards();
+          setCombat(false);
+          // Le boost peut perdurer pour un effet temporaire si besoin
+          setTimeout(() => {
+            console.log("Le boost d'évasion est terminé.");
+          }, talent.duration);
+        } else {
+          console.log(`Boost appliqué : ${talent.boostType} +${talent.boostAmount}`);
+          setTimeout(() => {
+            console.log(`Le boost ${talent.boostType} est terminé.`);
+          }, talent.duration);
+        }
         break;
       case "defense":
         if (talent.defenseType === "shield") {
           console.log(`Bouclier actif : absorbe ${talent.value} points de dégâts pendant ${talent.duration} ms`);
           applyShield(talent.value, talent.duration);
         } else if (talent.defenseType === "stun") {
-          console.log(`Le monstre est étourdi pendant ${talent.duration} ms`);
-          applyStun(monstreActuel, talent.duration);
+          console.log(`Tentative d'étourdir le monstre pendant ${talent.duration} ms`);
+          // Ajouter ici une logique d'étourdissement si souhaité
         }
         break;
       default:
@@ -147,6 +136,7 @@ export function utiliserTalent(talent, index) {
     }
   }
 }
+
 
 // === Initialisation des talents ===
 export function initialiserTalents() {
@@ -184,6 +174,50 @@ function animerAttaque() {
     }
   }, 100);
 }
+
+// Nouvelle fonction pour réaliser le dash arrière
+export function dashBackwards() {
+  // On récupère la position actuelle
+  let currentX = getPlayerX();
+  let currentY = getPlayerY();
+
+  // Utilisation de la dernière direction stockée globalement (dans window.lastMoveDirection)
+  let direction = window.lastMoveDirection || 'ArrowLeft';
+  let newX = currentX;
+  let newY = currentY;
+
+  switch(direction) {
+    case 'ArrowUp':
+      newY = currentY + 1;
+      break;
+    case 'ArrowDown':
+      newY = currentY - 1;
+      break;
+    case 'ArrowLeft':
+      newX = currentX + 1;
+      break;
+    case 'ArrowRight':
+      newX = currentX - 1;
+      break;
+    default:
+      newX = currentX + 1;
+      break;
+  }
+
+  // Optionnel : vérifier que le nouveau positionnement est dans les limites de la carte ou pas bloqué
+  setPlayerPosition(newX, newY);
+  
+  // Pour mettre à jour la position dans l'interface, on appelle movePlayer.
+  // Ici, nous importons movePlayer depuis map.js.
+  import('./map.js').then(module => {
+    module.movePlayer();
+  });
+
+  console.log(`Dash effectué de (${currentX}, ${currentY}) à (${newX}, ${newY})`);
+}
+
+
+
 
 // === Texte flottant ===
 function createFloatingText(text, color) {
@@ -228,6 +262,7 @@ function applyShield(value, duration) {
 }
 
 function applyStun(monstre, duration) {
+  // Optionnel : Si vous déplacez la logique d'étourdissement vers monstre.js, adaptez ici
   if (monstre) {
     monstre.stunned = true;
     setTimeout(() => {

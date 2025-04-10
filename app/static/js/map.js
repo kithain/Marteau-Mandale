@@ -2,8 +2,8 @@
 const IMAGE_BASE_URL = '/static';
 const API_BASE_URL = '/api';
 let deplacementSansRencontre = 0;
-import {playerClass, getPlayerX, getPlayerY, setPlayerPosition as setGlobalPlayerPosition, updateManaBar, initialiserTalents, utiliserTalent, combatActif, monstreActuel, pvMonstre, setCombat, talents } from './player.js';
-import { demarrerCombat } from './monstre.js';
+import { playerClass, getPlayerX, getPlayerY, setPlayerPosition as setGlobalPlayerPosition, /*updateManaBar, initialiserTalents,*/ utiliserTalent, combatActif, talents } from './player.js';
+import { demarrerCombat, getMonstreActif } from './monstre.js';
 export let currentMap = "A1";
 export let exitZones = [];
 export const tileSize = 64;
@@ -39,34 +39,9 @@ export function verifierRencontre() {
     .then(data => {
       if (data.monstre) {
         const monstre = data.monstre;
-        // Utilise la valeur de points de vie défini dans ton monstre.json
+        // Utilise la valeur de points de vie définie dans ton monstre.json
         const pv = monstre.pv;
-        
-        setCombat(true, monstre, pv);
-        demarrerCombat(monstre, pv);
-        
-        // Générer un identifiant unique pour cette instance
-        const uniqueId = `${monstre.id}-${Date.now()}`;
-
-        const monstreDiv = document.createElement('div');
-        // On utilise l'id unique pour différencier cet élément du DOM
-        monstreDiv.id = `monstre-${uniqueId}`;
-        monstreDiv.className = 'monstre';
-        monstreDiv.style.width = monstreDiv.style.height = `${tileSize}px`;
-        monstreDiv.style.left = `${getPlayerX() * tileSize}px`;
-        monstreDiv.style.top = `${getPlayerY() * tileSize}px`;
-        monstreDiv.style.backgroundImage = `url(${IMAGE_BASE_URL}/img/monstres/${monstre.image})`;
-
-        document.getElementById("map-inner").appendChild(monstreDiv);
-
-        // Stocker l'instance dans un objet global pour le suivi, si besoin
-        if (!window.monstresActifs) window.monstresActifs = {};
-        window.monstresActifs[uniqueId] = {
-          element: monstreDiv,
-          data: monstre,
-          pv: pv
-        };
-
+        demarrerCombat(monstre, pv, getPlayerX(), getPlayerY());
         // Appliquer un cooldown local pour éviter de générer trop rapidement plusieurs rencontres
         deplacementSansRencontre = 5;
       }
@@ -75,6 +50,8 @@ export function verifierRencontre() {
       console.error('Erreur lors de la vérification des rencontres:', error);
     });
 }
+
+export let lastMoveDirection = null;
 
 
 export function detecterSortie() {
@@ -146,45 +123,66 @@ export function getBlockedKey(x, y) {
 }
 
 export function movePlayer() {
+  // Récupérer l'élément DOM du joueur
   const player = document.getElementById('player');
   if (!player) return;
 
-  // Positionner le joueur sur la carte
+  // ---------------------------
+  // 1. Positionnement du joueur
+  // ---------------------------
   const playerX = getPlayerX();
   const playerY = getPlayerY();
   player.style.left = `${playerX * tileSize}px`;
   player.style.top = `${playerY * tileSize}px`;
 
+  // ---------------------------
+  // 2. Ajustement de la caméra
+  // ---------------------------
   const mapInner = document.getElementById("map-inner");
   const mapContainer = document.getElementById("map-container");
 
-  // Dimensions du conteneur (après dézoom appliqué)
+  // Dimensions du conteneur visible après dézoom appliqué
   const containerWidth = mapContainer.clientWidth;
   const containerHeight = mapContainer.clientHeight;
-  // Dimensions de la carte (avant dézoom, ici c'est 16 tuiles)
+
+  // Dimensions complètes de la carte (ici 16 tuiles de tileSize chacune)
   const mapWidth = tileSize * 16;
   const mapHeight = tileSize * 16;
 
-  // Calcul d'un décalage "souhaité" centré sur le joueur
+  // Calcul du décalage souhaité pour centrer la caméra sur le joueur
   let cameraX = playerX * tileSize - (containerWidth / 2 - tileSize / 2);
   let cameraY = playerY * tileSize - (containerHeight / 2 - tileSize / 2);
 
-  // On "clamp" pour forcer l'alignement sur les bords si le joueur est à l'extrémité :
+  // Ajustement pour ne pas dépasser les bords de la carte
   cameraX = Math.max(0, Math.min(cameraX, mapWidth - containerWidth));
   cameraY = Math.max(0, Math.min(cameraY, mapHeight - containerHeight));
 
-  // Appliquer la transformation sur la carte
+  // Appliquer le déplacement à la carte
   mapInner.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
-  // Vérifier si un monstre est présent et que le combat n'est pas actif
-  const monsterDiv = document.getElementById("combat-monstre");
+
+  // --------------------------------------------------------------
+  // 3. Vérification de la présence d'un monstre et relance du combat
+  // --------------------------------------------------------------
+  // Récupération de l'élément du monstre en combat via son ID (débutant par "combat-monstre-")
+  const monsterDiv = document.querySelector("[id^='combat-monstre-']");
   if (monsterDiv && !combatActif) {
-    // Calculer la position du monstre en nombre de tuiles
-    const monstreX = parseInt(monsterDiv.style.left) / tileSize;
-    const monstreY = parseInt(monsterDiv.style.top) / tileSize;
+    // Calcul des coordonnées du monstre (basées sur la taille d'une tuile)
+    const monstreX = parseInt(monsterDiv.style.left, 10) / tileSize;
+    const monstreY = parseInt(monsterDiv.style.top, 10) / tileSize;
+
+    // Si le joueur est sur la même case que le monstre
     if (playerX === monstreX && playerY === monstreY) {
-      // Relancer le combat avec le monstre déjà présent
-      setCombat(true, monstreActuel, pvMonstre);
-      console.log("Combat réactivé car le joueur est sur la case du monstre.");
+      // Récupération du monstre actif à partir de monstre.js
+      const monstre = getMonstreActif();
+      if (monstre) {
+        // Relancer le combat en redémarrant l'attaque automatique avec les données du monstre
+        demarrerCombat(monstre.data, monstre.pv, playerX, playerY);
+        console.log("Combat relancé car le joueur est sur la case du monstre.");
+      } else {
+        // Si aucune donnée de monstre n'est trouvée (cas rare), basculer simplement le flag de combat
+        setCombat(true);
+        console.log("Combat activé (fallback).");
+      }
     }
   }
 }
@@ -223,18 +221,25 @@ export function setPlayerPosition(x, y) {
 }
 
 export function handleKeydown(e) {
-  if (combatActif && !["&", "é", '"', "'", "(", "-", "è", "_", "ç", "à"].includes(e.key)) return;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    window.lastMoveDirection = e.key;
+  }
+  const talentKeys = ["&", "é", '"', "'", "(", "-", "è", "_", "ç", "à"];
+  if (combatActif && !talentKeys.includes(e.key)) {
+    console.log("Déplacement bloqué en mode combat.");
+    return;
+  }
   if (isTransitioning) return;
   const keyMap = {
     "&": 0, "é": 1, '"': 2, "'": 3,
     "(": 4, "-": 5, "è": 6, "_": 7,
     "ç": 8, "à": 9
   };
-  const index = keyMap[e.key];
-  // Utilisez la bonne structure, qu'il s'agisse d'un tableau direct ou d'un objet avec talents
+  const talentIndex = keyMap[e.key];
   const skills = Array.isArray(talents) ? talents : talents.talents;
-  if (index !== undefined && skills[index]) {
-    utiliserTalent(skills[index], index);
+  
+  if (talentIndex !== undefined && skills[talentIndex]) {
+    utiliserTalent(skills[talentIndex], talentIndex);
     return;
   }
 
@@ -244,21 +249,35 @@ export function handleKeydown(e) {
   if (e.key === 'ArrowDown') newY++;
   if (e.key === 'ArrowLeft') newX--;
   if (e.key === 'ArrowRight') newX++;
+
   if (newX < 0) return deplacementVersCarte('gauche');
   if (newX >= 16) return deplacementVersCarte('droite');
   if (newY < 0) return deplacementVersCarte('haut');
   if (newY >= 16) return deplacementVersCarte('bas');
+
   const blocked = blockedTiles.has(getBlockedKey(newX, newY));
   const hasMoved = newX !== getPlayerX() || newY !== getPlayerY();
+
   if (!blocked && hasMoved) {
     setGlobalPlayerPosition(newX, newY);
     movePlayer();
+    // Vérifier si un ou plusieurs monstres occupent la tuile cible
+    const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
+    monsterElements.forEach(monsterDiv => {
+      const monstreX = Math.round(parseFloat(monsterDiv.style.left) / tileSize);
+      const monstreY = Math.round(parseFloat(monsterDiv.style.top) / tileSize);
+      console.log(`Comparaison: Joueur (${newX}, ${newY}) - Monstre (${monstreX}, ${monstreY})`);
+      if (newX === monstreX && newY === monstreY) {
+        if (!combatActif) {
+          setCombat(true);
+          console.log("Combat re-déclenché car le joueur a déplacé sur la case d'un monstre.");
+        }
+      }
+    });
     verifierRencontre();
     detecterSortie();
   }
 }
-
-
 export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
   isTransitioning = true;
   currentMap = nomMap;
