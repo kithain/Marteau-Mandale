@@ -1,0 +1,8 @@
+[
+  { "monstre_id": "geunaude_lvl8", "probabilite": 16.67 },
+  { "monstre_id": "orc_lvl8", "probabilite": 16.67 },
+  { "monstre_id": "homme_arbre_lvl8", "probabilite": 16.67 },
+  { "monstre_id": "éfrit_lvl8", "probabilite": 16.67 },
+  { "monstre_id": "élémentaire_air_lvl8", "probabilite": 16.67 },
+  { "monstre_id": "élémentaire_eau", "probabilite": 16.67 }
+  ]

@@ -1,16 +1,17 @@
 // map.js
 const IMAGE_BASE_URL = '/static';
 const API_BASE_URL = '/api';
-let deplacementSansRencontre = 0;
-import { playerClass, getPlayerX, getPlayerY, setPlayerPosition as setGlobalPlayerPosition, /*updateManaBar, initialiserTalents,*/ utiliserTalent, combatActif, talents } from './player.js';
-import { demarrerCombat, getMonstreActif } from './monstre.js';
+import { getPlayerClass, getPlayerX, getPlayerY, setPlayerPosition as setGlobalPlayerPosition } from './player.js';
+import { getMonstreActif, stopAllMonsters } from './monstre.js';
+import { movePlayer } from './camera.js';
+import { verifierRencontre, detecterSortie } from './combat_manager.js';
+
 export let currentMap = "A1";
 export let exitZones = [];
 export const tileSize = 64;
 export const blockedTiles = new Set();
 export const maxTileCount = 16;
 export let isTransitioning = false;
-
 
 export function getVisibleTileCount() {
   const minSize = Math.min(window.innerWidth, window.innerHeight);
@@ -24,46 +25,46 @@ export function extraireCoordonneesCarte(nom) {
   return { colonne, ligne };
 }
 
-export function verifierRencontre() {
-  if (combatActif) return;
-  if (deplacementSansRencontre > 0) {
-    deplacementSansRencontre--;
-    return;
-  }
-
-  fetch(`${API_BASE_URL}/rencontre?x=${getPlayerX()}&y=${getPlayerY()}&carte=${currentMap}`)
-    .then(res => {
-      if (!res.ok) throw new Error('Erreur de réseau');
-      return res.json();
-    })
-    .then(data => {
-      if (data.monstre) {
-        const monstre = data.monstre;
-        // Utilise la valeur de points de vie définie dans ton monstre.json
-        const pv = monstre.pv;
-        demarrerCombat(monstre, pv, getPlayerX(), getPlayerY());
-        // Appliquer un cooldown local pour éviter de générer trop rapidement plusieurs rencontres
-        deplacementSansRencontre = 5;
-      }
-    })
-    .catch(error => {
-      console.error('Erreur lors de la vérification des rencontres:', error);
-    });
+export function getBlockedKey(x, y) {
+  return `${x},${y}`;
 }
 
-export let lastMoveDirection = null;
+export function isBlocked(x, y) {
+  return blockedTiles.has(getBlockedKey(x, y));
+}
 
-
-export function detecterSortie() {
-  const sortie = exitZones.find(zone =>
-    getPlayerX() >= zone.x &&
-    getPlayerX() < zone.x + zone.width &&
-    getPlayerY() >= zone.y &&
-    getPlayerY() < zone.y + zone.height
-  );
-  if (sortie) {
-    chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
+export function setPlayerPosition(x, y) {
+  if (!isBlocked(x, y)) {
+    setGlobalPlayerPosition(x, y);
+    movePlayer();
+    verifierRencontre();
+    const sortie = detecterSortie(exitZones);
+    if (sortie) {
+      chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
+    }
+    return true;
   }
+
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      if (dx === 0 && dy === 0) continue;
+      const tryX = x + dx;
+      const tryY = y + dy;
+      if (!isBlocked(tryX, tryY)) {
+        setGlobalPlayerPosition(tryX, tryY);
+        movePlayer();
+        verifierRencontre();
+        const sortie = detecterSortie(exitZones);
+        if (sortie) {
+          chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
+        }
+        return true;
+      }
+    }
+  }
+
+  console.error("Aucun spawn libre autour de la position initiale");
+  return false;
 }
 
 export function deplacementVersCarte(direction) {
@@ -117,176 +118,17 @@ export function deplacementVersCarte(direction) {
     .catch(err => console.error("Erreur de chargement de carte :", err));
 }
 
-
-export function getBlockedKey(x, y) {
-  return `${x},${y}`;
-}
-
-export function movePlayer() {
-  // Récupérer l'élément DOM du joueur
-  const player = document.getElementById('player');
-  if (!player) return;
-
-  // ---------------------------
-  // 1. Positionnement du joueur
-  // ---------------------------
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  player.style.left = `${playerX * tileSize}px`;
-  player.style.top = `${playerY * tileSize}px`;
-
-  // ---------------------------
-  // 2. Ajustement de la caméra
-  // ---------------------------
-  const mapInner = document.getElementById("map-inner");
-  const mapContainer = document.getElementById("map-container");
-
-  // Dimensions du conteneur visible après dézoom appliqué
-  const containerWidth = mapContainer.clientWidth;
-  const containerHeight = mapContainer.clientHeight;
-
-  // Dimensions complètes de la carte (ici 16 tuiles de tileSize chacune)
-  const mapWidth = tileSize * 16;
-  const mapHeight = tileSize * 16;
-
-  // Calcul du décalage souhaité pour centrer la caméra sur le joueur
-  let cameraX = playerX * tileSize - (containerWidth / 2 - tileSize / 2);
-  let cameraY = playerY * tileSize - (containerHeight / 2 - tileSize / 2);
-
-  // Ajustement pour ne pas dépasser les bords de la carte
-  cameraX = Math.max(0, Math.min(cameraX, mapWidth - containerWidth));
-  cameraY = Math.max(0, Math.min(cameraY, mapHeight - containerHeight));
-
-  // Appliquer le déplacement à la carte
-  mapInner.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
-
-  // --------------------------------------------------------------
-  // 3. Vérification de la présence d'un monstre et relance du combat
-  // --------------------------------------------------------------
-  // Récupération de l'élément du monstre en combat via son ID (débutant par "combat-monstre-")
-  const monsterDiv = document.querySelector("[id^='combat-monstre-']");
-  if (monsterDiv && !combatActif) {
-    // Calcul des coordonnées du monstre (basées sur la taille d'une tuile)
-    const monstreX = parseInt(monsterDiv.style.left, 10) / tileSize;
-    const monstreY = parseInt(monsterDiv.style.top, 10) / tileSize;
-
-    // Si le joueur est sur la même case que le monstre
-    if (playerX === monstreX && playerY === monstreY) {
-      // Récupération du monstre actif à partir de monstre.js
-      const monstre = getMonstreActif();
-      if (monstre) {
-        // Relancer le combat en redémarrant l'attaque automatique avec les données du monstre
-        demarrerCombat(monstre.data, monstre.pv, playerX, playerY);
-        console.log("Combat relancé car le joueur est sur la case du monstre.");
-      } else {
-        // Si aucune donnée de monstre n'est trouvée (cas rare), basculer simplement le flag de combat
-        setCombat(true);
-        console.log("Combat activé (fallback).");
-      }
-    }
-  }
-}
-
-export function resizeMapContainer() {
-  //const count = getVisibleTileCount();
-  //const container = document.getElementById("map-container");
-  //container.style.width = `${tileSize * count}px`;
-  //container.style.height = `${tileSize * count}px`;
-}
-
-export function isBlocked(x, y) {
-  return blockedTiles.has(getBlockedKey(x, y));
-}
-
-export function setPlayerPosition(x, y) {
-  if (!isBlocked(x, y)) {
-    setGlobalPlayerPosition(x, y);
-    return true;
-  }
-
-  for (let dx = -1; dx <= 1; dx++) {
-    for (let dy = -1; dy <= 1; dy++) {
-      if (dx === 0 && dy === 0) continue;
-      const tryX = x + dx;
-      const tryY = y + dy;
-      if (!isBlocked(tryX, tryY)) {
-        setGlobalPlayerPosition(tryX, tryY);
-        return true;
-      }
-    }
-  }
-
-  console.error("Aucun spawn libre autour de la position initiale");
-  return false;
-}
-
-export function handleKeydown(e) {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-    window.lastMoveDirection = e.key;
-  }
-  const talentKeys = ["&", "é", '"', "'", "(", "-", "è", "_", "ç", "à"];
-  if (combatActif && !talentKeys.includes(e.key)) {
-    console.log("Déplacement bloqué en mode combat.");
-    return;
-  }
-  if (isTransitioning) return;
-  const keyMap = {
-    "&": 0, "é": 1, '"': 2, "'": 3,
-    "(": 4, "-": 5, "è": 6, "_": 7,
-    "ç": 8, "à": 9
-  };
-  const talentIndex = keyMap[e.key];
-  const skills = Array.isArray(talents) ? talents : talents.talents;
-  
-  if (talentIndex !== undefined && skills[talentIndex]) {
-    utiliserTalent(skills[talentIndex], talentIndex);
-    return;
-  }
-
-  let newX = getPlayerX();
-  let newY = getPlayerY();
-  if (e.key === 'ArrowUp') newY--;
-  if (e.key === 'ArrowDown') newY++;
-  if (e.key === 'ArrowLeft') newX--;
-  if (e.key === 'ArrowRight') newX++;
-
-  if (newX < 0) return deplacementVersCarte('gauche');
-  if (newX >= 16) return deplacementVersCarte('droite');
-  if (newY < 0) return deplacementVersCarte('haut');
-  if (newY >= 16) return deplacementVersCarte('bas');
-
-  const blocked = blockedTiles.has(getBlockedKey(newX, newY));
-  const hasMoved = newX !== getPlayerX() || newY !== getPlayerY();
-
-  if (!blocked && hasMoved) {
-    setGlobalPlayerPosition(newX, newY);
-    movePlayer();
-    // Vérifier si un ou plusieurs monstres occupent la tuile cible
-    const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
-    monsterElements.forEach(monsterDiv => {
-      const monstreX = Math.round(parseFloat(monsterDiv.style.left) / tileSize);
-      const monstreY = Math.round(parseFloat(monsterDiv.style.top) / tileSize);
-      console.log(`Comparaison: Joueur (${newX}, ${newY}) - Monstre (${monstreX}, ${monstreY})`);
-      if (newX === monstreX && newY === monstreY) {
-        if (!combatActif) {
-          setCombat(true);
-          console.log("Combat re-déclenché car le joueur a déplacé sur la case d'un monstre.");
-        }
-      }
-    });
-    verifierRencontre();
-    detecterSortie();
-  }
-}
 export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
+  // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
+  stopAllMonsters();
+  window.monstresActifs = [];
+  window.combatActif = false;
+  window.PLAYER_MAP = nomMap; // Synchronisation pour la sauvegarde
   isTransitioning = true;
   currentMap = nomMap;
 
   fetch(`${IMAGE_BASE_URL}/maps/${nomMap}.tmj`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      return res.json();
-    })
+    .then(res => res.json())
     .then(async mapData => {
       const container = document.getElementById("map-inner");
       if (!container) throw new Error("Container map-inner introuvable");
@@ -387,7 +229,7 @@ export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
           playerDiv.style.position = "absolute";
           playerDiv.style.width = "64px";
           playerDiv.style.height = "64px";
-          playerDiv.style.backgroundImage = `url(/static/img/classes/${playerClass.toLowerCase()}_idle.png)`;
+          playerDiv.style.backgroundImage = `url(/static/img/classes/${getPlayerClass().toLowerCase()}_idle.png)`;
           playerDiv.style.backgroundSize = "64px 64px";
           playerDiv.style.imageRendering = "pixelated";
           playerDiv.style.backgroundRepeat = "no-repeat";
@@ -397,7 +239,6 @@ export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
           container.appendChild(playerDiv);
 
           movePlayer();
-          window.addEventListener("keydown", handleKeydown);
 
           isTransitioning = false;
         } catch (error) {

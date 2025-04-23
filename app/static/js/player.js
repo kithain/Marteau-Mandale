@@ -1,22 +1,35 @@
 // player.js
 
 // === Variables exportées (globales) ===
-export const playerClass = window.PLAYER_CLASS;
-export const talents = window.PLAYER_TALENTS;
-export let playerMana = 100;
-export const maxMana = 100;
+export let playerMana = 10;
 export let playerPV = 10;
-export const maxPV = 10;
 export let cooldowns = {};
 export let combatActif = false;
+export let playerShield = 0;
 
-// Importation de la fonction qui gère les dégâts sur le monstre (centralisée dans monstre.js)
-import { recevoirDegats } from './monstre.js';
+// === XP et Niveau ===
+export let playerXP = 0;
+export let playerLevel = 1;
+export let xpToNextLevel = 100;
+
+import { getMaxVie, getMaxMana } from './progression.js';
+import { getPlayerBaseAtk, filterTalentsByLevel } from './progression.js';
+import { recevoirDegats, getMonstreActif, applyStatusEffect, stopAllMonsters } from './monstre.js';
+
+// Lecture dynamique des talents depuis la page
+export function getTalents() {
+  return window.PLAYER_TALENTS || [];
+}
 
 // On ne garde qu'une seule version de setCombat, qui met simplement à jour le flag du combat.
 export function setCombat(actif) {
   combatActif = actif;
   console.log(`État du combat: ${combatActif ? "En cours" : "Terminé"}.`);
+  if (!combatActif) {
+    startRegen();
+  } else {
+    stopRegen();
+  }
 }
 
 // === Position du joueur ===
@@ -29,6 +42,7 @@ export function getPlayerPosition() {
 export function setPlayerPosition(x, y) {
   playerPosition.x = x;
   playerPosition.y = y;
+  window.PLAYER_POSITION = { x, y }; // Synchronisation pour la sauvegarde
 }
 
 export function getPlayerX() {
@@ -42,14 +56,41 @@ export function getPlayerY() {
 // === Vie // Mana ===
 export function updateManaBar() {
   const manaFill = document.getElementById("mana-fill");
-  const percent = (playerMana / maxMana) * 100;
+  if (!manaFill) return;
+  const percent = (playerMana / getMaxMana(playerLevel)) * 100;
   manaFill.style.width = percent + "%";
 }
 
 export function updateVieBar() {
   const vieFill = document.getElementById("vie-fill");
-  const percent = (playerPV / maxPV) * 100;
+  if (!vieFill) return;
+  const percent = (playerPV / getMaxVie(playerLevel)) * 100;
   vieFill.style.width = percent + "%";
+}
+
+// === XP ===
+export function gainXP(amount) {
+  playerXP += amount;
+  while (playerXP >= xpToNextLevel) {
+    levelUp();
+  }
+  updateXPBar();
+}
+
+export function levelUp() {
+  playerXP -= xpToNextLevel;
+  playerLevel += 1;
+  xpToNextLevel = Math.floor(xpToNextLevel * 1.5);
+  // Ici, tu peux ajouter des effets : augmenter les stats, afficher un message, etc.
+  createFloatingText(`Niveau ${playerLevel} !`, '#FFD700');
+  initialiserTalents();
+}
+
+export function updateXPBar() {
+  const xpFill = document.getElementById("xp-fill");
+  if (!xpFill) return;
+  const percent = (playerXP / xpToNextLevel) * 100;
+  xpFill.style.width = percent + "%";
 }
 
 // === Utilisation d'un talent ===
@@ -65,11 +106,11 @@ export function utiliserTalent(talent, index) {
   if (!player) return;
 
   // Effet visuel de couleur
-  if (talent.color) {
+  if (talent.color && talent.duration) {
     player.style.filter = `drop-shadow(0 0 6px ${talent.color})`;
     setTimeout(() => {
       player.style.filter = "";
-    }, 500);
+    }, talent.duration);
   }
 
   // Opacité si spécifié
@@ -99,51 +140,81 @@ export function utiliserTalent(talent, index) {
   }, talent.cooldown);
 
   // === Application des effets en combat ===
-  // Application des effets en combat
   if (combatActif) {
+    // Gestion zone/mono-cible
+    if (talent.zone === 'adjacent' || talent.zone === 'zone') {
+      console.log(`[DEBUG] Talent zone détecté (\"${talent.zone}\"), appel de recevoirDegats pour tous les monstres autour`);
+      import('./monstre.js').then(module => {
+        let degats = talent.damage;
+        if ((talent.niveauRequis || 1) === 1) {
+          degats = getPlayerBaseAtk(playerLevel);
+        }
+        module.recevoirDegats(degats);
+      });
+      return;
+    }
+    // Sinon, mono-cible : cible le monstre sur la case du joueur
+    const monstreActif = getMonstreActif();
+    if (!monstreActif) return;
     switch (talent.type) {
       case "attack":
-        recevoirDegats(talent.damage);
+        let degats = talent.damage;
+        if ((talent.niveauRequis || 1) === 1) {
+          degats = getPlayerBaseAtk(playerLevel);
+        }
+        recevoirDegats(degats, monstreActif.data.uniqueId);
         break;
       case "utility":
-        if (talent.boostType === "evasion") {
-          // Plutôt que d'annuler le combat, le joueur dèche d'une case en arrière
-          console.log(`Boost d'évasion activé : Dash en arrière.`);
+        if (talent.boostType === "stun") {
+          applyStatusEffect(monstreActif.data.uniqueId, "stunned", talent.duration);
+        } else if (talent.boostType === "poison") {
+          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
+        } else if (talent.boostType === "burn") {
+          applyStatusEffect(monstreActif.data.uniqueId, "burning", talent.duration);
+        } else if (talent.boostType === "dot") {
+          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
+        } else if (talent.boostType === "evasion") {
           dashBackwards();
           setCombat(false);
-          // Le boost peut perdurer pour un effet temporaire si besoin
+          stopAllMonsters();
           setTimeout(() => {
-            console.log("Le boost d'évasion est terminé.");
-          }, talent.duration);
-        } else {
-          console.log(`Boost appliqué : ${talent.boostType} +${talent.boostAmount}`);
-          setTimeout(() => {
-            console.log(`Le boost ${talent.boostType} est terminé.`);
-          }, talent.duration);
+            const currentX = getPlayerX();
+            const currentY = getPlayerY();
+            const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
+            for (const monsterDiv of monsterElements) {
+              const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
+              const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+            }
+          }, 100);
+          if (typeof afficherMessage === 'function') {
+            afficherMessage("Vous vous échappez discrètement du combat !", "success");
+          } else {
+            console.log("Boost d'évasion activé : Dash en arrière.");
+          }
+        } else if (talent.boostType === "debuff_atk") {
+          applyStatusEffect(monstreActif.data.uniqueId, "debuff_atk", talent.duration, talent.value);
         }
         break;
       case "defense":
         if (talent.defenseType === "shield") {
-          console.log(`Bouclier actif : absorbe ${talent.value} points de dégâts pendant ${talent.duration} ms`);
           applyShield(talent.value, talent.duration);
-        } else if (talent.defenseType === "stun") {
-          console.log(`Tentative d'étourdir le monstre pendant ${talent.duration} ms`);
-          // Ajouter ici une logique d'étourdissement si souhaité
+        } else if (talent.defenseType === "dot") {
+          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, talent.value);
         }
         break;
-      default:
-        console.warn("Type de talent inconnu :", talent);
     }
   }
 }
 
-
 // === Initialisation des talents ===
 export function initialiserTalents() {
   const talentButtons = document.getElementById('talents-buttons');
-  const skills = Array.isArray(talents) ? talents : talents.talents;
+  const talentsData = getTalents();
+  const allTalents = Array.isArray(talentsData) ? talentsData : talentsData.talents;
+  const skills = filterTalentsByLevel(allTalents, playerLevel);
+  talentButtons.innerHTML = '';
   skills.forEach((talent, index) => {
-    const btn = document.createElement('button');
+    const btn = document.createElement(`button`);
     btn.id = `talent-btn-${index}`;
     btn.textContent = `${index + 1}. ${talent.name}`;
     btn.onclick = () => utiliserTalent(talent, index);
@@ -160,7 +231,7 @@ function animerAttaque() {
   const frameWidth = 64;
   let frame = 0;
 
-  player.style.backgroundImage = `url(/static/img/classes/${playerClass.toLowerCase()}_attack.png)`;
+  player.style.backgroundImage = `url(/static/img/classes/${getPlayerClass().toLowerCase()}_attack.png)`;
   player.style.backgroundSize = `${frameCount * frameWidth}px 64px`;
 
   const interval = setInterval(() => {
@@ -168,7 +239,7 @@ function animerAttaque() {
     frame++;
     if (frame >= frameCount) {
       clearInterval(interval);
-      player.style.backgroundImage = `url(/static/img/classes/${playerClass.toLowerCase()}_idle.png)`;
+      player.style.backgroundImage = `url(/static/img/classes/${getPlayerClass().toLowerCase()}_idle.png)`;
       player.style.backgroundSize = `64px 64px`;
       player.style.backgroundPosition = `0px 0px`;
     }
@@ -181,43 +252,37 @@ export function dashBackwards() {
   let currentX = getPlayerX();
   let currentY = getPlayerY();
 
-  // Utilisation de la dernière direction stockée globalement (dans window.lastMoveDirection)
-  let direction = window.lastMoveDirection || 'ArrowLeft';
-  let newX = currentX;
-  let newY = currentY;
+  // Liste des directions autour du joueur (8 directions)
+  const directions = [
+    { dx: 0, dy: -1 }, // haut
+    { dx: 1, dy: -1 }, // haut-droite
+    { dx: 1, dy: 0 },  // droite
+    { dx: 1, dy: 1 },  // bas-droite
+    { dx: 0, dy: 1 },  // bas
+    { dx: -1, dy: 1 }, // bas-gauche
+    { dx: -1, dy: 0 }, // gauche
+    { dx: -1, dy: -1 } // haut-gauche
+  ];
 
-  switch(direction) {
-    case 'ArrowUp':
-      newY = currentY + 1;
-      break;
-    case 'ArrowDown':
-      newY = currentY - 1;
-      break;
-    case 'ArrowLeft':
-      newX = currentX + 1;
-      break;
-    case 'ArrowRight':
-      newX = currentX - 1;
-      break;
-    default:
-      newX = currentX + 1;
-      break;
-  }
-
-  // Optionnel : vérifier que le nouveau positionnement est dans les limites de la carte ou pas bloqué
-  setPlayerPosition(newX, newY);
-  
-  // Pour mettre à jour la position dans l'interface, on appelle movePlayer.
-  // Ici, nous importons movePlayer depuis map.js.
+  // Importation dynamique pour éviter les problèmes de dépendance circulaire
   import('./map.js').then(module => {
-    module.movePlayer();
+    const { isBlocked, setPlayerPosition } = module;
+    let found = false;
+    for (const dir of directions) {
+      const tryX = currentX + dir.dx;
+      const tryY = currentY + dir.dy;
+      if (!isBlocked(tryX, tryY)) {
+        setPlayerPosition(tryX, tryY);
+        found = true;
+        console.log(`Dash effectué de (${currentX}, ${currentY}) à (${tryX}, ${tryY})`);
+        break;
+      }
+    }
+    if (!found) {
+      console.log("Aucune case libre autour pour dash !");
+    }
   });
-
-  console.log(`Dash effectué de (${currentX}, ${currentY}) à (${newX}, ${newY})`);
 }
-
-
-
 
 // === Texte flottant ===
 function createFloatingText(text, color) {
@@ -255,8 +320,11 @@ function applyBoost(boostType, amount, duration) {
 }
 
 function applyShield(value, duration) {
-  console.log(`Bouclier de ${value} points activé pendant ${duration} ms.`);
+  // Active le bouclier du joueur pendant la durée indiquée
+  playerShield = value;
+  console.log(`Bouclier actif : absorbe ${value} PV pendant ${duration} ms.`);
   setTimeout(() => {
+    playerShield = 0;
     console.log("Bouclier expiré.");
   }, duration);
 }
@@ -272,13 +340,36 @@ function applyStun(monstre, duration) {
   }
 }
 
-export function infligerDegatsAuJoueur(valeur) {
-  playerPV = Math.max(0, playerPV - valeur);
-  updateVieBar();
-  afficherDegats(valeur);
+function applyPoison(duration) {
+  console.log(`Effet poison activé : 1 PV de dégâts par seconde pendant ${duration} ms.`);
+  const poisonInterval = setInterval(() => {
+    // Ici, on affecte le monstre actif en lui infligeant 1 dégât par intervalle de 1000 ms
+    import('./monstre.js').then(module => {
+      const monstre = module.getMonstreActif();
+      if (monstre) {
+        module.recevoirDegats(1);
+        console.log("Poison : 1 PV de dégâts infligé au monstre.");
+      }
+    });
+  }, 1000);
+  setTimeout(() => {
+    clearInterval(poisonInterval);
+    console.log("Effet poison terminé.");
+  }, duration);
+}
 
-  console.log(`Le joueur reçoit ${valeur} dégâts. PV restant: ${playerPV}`);
+export function infligerDegatsAuJoueur(valeur) {
+  // Si un bouclier est actif, il absorbe une partie des dégâts
+  if (playerShield > 0) {
+    const absorb = Math.min(playerShield, valeur);
+    valeur -= absorb;
+    playerShield -= absorb;
+    console.log(`Bouclier absorbe ${absorb} dégâts, reste: ${playerShield} PV de bouclier.`);
+  }
   
+  setPlayerPV(Math.max(0, playerPV - valeur));
+  console.log(`Le joueur reçoit ${valeur} dégâts. PV restant: ${playerPV}`);
+
   const player = document.getElementById("player");
   if (player) {
     player.style.filter = "brightness(50%)";
@@ -293,6 +384,8 @@ export function infligerDegatsAuJoueur(valeur) {
 }
 
 function afficherGameOver() {
+  // Stopper toutes les attaques de monstres
+  stopAllMonsters();
   const overlay = document.createElement("div");
   overlay.id = "game-over-overlay";
   overlay.style.position = "fixed";
@@ -308,7 +401,7 @@ function afficherGameOver() {
   overlay.style.zIndex = "999";
 
   const message = document.createElement("div");
-  message.textContent = "💀 R.I.P.💀";
+  message.textContent = " R.I.P.";
   message.style.fontSize = "3em";
   message.style.color = "red";
   message.style.marginBottom = "20px";
@@ -352,3 +445,141 @@ function afficherDegats(valeur) {
 
   setTimeout(() => texte.remove(), 2000);
 }
+
+export function setPlayerPV(val) {
+  playerPV = val;
+  window.PLAYER_VIE = val;
+  updateVieBar();
+}
+
+export function setPlayerMana(val) {
+  playerMana = val;
+  window.PLAYER_MANA = val;
+  updateManaBar();
+}
+
+export async function loadPlayerData(saveData) {
+  const isNewGame = (saveData && saveData.niveau === 1 && saveData.experience === 0);
+  playerLevel = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : 1;
+
+  if (isNewGame) {
+    setPlayerPV(getMaxVie(playerLevel));
+    setPlayerMana(getMaxMana(playerLevel));
+  } else {
+    if (saveData && typeof saveData.vie === 'number') {
+      setPlayerPV(saveData.vie);
+    } else {
+      setPlayerPV(getMaxVie(playerLevel));
+    }
+    if (saveData && typeof saveData.mana === 'number') {
+      setPlayerMana(saveData.mana);
+    } else {
+      setPlayerMana(getMaxMana(playerLevel));
+    }
+  }
+  // Ajout : chargement XP et niveau
+  if (saveData && typeof saveData.experience === 'number') {
+    playerXP = saveData.experience;
+  } else {
+    playerXP = 0;
+  }
+  updateXPBar();
+}
+
+// Ajout : sauvegarde XP et niveau dans le format de sauvegarde
+export function getPlayerSaveData() {
+  return {
+    vie: playerPV,
+    mana: playerMana,
+    experience: playerXP,
+    niveau: playerLevel,
+    statistiques: window.PLAYER_STATS || {},
+    carte: window.PLAYER_CARTE || '',
+    // autres champs si besoin
+  };
+}
+
+export async function updatePlayerStats(stats) {
+  try {
+    const response = await fetch('/api/player/stats', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(stats)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la mise à jour des statistiques');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur:', error);
+    return null;
+  }
+}
+
+// Classe du joueur (récupérée dynamiquement)
+export function getPlayerClass() {
+  return window.PLAYER_CLASS;
+}
+
+// --- Régénération automatique : toujours active sauf en combat ou game over ---
+let regenInterval = null;
+let isGameOver = false;
+
+export function startRegen() {
+  if (regenInterval) clearInterval(regenInterval);
+  regenInterval = setInterval(() => {
+    // Arrête la régénération si pas de barre de vie/mana (ex: page index)
+    const vieFill = document.getElementById("vie-fill");
+    const manaFill = document.getElementById("mana-fill");
+    if (!vieFill || !manaFill) {
+      stopRegen();
+      return;
+    }
+    if (isGameOver || playerPV <= 0) {
+      stopRegen();
+      return;
+    }
+    if (!combatActif) {
+      let updated = false;
+      // Régénération en pourcentage (ex: 2% du max toutes les 2s)
+      const pvRegen = getMaxVie(playerLevel) * 0.02;
+      const manaRegen = getMaxMana(playerLevel) * 0.02;
+      if (playerPV < getMaxVie(playerLevel)) {
+        setPlayerPV(Math.min(getMaxVie(playerLevel), playerPV + pvRegen));
+        updated = true;
+      }
+      if (playerMana < getMaxMana(playerLevel)) {
+        setPlayerMana(Math.min(getMaxMana(playerLevel), playerMana + manaRegen));
+        updated = true;
+      }
+      if (updated) {
+        console.log(`Régénération: PV=${playerPV}, Mana=${playerMana}`);
+      }
+    }
+  }, 1000);
+}
+
+export function stopRegen() {
+  if (regenInterval) clearInterval(regenInterval);
+  regenInterval = null;
+}
+
+// S'assurer que startRegen N'EST APPELÉ QU'UNE FOIS au chargement du jeu
+startRegen();
+
+// Pour arrêter la régénération en cas de game over, on modifie afficherGameOver
+const originalAfficherGameOver = typeof afficherGameOver === 'function' ? afficherGameOver : null;
+window.afficherGameOver = function(...args) {
+  isGameOver = true;
+  stopRegen();
+  if (originalAfficherGameOver) {
+    originalAfficherGameOver.apply(this, args);
+  }
+};
+
+// Appeler updateXPBar au chargement du script pour afficher la barre correctement
+updateXPBar();

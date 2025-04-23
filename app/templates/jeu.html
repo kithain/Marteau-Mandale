@@ -18,10 +18,14 @@
         <!-- Barre de mana -->
         <div id="vie-bar">
             <div id="vie-fill"></div>
-            </div>
+        </div>
     
         <div id="mana-bar">
             <div id="mana-fill"></div>
+        </div>
+        <!-- Barre d'XP -->
+        <div id="xp-bar" style="width: 200px; height: 20px; background: #333; border-radius: 5px; margin-top: 10px;">
+          <div id="xp-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #00f260, #0575e6); border-radius: 5px;"></div>
         </div>
      
         <!-- Zone de carte -->
@@ -39,17 +43,15 @@
         <form action="{{ url_for('routes.logout') }}" method="GET">
             <button type="submit">Retour au menu</button>
         </form>
+        <!-- Bouton de sauvegarde de la partie -->
+        <button id="save-btn" class="save-button">Sauvegarder la partie</button>
     </div>
 
-    <!-- Chargement de tsParticles -->
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-
-    <!-- Variables globales transmises à JS -->
-    <script>
-        window.PLAYER_CLASS = "{{ classe }}";
-        window.PLAYER_TALENTS = {{ save_data.talents | default([]) | tojson }};
-        window.PLAYER_MAP = "{{ save_data.get('carte', 'P1') }}";
+    <!-- Embedding des données de sauvegarde en JSON pour le front-end -->
+    <script id="player-data" type="application/json">
+        {{ save_data | tojson }}
     </script>
+    
 
     <!-- JS principaux -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>

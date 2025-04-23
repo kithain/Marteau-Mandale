@@ -1,4 +1,4 @@
-//utils.j
+//utils.js
 export function initConnexion() {
   const loginBtn = document.getElementById('login-btn');
   const registerBtn = document.getElementById('register-btn');
@@ -74,7 +74,31 @@ export function initSmokeAnimation() {
   });
 }
 
+export function afficherMobDegats(valeur) {
+  const player = document.getElementById("player");
+  if (!player) return;
+
+  const texte = document.createElement("div");
+  texte.textContent = `-${valeur}`;
+  texte.style.position = "absolute";
+  texte.style.left = player.style.left;
+  texte.style.top = player.style.top;
+  texte.style.transform = "translate(-50%, -100%)";
+  texte.style.color = "red";
+  texte.style.fontSize = "1.5em";
+  texte.style.fontWeight = "bold";
+  texte.style.zIndex = 20;
+  texte.style.animation = "floatUpDelayed 2s ease-out";
+  document.getElementById("map-inner").appendChild(texte);
+
+  setTimeout(() => texte.remove(), 2000);
+}
+
 export function initParticles() {
+  if (typeof tsParticles === 'undefined') {
+    console.log('tsParticles non chargé : les particules sont désactivées sur cette page.');
+    return;
+  }
   const containerId = "particles-js";
   const container = document.getElementById(containerId);
   tsParticles.load(containerId, {
@@ -132,24 +156,4 @@ export function initParticles() {
       opacity: 0
     }
   });
-}
-
-export function afficherMobDegats(valeur) {
-  const player = document.getElementById("player");
-  if (!player) return;
-
-  const texte = document.createElement("div");
-  texte.textContent = `-${valeur}`;
-  texte.style.position = "absolute";
-  texte.style.left = player.style.left;
-  texte.style.top = player.style.top;
-  texte.style.transform = "translate(-50%, -100%)";
-  texte.style.color = "red";
-  texte.style.fontSize = "1.5em";
-  texte.style.fontWeight = "bold";
-  texte.style.zIndex = 20;
-  texte.style.animation = "floatUpDelayed 2s ease-out";
-  document.getElementById("map-inner").appendChild(texte);
-
-  setTimeout(() => texte.remove(), 2000);
 }

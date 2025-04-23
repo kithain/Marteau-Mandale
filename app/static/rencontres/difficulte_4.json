@@ -1,0 +1,6 @@
+[
+  { "monstre_id": "bandit_lvl4", "probabilite": 25 },
+  { "monstre_id": "skull_lvl4", "probabilite": 25 },
+  { "monstre_id": "ghost_lvl4", "probabilite": 25 },
+  { "monstre_id": "homme_lezard_lvl4", "probabilite": 25 }
+]

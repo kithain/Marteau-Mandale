@@ -6,36 +6,62 @@
         {
           "id": "barbare_atk",
           "name": "Charge Brutale",
-          "cost": 1,
+          "cost": 0,
           "cooldown": 1000,
           "color": "#ff0000",
-          "effectText": "BAM ! ⚔",
+          "effectText": "BOUM !",
           "type": "attack",
-          "damage": 1
+          "damage": 4,
+          "niveauRequis": 1
         },
         {
           "id": "barbare_util",
-          "name": "Fracasse-armure",
+          "name": "Coup de Crâne",
           "cost": 1,
           "cooldown": 5000,
           "color": "#0000ff",
-          "effectText": "↑ Force 💪",
+          "effectText": "CLONG !",
           "type": "utility",
-          "boostType": "damage",
-          "boostAmount": 0.20,
-          "duration": 5000
+          "boostType": "stun",
+          "duration": 5000,
+          "niveauRequis": 3
         },
         {
           "id": "barbare_def",
-          "name": "ANTI-CRIT",
+          "name": "Tranch’Artères",
           "cost": 1,
           "cooldown": 4000,
           "color": "#00ff00",
-          "effectText": "Bouclier 🛡",
+          "effectText": "OUVERT !",
           "type": "defense",
-          "defenseType": "stun",
-          "value": 3,
-          "duration": 4000
+          "defenseType": "dot",
+          "value": 2,
+          "duration": 4000,
+          "niveauRequis": 5
+        },
+        {
+          "id": "barbare_rage_du_boucher",
+          "name": "Rage du Boucher",
+          "cost": 2,
+          "cooldown": 6000,
+          "color": "#ff8800",
+          "effectText": "GRRRAH !",
+          "type": "attack",
+          "damage": 8,
+          "niveauRequis": 7
+        },
+        {
+          "id": "barbare_brise_arme",
+          "name": "Brise d’arme",
+          "cost": 3,
+          "cooldown": 12000,
+          "color": "#cccc00",
+          "effectText": "TOI PLUS ARME !",
+          "type": "utility",
+          "boostType": "debuff_atk",
+          "value": -2,
+          "duration": 5000,
+          "niveauRequis": 9
         }
       ]
     },
@@ -45,35 +71,60 @@
         {
           "id": "mage_atk",
           "name": "Boule de Feu",
-          "cost": 1,
+          "cost": 0,
           "cooldown": 1000,
           "color": "#ff0000",
-          "effectText": "🔥 Feu",
+          "effectText": " Feu",
           "type": "attack",
-          "damage": 1
+          "damage": 2,
+          "niveauRequis": 1
         },
         {
           "id": "mage_util",
-          "name": "Barrière Arcanique",
+          "name": "Pluie acide",
           "cost": 1,
-          "cooldown": 5000,
-          "color": "#0000ff",
-          "effectText": "↑ Mana 💧",
+          "cooldown": 4000,
+          "color": "#00ff00",
+          "effectText": "Poison ",
           "type": "utility",
-          "boostType": "mana_regen",
-          "boostAmount": 10,
-          "duration": 5000
+          "boostType": "poison",
+          "duration": 4000,
+          "niveauRequis": 3
         },
         {
           "id": "mage_def",
           "name": "Barrière Arcanique",
           "cost": 1,
           "cooldown": 4000,
-          "color": "#00ff00",
-          "effectText": "Bouclier 🛡",
+          "color": "#00ffff",
+          "effectText": "Bouclier ",
           "type": "defense",
           "defenseType": "shield",
-          "duration": 2000
+          "duration": 4000,
+          "value": 4,
+          "niveauRequis": 5
+        },
+        {
+          "id": "mage_eclair",
+          "name": "Éclair Chaotique",
+          "cost": 2,
+          "cooldown": 6000,
+          "color": "#ffd700",
+          "effectText": "Éclair ! ",
+          "type": "attack",
+          "damage": 7,
+          "niveauRequis": 7
+        },
+        {
+          "id": "mage_tempete",
+          "name": "Tempête Élémentaire",
+          "cost": 3,
+          "cooldown": 12000,
+          "color": "#8ecae6",
+          "effectText": "Tempête ! ",
+          "type": "attack",
+          "damage": 10,
+          "niveauRequis": 9
         }
       ]
     },
@@ -83,12 +134,14 @@
         {
           "id": "paladin_atk",
           "name": "Choc Sacré",
-          "cost": 1,
+          "cost": 0,
           "cooldown": 1000,
           "color": "#ff0000",
-          "effectText": "Justice ⚔ ",
+          "effectText": "Justice ",
           "type": "attack",
-          "damage": 1
+          "damage": 2,
+          "niveauRequis": 1,
+          "zone": "adjacent"
         },
         {
           "id": "paladin_util",
@@ -96,23 +149,49 @@
           "cost": 1,
           "cooldown": 5000,
           "color": "#0000ff",
-          "effectText": "Jugement ⚖️",
+          "effectText": "Jugement ",
           "type": "utility",
           "boostType": "stun",
-          "boostAmount": 0.25,
-          "duration": 5000
+          "duration": 5000,
+          "niveauRequis": 3
         },
         {
           "id": "paladin_def",
           "name": "Aura Protectrice",
           "cost": 1,
           "cooldown": 4000,
-          "color": "#00ff00",
-          "effectText": "Bouclier 🛡",
+          "color": "#00ffff",
+          "effectText": "Bouclier ",
           "type": "defense",
           "defenseType": "shield",
+          "duration": 4000,
           "value": 4,
-          "duration": 4000
+          "niveauRequis": 5
+        },
+        {
+          "id": "paladin_lumiere",
+          "name": "Lumière Soignante",
+          "cost": 2,
+          "cooldown": 6000,
+          "color": "#ffff00",
+          "effectText": "Soin ! ",
+          "type": "utility",
+          "boostType": "heal",
+          "value": 8,
+          "niveauRequis": 7
+        },
+        {
+          "id": "paladin_garde",
+          "name": "Invocation du Garde",
+          "cost": 3,
+          "cooldown": 12000,
+          "color": "#c0c0c0",
+          "effectText": "Garde ! ",
+          "type": "defense",
+          "boostType": "shield",
+          "duration": 6000,
+          "value": 8,
+          "niveauRequis": 9
         }
       ]
     },
@@ -122,24 +201,25 @@
         {
           "id": "voleur_atk",
           "name": "Tir Rapide",
-          "cost": 1,
-          "cooldown": 1000, 
+          "cost": 0,
+          "cooldown": 1000,
           "color": "#ff0000",
-          "effectText": "Tir Rapide 🏹",
+          "effectText": "Tir Rapide ",
           "type": "attack",
-          "damage": 1
+          "damage": 2,
+          "niveauRequis": 1
         },
         {
           "id": "voleur_util",
           "name": "Furtivité",
           "cost": 1,
-          "cooldown": 5000,
-          "color": "#0000ff",
-          "effectText": "Furtif 🕵️",
+          "cooldown": 4000,
+          "color": "#aaaaaa",
+          "effectText": "Furtif ",
           "type": "utility",
           "boostType": "evasion",
-          "boostAmount": 0.15,
-          "duration": 5000
+          "duration": 4000,
+          "niveauRequis": 3
         },
         {
           "id": "voleur_def",
@@ -147,10 +227,35 @@
           "cost": 1,
           "cooldown": 4000,
           "color": "#00ff00",
-          "effectText": "Poison ☠",
+          "effectText": "Poison ",
           "type": "defense",
-          "defenseType": "stun",
-          "duration": 2000
+          "defenseType": "dot",
+          "duration": 4000,
+          "value": 2,
+          "niveauRequis": 5
+        },
+        {
+          "id": "voleur_assaut",
+          "name": "Assaut Silencieux",
+          "cost": 2,
+          "cooldown": 6000,
+          "color": "#ff4444",
+          "effectText": "Coup sournois !",
+          "type": "attack",
+          "damage": 8,
+          "niveauRequis": 7
+        },
+        {
+          "id": "voleur_siphon",
+          "name": "Coup Siphonnant",
+          "cost": 3,
+          "cooldown": 12000,
+          "color": "#880000",
+          "effectText": "Drain de vie !",
+          "type": "attack",
+          "damage": 4,
+          "heal": 4,
+          "niveauRequis": 9
         }
       ]
     }

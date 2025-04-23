@@ -1,0 +1,7 @@
+[
+  { "monstre_id": "homme_lezard_lvl7", "probabilite": 20 },
+  { "monstre_id": "geunaude_lvl7", "probabilite": 20 },
+  { "monstre_id": "orc_lvl7", "probabilite": 20 },
+  { "monstre_id": "homme_arbre_lvl7", "probabilite": 20 },
+  { "monstre_id": "élémentaire_air_lvl7", "probabilite": 20 }
+]

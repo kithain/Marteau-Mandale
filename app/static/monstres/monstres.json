@@ -2,21 +2,113 @@
   {
     "id": "slime_vert",
     "nom": "Slime Vert",
-    "pv": 2,
-    "attaque": 1,
-    "defense": 1,
-    "experience": 10,
     "image": "slime.png",
-    "talents": ["corrosion"]
+    "talents": ["corrosion"],
+    "difficulte": 1
   },
   {
     "id": "gobelin",
     "nom": "Gobelin",
-    "pv": 4,
-    "attaque": 2,
-    "defense": 2,
-    "experience": 20,
     "image": "gobelin.png",
-    "talents": ["coup_vif", "esquive"]
+    "talents": ["coup_vif", "esquive"],
+    "difficulte": 3
+  },
+  {
+    "id": "orc",
+    "nom": "Orc",
+    "image": "orc.png",
+    "talents": ["rage"],
+    "difficulte": 6
+  },
+  {
+    "id": "bandit",
+    "nom": "Bandit",
+    "image": "bandit.png",
+    "talents": ["coup_vif"],
+    "difficulte": 3.5
+  },
+  {
+    "id": "golem",
+    "nom": "Golem",
+    "image": "golem.png",
+    "talents": ["peau_dure"],
+    "difficulte": 10
+  },
+  {
+    "id": "homme_arbre",
+    "nom": "Homme-Arbre",
+    "image": "homme_arbre.png",
+    "talents": ["regeneration"],
+    "difficulte": 7
+  },
+  {
+    "id": "homme_lezard",
+    "nom": "Homme-Lézard",
+    "image": "homme_lezard.png",
+    "talents": ["coup_vif"],
+    "difficulte": 4.5
+  },
+  {
+    "id": "skull",
+    "nom": "Crâne Maudit",
+    "image": "skull.png",
+    "talents": ["malédiction"],
+    "difficulte": 2.5
+  },
+  {
+    "id": "ghost",
+    "nom": "Fantôme",
+    "image": "ghost.png",
+    "talents": ["intangible"],
+    "difficulte": 3
+  },
+  {
+    "id": "ghost_miner",
+    "nom": "Fantôme Mineur",
+    "image": "ghost_miner.png",
+    "talents": ["intangible"],
+    "difficulte": 3.5
+  },
+  {
+    "id": "geunaude",
+    "nom": "Geunaude",
+    "image": "geunaude.png",
+    "talents": ["soin"],
+    "difficulte": 5
+  },
+  {
+    "id": "éfrit",
+    "nom": "Éfrit",
+    "image": "éfrit.png",
+    "talents": ["brûlure"],
+    "difficulte": 8
+  },
+  {
+    "id": "élémentaire_feu",
+    "nom": "Élémentaire de Feu",
+    "image": "élémentaire_feu.png",
+    "talents": ["brûlure"],
+    "difficulte": 10
+  },
+  {
+    "id": "élémentaire_eau",
+    "nom": "Élémentaire d'Eau",
+    "image": "élémentaire_eau.png",
+    "talents": ["soin"],
+    "difficulte": 8.5
+  },
+  {
+    "id": "élémentaire_terre",
+    "nom": "Élémentaire de Terre",
+    "image": "élémentaire_terre.png",
+    "talents": ["peau_dure"],
+    "difficulte": 10
+  },
+  {
+    "id": "élémentaire_air",
+    "nom": "Élémentaire d'Air",
+    "image": "élémentaire_air.png",
+    "talents": ["esquive"],
+    "difficulte": 7
   }
 ]

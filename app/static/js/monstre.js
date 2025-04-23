@@ -1,102 +1,214 @@
-/* monstre.js */
+// monstre.js
 import { infligerDegatsAuJoueur, setCombat, getPlayerX, getPlayerY } from './player.js';
 import { afficherMobDegats } from './utils.js';
+import { getMonsterPV, getMonsterAtk, getMonsterDef } from './progression.js';
 
-// Stockage du monstre actuellement engagé dans le combat
-let monstreActif = null;
-let attaqueInterval = null;
+const tileSize = 64;
+let monstresActifs = [];
 
-/**
- * Crée l'élément DOM pour le monstre en combat.
- * @param {string} image - Le nom de l'image du monstre.
- * @param {string} uniqueId - L'identifiant unique du monstre.
- * @param {number} posX - La coordonnée X pour le placement (par défaut 0).
- * @param {number} posY - La coordonnée Y pour le placement (par défaut 0).
- * @returns {HTMLElement} L'élément DOM créé.
- */
 function createMonsterElement(image, uniqueId, posX = 0, posY = 0) {
   const monstreDiv = document.createElement('div');
   monstreDiv.id = `combat-monstre-${uniqueId}`;
   monstreDiv.className = 'monstre';
   monstreDiv.style.width = '64px';
   monstreDiv.style.height = '64px';
-  monstreDiv.style.left = `${posX * 64}px`;
-  monstreDiv.style.top = `${posY * 64}px`;
+  monstreDiv.style.left = `${posX * tileSize}px`;
+  monstreDiv.style.top = `${posY * tileSize}px`;
   monstreDiv.style.backgroundImage = `url(/static/img/monstres/${image})`;
+
+  // Ajout de la barre de vie
+  const healthBar = document.createElement('div');
+  healthBar.className = 'monster-health-bar';
+  const healthFill = document.createElement('div');
+  healthFill.className = 'monster-health-fill';
+  healthBar.appendChild(healthFill);
+  monstreDiv.appendChild(healthBar);
+
+  // Ajout du conteneur d'états
+  const statusContainer = document.createElement('div');
+  statusContainer.className = 'monster-status';
+  monstreDiv.appendChild(statusContainer);
+
   document.getElementById("map-inner").appendChild(monstreDiv);
   return monstreDiv;
 }
 
-export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
-  // Si un monstre est déjà actif, le retirer avant de démarrer un nouveau combat
-  if (monstreActif && monstreActif.element) {
-    monstreActif.element.remove();
-    clearInterval(attaqueInterval);
-    monstreActif = null;
+function updateMonsterStatus(monstre) {
+  const statusContainer = monstre.element.querySelector('.monster-status');
+  statusContainer.innerHTML = ''; // Réinitialise les états
+
+  // Ajout des icônes d'état
+  if (monstre.data.stunned) {
+    const stunIcon = document.createElement('div');
+    stunIcon.className = 'monster-status-icon monster-status-stunned';
+    stunIcon.textContent = '⚡';
+    statusContainer.appendChild(stunIcon);
   }
-  
-  // Générer un identifiant unique pour ce combat
-  const uniqueId = `${monstreData.id}-${Date.now()}`;
-  monstreData.uniqueId = uniqueId;
-  
-  // Créer l'élément visuel du monstre
-  const element = createMonsterElement(monstreData.image, uniqueId, posX, posY);
-  
-  // Stocker le monstre actif avec ses données et l'élément DOM associé
-  monstreActif = {
-    data: monstreData,
-    pv: pvInitial,
-    element: element,
-  };
 
-  setCombat(true);
+  if (monstre.data.poisoned) {
+    const poisonIcon = document.createElement('div');
+    poisonIcon.className = 'monster-status-icon monster-status-poisoned';
+    poisonIcon.textContent = '☠';
+    statusContainer.appendChild(poisonIcon);
+  }
 
-  // Lancer l'attaque automatique du monstre toutes les 5 secondes
-  attaqueInterval = setInterval(() => attaqueJoueur(), 5000);
+  if (monstre.data.burning) {
+    const burnIcon = document.createElement('div');
+    burnIcon.className = 'monster-status-icon monster-status-burning';
+    burnIcon.textContent = '🔥';
+    statusContainer.appendChild(burnIcon);
+  }
+
+  if (typeof monstre.data.atk === 'number' && monstre.data.atk < getMonsterAtk(monstre.data.difficulte || 1)) {
+    const debuffIcon = document.createElement('div');
+    debuffIcon.className = 'monster-status-icon monster-status-debuff-atk';
+    debuffIcon.textContent = '↓';
+    statusContainer.appendChild(debuffIcon);
+  }
 }
 
-/**
- * Gère l'attaque automatique du monstre sur le joueur.
- */
-function attaqueJoueur() {
-  if (!monstreActif) return;
-  
-  // Récupérer la position actuelle du joueur
+function applyAttackDebuff(monstre, value, duration) {
+  if (!monstre || typeof monstre.data.atk !== 'number') return;
+  const originalAtk = monstre.data.atk;
+  monstre.data.atk += value; // value négatif pour debuff
+  updateMonsterStatus(monstre);
+  setTimeout(() => {
+    monstre.data.atk = originalAtk;
+    updateMonsterStatus(monstre);
+  }, duration);
+}
+
+function moveMonsterTowardPlayer(monstre) {
   const playerX = getPlayerX();
   const playerY = getPlayerY();
-  
-  // Calculer la position du monstre (en supposant que la taille d'une tuile est de 64 pixels)
-  const monsterX = parseInt(monstreActif.element.style.left) / 64;
-  const monsterY = parseInt(monstreActif.element.style.top) / 64;
-  
-  // Si le joueur n'est plus sur la même case, on annule l'attaque et termine le combat
-  if (playerX !== monsterX || playerY !== monsterY) {
-    console.log("Le joueur n'est plus sur la case du monstre, l'attaque est annulée.");
-    suspendCombat();
-    return;
+  let monstreX = parseInt(monstre.element.style.left) / tileSize;
+  let monstreY = parseInt(monstre.element.style.top) / tileSize;
+
+  // Détermine la direction de déplacement (priorité à l'axe le plus éloigné)
+  let dx = playerX - monstreX;
+  let dy = playerY - monstreY;
+  let stepX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+  let stepY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+
+  // Si déjà adjacent, ne bouge pas
+  if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) return;
+
+  // Essaye d'avancer d'abord sur X, sinon sur Y
+  let newX = monstreX + (Math.abs(dx) >= Math.abs(dy) ? stepX : 0);
+  let newY = monstreY + (Math.abs(dx) < Math.abs(dy) ? stepY : 0);
+
+  // Vérifie si la case est libre (pas un autre monstre ni un mur)
+  // À adapter si tu as une fonction isBlocked ou similaire
+  if (typeof window.isBlocked === 'function' && window.isBlocked(newX, newY)) {
+    // Si bloqué, essaie l'autre axe
+    newX = monstreX + (Math.abs(dx) < Math.abs(dy) ? stepX : 0);
+    newY = monstreY + (Math.abs(dx) >= Math.abs(dy) ? stepY : 0);
+    if (typeof window.isBlocked === 'function' && window.isBlocked(newX, newY)) {
+      // Si toujours bloqué, ne bouge pas
+      return;
+    }
   }
-  
-  // Si le monstre est étourdi, il n'attaque pas
-  if (monstreActif.data.stunned) {
-    console.log(`${monstreActif.data.nom} est étourdi et ne peut pas attaquer.`);
-    return;
-  }
-  
-  const degats = monstreActif.data.degats || 1;
-  console.log(`${monstreActif.data.nom} attaque et inflige ${degats} dégâts !`);
-  
-  // Infliger les dégâts au joueur et afficher l'animation correspondante
-  infligerDegatsAuJoueur(degats);
-  afficherMobDegats(degats);
-  
-  // Appliquer l'animation d'attaque sur le monstre
-  animerAttaqueMonstre(monstreActif.data.uniqueId);
+
+  monstre.element.style.left = `${newX * tileSize}px`;
+  monstre.element.style.top = `${newY * tileSize}px`;
 }
 
-/**
- * Anime l'attaque du monstre.
- * @param {string} uniqueId - L'identifiant unique du monstre.
- */
+export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
+  // Vérifie s'il existe déjà un monstre actif sur la case
+  const existing = monstresActifs.find(m => {
+    const x = parseInt(m.element.style.left) / tileSize;
+    const y = parseInt(m.element.style.top) / tileSize;
+    return x === posX && y === posY;
+  });
+  if (existing) {
+    // Si déjà actif, réactive juste son intervalle d'attaque
+    if (!existing.interval) {
+      existing.interval = setInterval(() => attaqueJoueur(existing.data.uniqueId), 1000);
+    }
+    if (!existing.chaseInterval) {
+      existing.chaseInterval = setInterval(() => moveMonsterTowardPlayer(existing), 500);
+    }
+    setCombat(true);
+    return;
+  }
+
+  const uniqueId = `${monstreData.id}-${Date.now()}`;
+  monstreData.uniqueId = uniqueId;
+  monstreData.stunned = false;
+  monstreData.poisoned = false;
+  monstreData.burning = false;
+
+  // Ajout : compatibilité XP (xpValue)
+  if (typeof monstreData.experience !== 'undefined') {
+    monstreData.xpValue = monstreData.experience;
+  }
+
+  // Progression dynamique des stats du monstre selon sa difficulte (niveau)
+  const niveau = Math.round(monstreData.difficulte || 1);
+  const pvMonstre = getMonsterPV(niveau);
+  const atkMonstre = getMonsterAtk(niveau);
+  const defMonstre = getMonsterDef(niveau);
+  monstreData.atk = atkMonstre;
+  monstreData.defense = defMonstre;
+
+  // --- LOG des stats du monstre au début du combat ---
+  console.log('[COMBAT] Monstre:', monstreData.nom || monstreData.id, `| Niveau: ${niveau}`);
+  console.log(`[COMBAT] PV: ${pvMonstre}, ATK: ${atkMonstre}, DEF: ${defMonstre}`);
+
+  const element = createMonsterElement(monstreData.image, uniqueId, posX, posY);
+
+  const interval = setInterval(() => attaqueJoueur(uniqueId), 1000);
+  const chaseInterval = setInterval(() => moveMonsterTowardPlayer(monstreObj), 500);
+  const monstreObj = {
+    data: monstreData,
+    pv: pvMonstre,
+    maxPv: pvMonstre,
+    element,
+    interval,
+    chaseInterval
+  };
+
+  monstresActifs.push(monstreObj);
+  updateMonsterStatus(monstreObj);
+  setCombat(true);
+}
+
+function attaqueJoueur(uniqueId) {
+  // Si le joueur est mort, on arrête tous les monstres
+  import('./player.js').then(({ playerPV, getPlayerX, getPlayerY, infligerDegatsAuJoueur }) => {
+    if (playerPV <= 0) {
+      stopAllMonsters();
+      return;
+    }
+
+    const monstre = monstresActifs.find(m => m.data.uniqueId === uniqueId);
+    if (!monstre) return;
+
+    const playerX = getPlayerX();
+    const playerY = getPlayerY();
+    const monsterX = parseInt(monstre.element.style.left) / tileSize;
+    const monsterY = parseInt(monstre.element.style.top) / tileSize;
+
+    // NOUVEAU : le monstre attaque si il est adjacent OU sur la même case
+    const dx = Math.abs(playerX - monsterX);
+    const dy = Math.abs(playerY - monsterY);
+    if ((dx <= 1 && dy <= 1)) {
+      // Attaque si adjacent
+      const atk = monstre.data.atk ?? 0;
+      const playerDefense = 0; // TODO: récupérer la défense réelle du joueur
+      const degats = Math.max(0, atk - playerDefense);
+      if (degats === 0) {
+        console.log(`${monstre.data.nom} est trop affaibli pour infliger des dégâts ! (ATK=${atk})`);
+      } else {
+        console.log(`${monstre.data.nom} attaque (ATK=${atk}) et inflige ${degats} dégâts !`);
+      }
+      infligerDegatsAuJoueur(degats);
+      afficherMobDegats(degats);
+      animerAttaqueMonstre(monstre.data.uniqueId);
+    }
+  });
+}
+
 function animerAttaqueMonstre(uniqueId) {
   const monstreDiv = document.getElementById(`combat-monstre-${uniqueId}`);
   if (!monstreDiv) return;
@@ -106,71 +218,154 @@ function animerAttaqueMonstre(uniqueId) {
   }, 200);
 }
 
-/**
- * Fait réceptionner des dégâts au monstre.
- * @param {number} valeur - La valeur des dégâts (par défaut 1).
- */
 export function recevoirDegats(valeur = 1) {
-  if (!monstreActif) return;
-  
-  monstreActif.pv = Math.max(0, monstreActif.pv - valeur);
-  console.log(`Le ${monstreActif.data.nom} reçoit ${valeur} dégâts, PV restant : ${monstreActif.pv}`);
-  
-  // Animation flash pour indiquer les dégâts
-  if (monstreActif.element) {
-    monstreActif.element.style.filter = "brightness(150%)";
-    setTimeout(() => { 
-      monstreActif.element.style.filter = ""; 
-    }, 300);
-  }
-  
-  // Si les PV sont épuisés, terminer le combat
-  if (monstreActif.pv === 0) {
-    console.log(`✅ Le ${monstreActif.data.nom} est vaincu !`);
-    finCombat();
-  }
-}
-
-function suspendCombat() {
-  clearInterval(attaqueInterval);
-  setCombat(false);
-  // Le monstre reste affiché dans le DOM et monstreActif reste défini.
-  console.log("Combat suspendu, le monstre reste sur la carte.");
-}
-
-export function finCombat() {
-  // Arrête l'attaque automatique
-  clearInterval(attaqueInterval);
-  
-  // Réactive la possibilité de déplacement
-  setCombat(false);
-
-  if (monstreActif) {
-    // Si le monstre est vaincu (pv === 0), le retirer de la carte
-    if (monstreActif.pv === 0) {
-      if (monstreActif.element) {
-        monstreActif.element.classList.add("fade-out");
-        // Supprimer l'élément dès que l'animation est terminée
-        monstreActif.element.addEventListener('animationend', () => {
-          if (monstreActif && monstreActif.element) {
-            monstreActif.element.remove();
-          }
-        });
-        // En cas de souci, supprimer après un délai
-       // setTimeout(() => {
-       //   if (monstreActif && monstreActif.element && document.body.contains(monstreActif.element)) {
-       //     monstreActif.element.remove();
-       //   }
-       // }, 600);
+  monstresActifs.forEach(monstre => {
+    const playerX = getPlayerX();
+    const playerY = getPlayerY();
+    const monstreX = parseInt(monstre.element.style.left) / tileSize;
+    const monstreY = parseInt(monstre.element.style.top) / tileSize;
+    // Modif : accepte monstre sur case adjacente OU sur la même case
+    const dx = Math.abs(playerX - monstreX);
+    const dy = Math.abs(playerY - monstreY);
+    console.log(`[DEBUG] Test ${monstre.data.nom} (id=${monstre.data.uniqueId}) : joueur=(${playerX},${playerY}) monstre=(${monstreX},${monstreY}) dx=${dx} dy=${dy} | Cible ${(dx <= 1 && dy <= 1) ? 'OUI' : 'NON'}`);
+    if ((dx <= 1 && dy <= 1)) { // autorise aussi dx==0 && dy==0 (sur la même case)
+      // Calcul des dégâts en tenant compte de la défense
+      const defense = monstre.data.defense ?? 0;
+      const dmgInfliges = Math.max(0, valeur - defense);
+      monstre.pv = Math.max(0, monstre.pv - dmgInfliges);
+      console.log(`${monstre.data.nom} reçoit ${dmgInfliges} dégâts (après défense). PV restant : ${monstre.pv}`);
+      // Mise à jour de la barre de vie
+      const healthFill = monstre.element.querySelector('.monster-health-fill');
+      if (healthFill) {
+        healthFill.style.width = `${(monstre.pv / monstre.maxPv) * 100}%`;
       }
-      monstreActif = null;
-    } else {
-      // Si le monstre est encore vivant, l'indiquer dans la console (il reste affiché sur la carte)
-      console.log("Combat terminé, mais le monstre est toujours vivant.");
+      if (monstre.element) {
+        monstre.element.style.filter = "brightness(150%)";
+        setTimeout(() => {
+          monstre.element.style.filter = "";
+        }, 300);
+      }
+      if (monstre.pv === 0) {
+        finCombat(monstre.data.uniqueId);
+      }
     }
+  });
+}
+
+export function finCombat(uniqueId) {
+  const index = monstresActifs.findIndex(m => m.data.uniqueId === uniqueId);
+  if (index === -1) return;
+
+  const monstre = monstresActifs[index];
+  clearInterval(monstre.interval);
+  if (monstre.chaseInterval) clearInterval(monstre.chaseInterval);
+
+  // Attribution de l'XP au joueur si le monstre est mort
+  if (monstre.pv === 0 && monstre.element) {
+    // On suppose que monstre.data.xpValue existe, sinon mettre une valeur par défaut
+    import('./player.js').then(({ gainXP }) => {
+      gainXP(monstre.data.xpValue || 10);
+    });
+    monstre.element.classList.add("fade-out");
+    monstre.element.addEventListener('animationend', () => {
+      monstre.element.remove();
+    });
+  }
+
+  monstresActifs.splice(index, 1);
+
+  if (monstresActifs.length === 0) {
+    setCombat(false);
   }
 }
 
-export function getMonstreActif() { 
-  return monstreActif; 
+export function getMonstreActif() {
+  // Retourne le premier monstre actif sur la case du joueur
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
+  return monstresActifs.find(monstre => {
+    const x = parseInt(monstre.element.style.left) / tileSize;
+    const y = parseInt(monstre.element.style.top) / tileSize;
+    return x === playerX && y === playerY;
+  });
+}
+
+export function getMonstreParId(id) {
+  return monstresActifs.find(monstre => monstre.data.uniqueId === id);
+}
+
+export function applyStatusEffect(monsterId, effect, duration, value = 1) {
+  const monstre = monstresActifs.find(m => m.data.uniqueId === monsterId);
+  if (!monstre) return;
+
+  if (effect === "debuff_atk") {
+    applyAttackDebuff(monstre, value, duration);
+    return;
+  }
+
+  monstre.data[effect] = true;
+  updateMonsterStatus(monstre);
+
+  let intervalId;
+  // Appliquer les dégâts sur la durée pour les effets poison et burning
+  if (effect === "poisoned" || effect === "burning") {
+    intervalId = setInterval(() => {
+      recevoirDegats(value);
+      console.log(`${effect} : ${value} dégâts appliqués au monstre.`);
+    }, 1000);
+  }
+
+  setTimeout(() => {
+    monstre.data[effect] = false;
+    updateMonsterStatus(monstre);
+    if (intervalId) clearInterval(intervalId);
+  }, duration);
+}
+
+// Fonction pour arrêter tous les monstres et leurs intervalles
+export function stopAllMonsters() {
+  monstresActifs.forEach(m => {
+    if (m.interval) {
+      clearInterval(m.interval);
+      m.interval = null;
+    }
+    if (m.chaseInterval) {
+      clearInterval(m.chaseInterval);
+      m.chaseInterval = null;
+    }
+  });
+  setCombat(false);
+}
+
+// --- Utilitaire pour parser monstre_id au format id_lvlX ---
+function parseMonstreId(monstre_id) {
+  const match = monstre_id.match(/^(.*)_lvl(\d+)$/);
+  if (match) {
+    return { id: match[1], niveau: parseInt(match[2], 10) };
+  } else {
+    return { id: monstre_id, niveau: 1 };
+  }
+}
+
+// --- Lors de la génération d'un monstre, utiliser le niveau parsé ---
+// Exemple d'adaptation pour la fonction qui crée un monstre à partir d'un id :
+export function creerMonstreDepuisId(monstre_id) {
+  const { id, niveau } = parseMonstreId(monstre_id);
+  // On récupère les données du monstre de base (sans le niveau)
+  const monstreData = window.MONSTRES.find(m => m.id === id);
+  if (!monstreData) {
+    console.error('Monstre inconnu:', monstre_id);
+    return null;
+  }
+  // On applique la progression dynamique avec le niveau parsé
+  return {
+    ...monstreData,
+    pv: getMonsterPV(niveau),
+    maxPv: getMonsterPV(niveau),
+    atk: getMonsterAtk(niveau),
+    def: getMonsterDef(niveau),
+    xpValue: getMonsterXP(niveau),
+    difficulte: niveau,
+    niveau: niveau
+  };
 }

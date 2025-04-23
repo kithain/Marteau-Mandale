@@ -1,6 +1,7 @@
 import os
 import json
 import random
+from .utils_rencontres import choisir_monstre
 # === dernieres rencontres ===
 dernieres_rencontres = {}  # Clé = (x, y, carte), valeur = compte à rebours
 # === Chemins de base ===
@@ -55,33 +56,14 @@ def generer_rencontre(x, y, nom_carte="map1"):
         print(f"[DEBUG] 🚫 Tuile bloquée à ({x}, {y}) sur {nom_carte}")
         return None
 
-    table = charger_table_rencontres(nom_carte)
-    for zone in table.get("zones", []):
-        if zone["x"][0] <= x <= zone["x"][1] and zone["y"][0] <= y <= zone["y"][1]:
-            # 🎯 Lire la difficulté de la zone
-            difficulte = zone.get("difficulte", 1)
-            chance = 0.1 * difficulte  # 0.1 = 10% par niveau
-
-            print(f"[DEBUG] Difficulté {difficulte} => chance {int(chance * 100)}%")
-            if random.random() > chance:
-                print("[DEBUG] 🎲 Pas de rencontre cette fois.")
-                return None
-
-            cooldown = zone.get("cooldown", 3)
-            pool = [
-                r["monstre_id"]
-                for r in zone["rencontres"]
-                for _ in range(r["probabilite"])
-            ]
-            if pool:
-                choisi = random.choice(pool)
-                print(f"[DEBUG] 🎲 Monstre généré : {choisi}")
-                dernieres_rencontres[key] = cooldown
-                return choisi
-    print("[DEBUG] ❌ Aucun monstre généré ici.")
-    return None
-
-
+    # --- Nouvelle logique : sélection dynamique du monstre selon la difficulté calculée ---
+    ligne = nom_carte[0]  # ex: 'O' pour 'O7'
+    colonne = int(nom_carte[1:])  # ex: 7 pour 'O7'
+    monstre_id = choisir_monstre(ligne, colonne)
+    print(f"[DEBUG] Monstre choisi dynamiquement pour {nom_carte} ({ligne}{colonne}): {monstre_id}")
+    cooldown = 3  # cooldown générique, à adapter si besoin
+    dernieres_rencontres[key] = cooldown
+    return monstre_id
 
 def est_tuile_bloquee(x, y, nom_carte):
     """Vérifie si la tuile est bloquée dans le calque obstacles de la map TMJ."""

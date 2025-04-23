@@ -357,3 +357,56 @@ form button {
 .secousse-monstre {
   animation: monsterShake 0.2s ease-in-out;
 }
+
+/* ======= États des monstres ======= */
+.monster-status {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 10;
+}
+
+.monster-status-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  font-weight: bold;
+}
+
+.monster-status-stunned {
+  background-color: #FFA500;
+}
+
+.monster-status-poisoned {
+  background-color: #4CAF50;
+}
+
+.monster-status-burning {
+  background-color: #FF4500;
+}
+
+.monster-health-bar {
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.monster-health-fill {
+  height: 100%;
+  background-color: #8b0000;
+  width: 100%;
+  transition: width 0.3s ease;
+}

@@ -1,0 +1,8 @@
+[
+  { "monstre_id": "golem_lvl10", "probabilite": 16 },
+  { "monstre_id": "éfrit_lvl10", "probabilite": 17 },
+  { "monstre_id": "élémentaire_air_lvl10", "probabilite": 17 },
+  { "monstre_id": "élémentaire_eau_lvl10", "probabilite": 17 },
+  { "monstre_id": "élémentaire_terre_lvl10", "probabilite": 16 },
+  { "monstre_id": "élémentaire_feu_lvl10", "probabilite": 17 }
+]
