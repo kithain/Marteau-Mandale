@@ -3,12 +3,24 @@ import { getPlayerX, getPlayerY, combatActif } from './player.js';
 import { demarrerCombat } from './monstre.js';
 import { currentMap } from './map.js';
 
-let deplacementSansRencontre = 0;
+let deplacementSansRencontre = 3;
+
+export function setDeplacementSansRencontre(val) {
+  if (typeof val === 'number' && !isNaN(val)) {
+    deplacementSansRencontre = val;
+    window.DEP_SANS_RENCONTRE = val;
+  }
+}
+
+export function getDeplacementSansRencontre() {
+  return deplacementSansRencontre;
+}
 
 export function verifierRencontre() {
   if (combatActif) return;
   if (deplacementSansRencontre > 0) {
     deplacementSansRencontre--;
+    window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
     return;
   }
 
@@ -42,6 +54,7 @@ export function verifierRencontre() {
         const spawnY = found ? found.y : py;
         demarrerCombat(monstre, pv, spawnX, spawnY);
         deplacementSansRencontre = 5;
+        window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
       }
     })
     .catch(error => {

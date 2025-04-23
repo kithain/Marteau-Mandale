@@ -34,8 +34,20 @@ function showToast(message, color = '#333') {
   }, 1800);
 }
 
-// Initialisation des événements
-document.addEventListener('DOMContentLoaded', () => {
+// --- Chargement dynamique des talents depuis talents.json ---
+function chargerTalentsEtDemarrerJeu() {
+  fetch('/static/talents/talents.json')
+    .then(response => response.json())
+    .then(talentsData => {
+      window.talentsDisponibles = {};
+      talentsData.classes.forEach(classeObj => {
+        window.talentsDisponibles[classeObj.class] = classeObj.talents;
+      });
+      demarrerJeu();
+    });
+}
+
+function demarrerJeu() {
   initConnexion();
   initSmokeAnimation();
   initParticles();
@@ -62,14 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     // Définition des variables globales pour la compatibilité
     window.PLAYER_CLASS = saveData.classe;
-    window.PLAYER_TALENTS = saveData.talents;
+    // window.PLAYER_TALENTS n'est plus utilisé
     window.PLAYER_MAP = saveData.carte;
     window.PLAYER_LEVEL = saveData.niveau;
     window.PLAYER_XP = saveData.experience;
     window.PLAYER_STATS = saveData.statistiques;
     window.PLAYER_INVENTAIRE = saveData.inventaire;
     window.PLAYER_POSITION = saveData.position;
-
+    // Ajout : synchronisation du compteur de déplacement sans rencontre
+    window.DEP_SANS_RENCONTRE = (typeof saveData.deplacementSansRencontre === 'number') ? saveData.deplacementSansRencontre : 3;
+    import('./combat_manager.js').then(module => {
+      if (module.setDeplacementSansRencontre) {
+        module.setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
+      }
+    });
     // Si la position est {x: 0, y: 0}, on considère qu'il faut utiliser le player_start de la carte
     let pos = saveData.position;
     let usePlayerStart = false;
@@ -103,13 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // On récupère les données à sauvegarder (adapter selon ton jeu)
       const saveData = {
         classe: window.PLAYER_CLASS,
-        talents: window.PLAYER_TALENTS,
         carte: window.PLAYER_MAP,
         niveau: window.PLAYER_LEVEL,
         experience: window.PLAYER_XP,
         statistiques: window.PLAYER_STATS,
         inventaire: window.PLAYER_INVENTAIRE,
         position: window.PLAYER_POSITION,
+        deplacementSansRencontre: window.DEP_SANS_RENCONTRE || 3,
         vie: window.PLAYER_VIE !== undefined ? window.PLAYER_VIE : (typeof playerPV !== 'undefined' ? playerPV : null),
         mana: window.PLAYER_MANA !== undefined ? window.PLAYER_MANA : (typeof playerMana !== 'undefined' ? playerMana : null)
       };
@@ -129,7 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-});
+}
+
+document.addEventListener('DOMContentLoaded', chargerTalentsEtDemarrerJeu);
 
 // === Sélecteur de classe (menu) ===
 function changeClass(direction) {

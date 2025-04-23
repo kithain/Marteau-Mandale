@@ -1,1 +1,20 @@
-{"niveau": 1, "experience": 0, "classe": "Paladin", "statistiques": {"force": 8, "intelligence": 4, "agilite": 3, "vie": 120}, "inventaire": [], "talents": [{"id": "paladin_atk", "name": "Choc Sacr\u00e9", "cost": 0, "cooldown": 1000, "color": "#ff0000", "effectText": "Justice ", "type": "attack", "damage": 2, "niveauRequis": 1, "zone": "adjacent"}, {"id": "paladin_util", "name": "Jugement", "cost": 1, "cooldown": 5000, "color": "#0000ff", "effectText": "Jugement ", "type": "utility", "boostType": "stun", "duration": 5000, "niveauRequis": 3}, {"id": "paladin_def", "name": "Aura Protectrice", "cost": 1, "cooldown": 4000, "color": "#00ffff", "effectText": "Bouclier ", "type": "defense", "defenseType": "shield", "duration": 4000, "value": 4, "niveauRequis": 5}, {"id": "paladin_lumiere", "name": "Lumi\u00e8re Soignante", "cost": 2, "cooldown": 6000, "color": "#ffff00", "effectText": "Soin ! ", "type": "utility", "boostType": "heal", "value": 8, "niveauRequis": 7}, {"id": "paladin_garde", "name": "Invocation du Garde", "cost": 3, "cooldown": 12000, "color": "#c0c0c0", "effectText": "Garde ! ", "type": "defense", "boostType": "shield", "duration": 6000, "value": 8, "niveauRequis": 9}], "position": {"x": 0, "y": 0}, "carte": "P7"}
+{
+  "classe": "Voleur",
+  "carte": "K6",
+  "niveau": 10,
+  "experience": 3829,
+  "statistiques": {
+    "agilite": 9,
+    "force": 4,
+    "intelligence": 5,
+    "vie": 100
+  },
+  "inventaire": [],
+  "position": {
+    "x": 3,
+    "y": 8
+  },
+  "deplacementSansRencontre": 5,
+  "vie": 480,
+  "mana": 60
+}

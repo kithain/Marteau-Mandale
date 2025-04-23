@@ -1,7 +1,7 @@
 // monstre.js
-import { infligerDegatsAuJoueur, setCombat, getPlayerX, getPlayerY } from './player.js';
+import { infligerDegatsAuJoueur, setCombat, getPlayerX, getPlayerY, playerPV } from './player.js';
 import { afficherMobDegats } from './utils.js';
-import { getMonsterPV, getMonsterAtk, getMonsterDef } from './progression.js';
+import { getMonsterPV, getMonsterAtk, getMonsterDef, getMonsterXP, getPlayerBaseDef } from './progression.js';
 
 const tileSize = 64;
 let monstresActifs = [];
@@ -151,8 +151,9 @@ export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
   monstreData.atk = atkMonstre;
   monstreData.defense = defMonstre;
 
-  // --- LOG des stats du monstre au début du combat ---
-  console.log('[COMBAT] Monstre:', monstreData.nom || monstreData.id, `| Niveau: ${niveau}`);
+  // Log initial du combat avec niveau du monstre
+  const niveauMonstre = (typeof monstreData.niveau !== 'undefined') ? monstreData.niveau : (monstreData.difficulte || '?');
+  console.log('[COMBAT] Monstre:', monstreData.nom || monstreData.id, `| Niveau: ${niveauMonstre}`);
   console.log(`[COMBAT] PV: ${pvMonstre}, ATK: ${atkMonstre}, DEF: ${defMonstre}`);
 
   const element = createMonsterElement(monstreData.image, uniqueId, posX, posY);
@@ -175,38 +176,45 @@ export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
 
 function attaqueJoueur(uniqueId) {
   // Si le joueur est mort, on arrête tous les monstres
-  import('./player.js').then(({ playerPV, getPlayerX, getPlayerY, infligerDegatsAuJoueur }) => {
-    if (playerPV <= 0) {
-      stopAllMonsters();
-      return;
+  if (playerPV <= 0) {
+    stopAllMonsters();
+    return;
+  }
+
+  const monstre = monstresActifs.find(m => m.data.uniqueId === uniqueId);
+  if (!monstre) return;
+
+  // Empêche le monstre d'agir s'il est stun
+  if (monstre.data.stunned) {
+    console.log(`[STUN] ${monstre.data.nom} est étourdi et ne peut pas agir.`);
+    return;
+  }
+
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
+  const monsterX = parseInt(monstre.element.style.left) / tileSize;
+  const monsterY = parseInt(monstre.element.style.top) / tileSize;
+
+  // NOUVEAU : le monstre attaque si il est adjacent OU sur la même case
+  const dx = Math.abs(playerX - monsterX);
+  const dy = Math.abs(playerY - monsterY);
+  if ((dx <= 1 && dy <= 1)) {
+    // Attaque si adjacent
+    const atk = monstre.data.atk ?? 0;
+    // Récupère la défense réelle du joueur
+    let playerDefense = 0;
+    if (typeof getPlayerBaseDef === 'function' && typeof window.PLAYER_LEVEL !== 'undefined') {
+      playerDefense = getPlayerBaseDef(window.PLAYER_LEVEL);
     }
-
-    const monstre = monstresActifs.find(m => m.data.uniqueId === uniqueId);
-    if (!monstre) return;
-
-    const playerX = getPlayerX();
-    const playerY = getPlayerY();
-    const monsterX = parseInt(monstre.element.style.left) / tileSize;
-    const monsterY = parseInt(monstre.element.style.top) / tileSize;
-
-    // NOUVEAU : le monstre attaque si il est adjacent OU sur la même case
-    const dx = Math.abs(playerX - monsterX);
-    const dy = Math.abs(playerY - monsterY);
-    if ((dx <= 1 && dy <= 1)) {
-      // Attaque si adjacent
-      const atk = monstre.data.atk ?? 0;
-      const playerDefense = 0; // TODO: récupérer la défense réelle du joueur
-      const degats = Math.max(0, atk - playerDefense);
-      if (degats === 0) {
-        console.log(`${monstre.data.nom} est trop affaibli pour infliger des dégâts ! (ATK=${atk})`);
-      } else {
-        console.log(`${monstre.data.nom} attaque (ATK=${atk}) et inflige ${degats} dégâts !`);
-      }
-      infligerDegatsAuJoueur(degats);
-      afficherMobDegats(degats);
-      animerAttaqueMonstre(monstre.data.uniqueId);
+    const degats = Math.max(0, atk - playerDefense);
+    console.log(`[COMBAT] ${monstre.data.nom} attaque le joueur ! ATK=${atk}, DEF joueur=${playerDefense}, dégâts infligés=${degats}`);
+    if (degats === 0) {
+      console.log(`${monstre.data.nom} est trop affaibli pour infliger des dégâts ! (ATK=${atk})`);
     }
-  });
+    infligerDegatsAuJoueur(degats);
+    afficherMobDegats(degats);
+    animerAttaqueMonstre(monstre.data.uniqueId);
+  }
 }
 
 function animerAttaqueMonstre(uniqueId) {
@@ -227,13 +235,13 @@ export function recevoirDegats(valeur = 1) {
     // Modif : accepte monstre sur case adjacente OU sur la même case
     const dx = Math.abs(playerX - monstreX);
     const dy = Math.abs(playerY - monstreY);
-    console.log(`[DEBUG] Test ${monstre.data.nom} (id=${monstre.data.uniqueId}) : joueur=(${playerX},${playerY}) monstre=(${monstreX},${monstreY}) dx=${dx} dy=${dy} | Cible ${(dx <= 1 && dy <= 1) ? 'OUI' : 'NON'}`);
     if ((dx <= 1 && dy <= 1)) { // autorise aussi dx==0 && dy==0 (sur la même case)
       // Calcul des dégâts en tenant compte de la défense
       const defense = monstre.data.defense ?? 0;
       const dmgInfliges = Math.max(0, valeur - defense);
+      const pvAvant = monstre.pv;
       monstre.pv = Math.max(0, monstre.pv - dmgInfliges);
-      console.log(`${monstre.data.nom} reçoit ${dmgInfliges} dégâts (après défense). PV restant : ${monstre.pv}`);
+      console.log(`[COMBAT] ${monstre.data.nom} reçoit une attaque ! Dégâts bruts=${valeur}, DEF=${defense}, Dégâts infligés=${dmgInfliges}, PV avant=${pvAvant}, PV après=${monstre.pv}`);
       // Mise à jour de la barre de vie
       const healthFill = monstre.element.querySelector('.monster-health-fill');
       if (healthFill) {
@@ -246,6 +254,7 @@ export function recevoirDegats(valeur = 1) {
         }, 300);
       }
       if (monstre.pv === 0) {
+        console.log(`[COMBAT] ${monstre.data.nom} est vaincu !`);
         finCombat(monstre.data.uniqueId);
       }
     }
@@ -298,6 +307,10 @@ export function applyStatusEffect(monsterId, effect, duration, value = 1) {
   const monstre = monstresActifs.find(m => m.data.uniqueId === monsterId);
   if (!monstre) return;
 
+  if (effect === "stunned") {
+    console.log(`[DEBUG] Application du stun sur ${monstre.data.nom} (${monsterId}) pour ${duration} ms.`);
+  }
+
   if (effect === "debuff_atk") {
     applyAttackDebuff(monstre, value, duration);
     return;
@@ -316,10 +329,25 @@ export function applyStatusEffect(monsterId, effect, duration, value = 1) {
   }
 
   setTimeout(() => {
+    if (effect === "stunned") {
+      console.log(`[DEBUG] Fin du stun sur ${monstre.data.nom} (${monsterId}).`);
+    }
     monstre.data[effect] = false;
     updateMonsterStatus(monstre);
     if (intervalId) clearInterval(intervalId);
   }, duration);
+}
+
+export function getMonstresAdjacentsEtSurCase() {
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
+  return monstresActifs.filter(monstre => {
+    const monstreX = parseInt(monstre.element.style.left) / tileSize;
+    const monstreY = parseInt(monstre.element.style.top) / tileSize;
+    const dx = Math.abs(playerX - monstreX);
+    const dy = Math.abs(playerY - monstreY);
+    return (dx <= 1 && dy <= 1);
+  });
 }
 
 // Fonction pour arrêter tous les monstres et leurs intervalles

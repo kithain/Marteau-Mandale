@@ -120,7 +120,8 @@ def nouvelle_partie():
         "classe": classe,
         "statistiques": stats_par_classe[classe],
         "inventaire": [],
-        "talents": load_talents(classe),
+        # PATCH ULTRA-SIMPLIFIE : on ne sauvegarde plus les talents pour le joueur !
+        # "talents": load_talents(classe),
         "position": {"x": 0, "y": 0},
         "carte": "P7"  # carte de depart !
     }
@@ -159,11 +160,11 @@ def jeu():
     with open(save_path, 'r') as f:
         save_data = json.load(f)
 
-    # === AJOUT ICI POUR FORCER LES TALENTS SI ABSENTS ===
-    if "talents" not in save_data or not save_data["talents"]:
-        print(f"[INFO] Aucune donnée de talents pour {username}, rechargement...")
-        save_data["talents"] = load_talents(save_data["classe"])
-
+    # === PATCH ULTRA-SIMPLIFIE ===
+    # On ne force plus la clé talents pour le joueur
+    # if "talents" not in save_data or not save_data["talents"]:
+    #     print(f"[INFO] Aucune donnée de talents pour {username}, rechargement...")
+    #     save_data["talents"] = load_talents(save_data["classe"])
     save_data.setdefault("carte", "P1")
 
     return render_template(

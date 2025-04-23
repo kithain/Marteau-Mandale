@@ -9,27 +9,43 @@ export let playerShield = 0;
 
 // === XP et Niveau ===
 export let playerXP = 0;
-export let playerLevel = 1;
 export let xpToNextLevel = 100;
+
+// Fonction utilitaire pour obtenir l'XP nécessaire pour atteindre le niveau donné
+function getXpToNextLevel(level) {
+  let xp = 100; // XP de base pour le niveau 1 (à ajuster si besoin)
+  for (let i = 1; i < level; i++) {
+    xp = Math.floor(xp * 1.5);
+  }
+  return xp;
+}
 
 import { getMaxVie, getMaxMana } from './progression.js';
 import { getPlayerBaseAtk, filterTalentsByLevel } from './progression.js';
 import { recevoirDegats, getMonstreActif, applyStatusEffect, stopAllMonsters } from './monstre.js';
 
-// Lecture dynamique des talents depuis la page
-export function getTalents() {
-  return window.PLAYER_TALENTS || [];
+// Récupère tous les talents disponibles (toutes classes)
+function getAllTalentsList() {
+  if (window.talentsDisponibles) {
+    // Fusionne tous les talents de toutes les classes
+    return Object.values(window.talentsDisponibles).flat();
+  }
+  return [];
 }
 
-// On ne garde qu'une seule version de setCombat, qui met simplement à jour le flag du combat.
-export function setCombat(actif) {
-  combatActif = actif;
-  console.log(`État du combat: ${combatActif ? "En cours" : "Terminé"}.`);
-  if (!combatActif) {
-    startRegen();
-  } else {
-    stopRegen();
-  }
+// Retourne les objets talents débloqués à partir d'une liste d'IDs
+function getTalentsFromIds(ids) {
+  const allTalents = getAllTalentsList();
+  return ids.map(id => allTalents.find(t => t.id === id)).filter(Boolean);
+}
+
+// Lecture dynamique des talents selon le niveau et la classe
+export function getTalents() {
+  const classe = window.PLAYER_CLASS;
+  const niveau = (typeof window.PLAYER_LEVEL === 'number') ? window.PLAYER_LEVEL : 1;
+  if (!classe || !window.talentsDisponibles || !window.talentsDisponibles[classe]) return [];
+  // Retourne TOUS les talents débloqués selon le niveau du joueur
+  return window.talentsDisponibles[classe].filter(t => (t.niveauRequis || 1) <= niveau);
 }
 
 // === Position du joueur ===
@@ -57,39 +73,63 @@ export function getPlayerY() {
 export function updateManaBar() {
   const manaFill = document.getElementById("mana-fill");
   if (!manaFill) return;
-  const percent = (playerMana / getMaxMana(playerLevel)) * 100;
+  const percent = (playerMana / getMaxMana(window.PLAYER_LEVEL)) * 100;
   manaFill.style.width = percent + "%";
 }
 
 export function updateVieBar() {
   const vieFill = document.getElementById("vie-fill");
   if (!vieFill) return;
-  const percent = (playerPV / getMaxVie(playerLevel)) * 100;
+  const percent = (playerPV / getMaxVie(window.PLAYER_LEVEL)) * 100;
   vieFill.style.width = percent + "%";
 }
 
 // === XP ===
 export function gainXP(amount) {
+  // Bloque l'XP au niveau 10
+  if (window.PLAYER_LEVEL >= 10) {
+    // On bloque l'XP au max requis pour le niveau 10
+    const maxXP = getXpToNextLevel(10);
+    playerXP = Math.min(playerXP, maxXP);
+    window.PLAYER_XP = playerXP;
+    updateXPBar();
+    return;
+  }
   playerXP += amount;
   while (playerXP >= xpToNextLevel) {
     levelUp();
+    // Si on atteint le niveau 10, on bloque l'XP
+    if (window.PLAYER_LEVEL >= 10) {
+      playerXP = getXpToNextLevel(10);
+      break;
+    }
   }
+  window.PLAYER_XP = playerXP;
   updateXPBar();
 }
 
 export function levelUp() {
-  playerXP -= xpToNextLevel;
-  playerLevel += 1;
+  if (window.PLAYER_LEVEL >= 10) {
+    // On ne monte plus de niveau
+    return;
+  }
+  window.PLAYER_XP -= xpToNextLevel;
+  window.PLAYER_LEVEL += 1;
   xpToNextLevel = Math.floor(xpToNextLevel * 1.5);
-  // Ici, tu peux ajouter des effets : augmenter les stats, afficher un message, etc.
-  createFloatingText(`Niveau ${playerLevel} !`, '#FFD700');
+  createFloatingText(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
   initialiserTalents();
 }
 
 export function updateXPBar() {
   const xpFill = document.getElementById("xp-fill");
   if (!xpFill) return;
-  const percent = (playerXP / xpToNextLevel) * 100;
+  let maxXP = xpToNextLevel;
+  // Si niveau max, on bloque l'XP au seuil max
+  if (window.PLAYER_LEVEL >= 10) {
+    maxXP = getXpToNextLevel(10);
+    playerXP = Math.min(playerXP, maxXP);
+  }
+  const percent = Math.min(100, (playerXP / maxXP) * 100);
   xpFill.style.width = percent + "%";
 }
 
@@ -143,13 +183,90 @@ export function utiliserTalent(talent, index) {
   if (combatActif) {
     // Gestion zone/mono-cible
     if (talent.zone === 'adjacent' || talent.zone === 'zone') {
-      console.log(`[DEBUG] Talent zone détecté (\"${talent.zone}\"), appel de recevoirDegats pour tous les monstres autour`);
+      console.log(`[DEBUG] Talent zone détecté (\"${talent.zone}\"), application sur tous les monstres autour`);
       import('./monstre.js').then(module => {
-        let degats = talent.damage;
-        if ((talent.niveauRequis || 1) === 1) {
-          degats = getPlayerBaseAtk(playerLevel);
-        }
-        module.recevoirDegats(degats);
+        const monstres = module.getMonstresAdjacentsEtSurCase ? module.getMonstresAdjacentsEtSurCase() : [];
+        monstres.forEach(monstre => {
+          // --- Attaque ---
+          if (talent.type === "attack") {
+            let degats = talent.damage;
+            if ((talent.niveauRequis || 1) === 1) {
+              degats = getPlayerBaseAtk(window.PLAYER_LEVEL);
+            }
+            module.recevoirDegats(degats, monstre.data.uniqueId);
+          }
+          // --- Utility (stun, heal, poison, burn, debuff, evasion, etc.) ---
+          else if (talent.type === "utility") {
+            switch (talent.boostType) {
+              case "stun":
+                module.applyStatusEffect(monstre.data.uniqueId, "stunned", talent.duration);
+                break;
+              case "heal":
+              case "soin":
+                // Heal the player for the given value, but not above max HP
+                setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), playerPV + (talent.value || 0)));
+                if (typeof afficherMessage === 'function') {
+                  afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
+                } else {
+                  console.log(`[HEAL] +${talent.value || 0} PV soignés.`);
+                }
+                break;
+              case "poison":
+                module.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration);
+                break;
+              case "burn":
+                module.applyStatusEffect(monstre.data.uniqueId, "burning", talent.duration);
+                break;
+              case "dot":
+                module.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, talent.value);
+                break;
+              case "debuff_atk":
+                module.applyStatusEffect(monstre.data.uniqueId, "debuff_atk", talent.duration, talent.value);
+                break;
+              case "evasion":
+                // Appliquer un effet d'évasion sur le joueur (pas sur le monstre)
+                dashBackwards();
+                setCombat(false);
+                stopAllMonsters();
+                setTimeout(() => {
+                  const currentX = getPlayerX();
+                  const currentY = getPlayerY();
+                  const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
+                  for (const monsterDiv of monsterElements) {
+                    const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
+                    const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+                  }
+                }, 100);
+                if (typeof afficherMessage === 'function') {
+                  afficherMessage("Vous vous échappez discrètement du combat !", "success");
+                } else {
+                  console.log("Boost d'évasion activé : Dash en arrière.");
+                }
+                break;
+              default:
+                console.warn(`[TALENT] Type utility inconnu ou non géré : ${talent.boostType}`);
+                break;
+            }
+          }
+          // --- Defense (bouclier sur joueur, dot sur monstre, etc.) ---
+          else if (talent.type === "defense") {
+            switch (talent.defenseType) {
+              case "dot":
+                // scaling DOT sur le niveau du joueur
+                const dotScaling = talent.dotScaling !== undefined ? talent.dotScaling : 0.5;
+                const dotValue = Math.max(1, Math.round(talent.value + (window.PLAYER_LEVEL - 1) * dotScaling));
+                module.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, dotValue);
+                break;
+              default:
+                console.warn(`[TALENT] Type defense inconnu ou non géré : ${talent.defenseType}`);
+                break;
+            }
+          }
+          // --- Autre type non géré ---
+          else {
+            console.warn(`[TALENT] Type de talent non géré : ${talent.type}`);
+          }
+        });
       });
       return;
     }
@@ -160,46 +277,68 @@ export function utiliserTalent(talent, index) {
       case "attack":
         let degats = talent.damage;
         if ((talent.niveauRequis || 1) === 1) {
-          degats = getPlayerBaseAtk(playerLevel);
+          degats = getPlayerBaseAtk(window.PLAYER_LEVEL);
         }
         recevoirDegats(degats, monstreActif.data.uniqueId);
         break;
       case "utility":
-        if (talent.boostType === "stun") {
-          applyStatusEffect(monstreActif.data.uniqueId, "stunned", talent.duration);
-        } else if (talent.boostType === "poison") {
-          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
-        } else if (talent.boostType === "burn") {
-          applyStatusEffect(monstreActif.data.uniqueId, "burning", talent.duration);
-        } else if (talent.boostType === "dot") {
-          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
-        } else if (talent.boostType === "evasion") {
-          dashBackwards();
-          setCombat(false);
-          stopAllMonsters();
-          setTimeout(() => {
-            const currentX = getPlayerX();
-            const currentY = getPlayerY();
-            const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
-            for (const monsterDiv of monsterElements) {
-              const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
-              const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+        switch (talent.boostType) {
+          case "stun":
+            applyStatusEffect(monstreActif.data.uniqueId, "stunned", talent.duration);
+            break;
+          case "heal":
+          case "soin":
+            setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), playerPV + (talent.value || 0)));
+            if (typeof afficherMessage === 'function') {
+              afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
+            } else {
+              console.log(`[HEAL] +${talent.value || 0} PV soignés.`);
             }
-          }, 100);
-          if (typeof afficherMessage === 'function') {
-            afficherMessage("Vous vous échappez discrètement du combat !", "success");
-          } else {
-            console.log("Boost d'évasion activé : Dash en arrière.");
-          }
-        } else if (talent.boostType === "debuff_atk") {
-          applyStatusEffect(monstreActif.data.uniqueId, "debuff_atk", talent.duration, talent.value);
+            break;
+          case "poison":
+            applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
+            break;
+          case "burn":
+            applyStatusEffect(monstreActif.data.uniqueId, "burning", talent.duration);
+            break;
+          case "dot":
+            applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, talent.value);
+            break;
+          case "debuff_atk":
+            applyStatusEffect(monstreActif.data.uniqueId, "debuff_atk", talent.duration, talent.value);
+            break;
+          case "evasion":
+            dashBackwards();
+            setCombat(false);
+            stopAllMonsters();
+            setTimeout(() => {
+              const currentX = getPlayerX();
+              const currentY = getPlayerY();
+              const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
+              for (const monsterDiv of monsterElements) {
+                const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
+                const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+              }
+            }, 100);
+            if (typeof afficherMessage === 'function') {
+              afficherMessage("Vous vous échappez discrètement du combat !", "success");
+            } else {
+              console.log("Boost d'évasion activé : Dash en arrière.");
+            }
+            break;
+          default:
+            console.warn(`[TALENT] Type utility inconnu ou non géré : ${talent.boostType}`);
+            break;
         }
         break;
       case "defense":
         if (talent.defenseType === "shield") {
           applyShield(talent.value, talent.duration);
         } else if (talent.defenseType === "dot") {
-          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, talent.value);
+          // scaling DOT sur le niveau du joueur
+          const dotScaling = talent.dotScaling !== undefined ? talent.dotScaling : 0.5;
+          const dotValue = Math.max(1, Math.round(talent.value + (window.PLAYER_LEVEL - 1) * dotScaling));
+          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, dotValue);
         }
         break;
     }
@@ -210,10 +349,13 @@ export function utiliserTalent(talent, index) {
 export function initialiserTalents() {
   const talentButtons = document.getElementById('talents-buttons');
   const talentsData = getTalents();
-  const allTalents = Array.isArray(talentsData) ? talentsData : talentsData.talents;
-  const skills = filterTalentsByLevel(allTalents, playerLevel);
+  // Ne garde que les talents effectivement débloqués (présents et valides)
+  const skills = Array.isArray(talentsData)
+    ? talentsData.filter(t => t && t.id && (t.niveauRequis || 1) <= window.PLAYER_LEVEL)
+    : [];
   talentButtons.innerHTML = '';
   skills.forEach((talent, index) => {
+    if (!talent || !talent.name) return;
     const btn = document.createElement(`button`);
     btn.id = `talent-btn-${index}`;
     btn.textContent = `${index + 1}. ${talent.name}`;
@@ -360,15 +502,16 @@ function applyPoison(duration) {
 
 export function infligerDegatsAuJoueur(valeur) {
   // Si un bouclier est actif, il absorbe une partie des dégâts
+  let valeurInitiale = valeur;
   if (playerShield > 0) {
     const absorb = Math.min(playerShield, valeur);
     valeur -= absorb;
     playerShield -= absorb;
-    console.log(`Bouclier absorbe ${absorb} dégâts, reste: ${playerShield} PV de bouclier.`);
+    console.log(`[COMBAT] Bouclier absorbe ${absorb} dégâts, reste: ${playerShield} PV de bouclier. Dégâts restants à appliquer: ${valeur}`);
   }
-  
+  const pvAvant = playerPV;
   setPlayerPV(Math.max(0, playerPV - valeur));
-  console.log(`Le joueur reçoit ${valeur} dégâts. PV restant: ${playerPV}`);
+  console.log(`[COMBAT] Joueur reçoit une attaque ! Dégâts bruts=${valeurInitiale}, Dégâts après bouclier=${valeur}, PV avant=${pvAvant}, PV après=${playerPV}`);
 
   const player = document.getElementById("player");
   if (player) {
@@ -377,7 +520,7 @@ export function infligerDegatsAuJoueur(valeur) {
   }
 
   if (playerPV <= 0) {
-    console.log("Le joueur est mort.");
+    console.log("[COMBAT] Le joueur est mort.");
     setCombat(false);
     afficherGameOver();
   }
@@ -460,39 +603,39 @@ export function setPlayerMana(val) {
 
 export async function loadPlayerData(saveData) {
   const isNewGame = (saveData && saveData.niveau === 1 && saveData.experience === 0);
-  playerLevel = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : 1;
-
+  window.PLAYER_LEVEL = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : 1;
   if (isNewGame) {
-    setPlayerPV(getMaxVie(playerLevel));
-    setPlayerMana(getMaxMana(playerLevel));
+    setPlayerPV(getMaxVie(window.PLAYER_LEVEL));
+    setPlayerMana(getMaxMana(window.PLAYER_LEVEL));
   } else {
     if (saveData && typeof saveData.vie === 'number') {
       setPlayerPV(saveData.vie);
     } else {
-      setPlayerPV(getMaxVie(playerLevel));
+      setPlayerPV(getMaxVie(window.PLAYER_LEVEL));
     }
     if (saveData && typeof saveData.mana === 'number') {
       setPlayerMana(saveData.mana);
     } else {
-      setPlayerMana(getMaxMana(playerLevel));
+      setPlayerMana(getMaxMana(window.PLAYER_LEVEL));
     }
   }
-  // Ajout : chargement XP et niveau
   if (saveData && typeof saveData.experience === 'number') {
-    playerXP = saveData.experience;
+    window.PLAYER_XP = saveData.experience;
+    playerXP = window.PLAYER_XP;
   } else {
+    window.PLAYER_XP = 0;
     playerXP = 0;
   }
   updateXPBar();
 }
 
-// Ajout : sauvegarde XP et niveau dans le format de sauvegarde
+// Ajout : sauvegarde XP, niveau ET talents dans le format de sauvegarde
 export function getPlayerSaveData() {
   return {
     vie: playerPV,
     mana: playerMana,
     experience: playerXP,
-    niveau: playerLevel,
+    niveau: window.PLAYER_LEVEL,
     statistiques: window.PLAYER_STATS || {},
     carte: window.PLAYER_CARTE || '',
     // autres champs si besoin
@@ -546,14 +689,14 @@ export function startRegen() {
     if (!combatActif) {
       let updated = false;
       // Régénération en pourcentage (ex: 2% du max toutes les 2s)
-      const pvRegen = getMaxVie(playerLevel) * 0.02;
-      const manaRegen = getMaxMana(playerLevel) * 0.02;
-      if (playerPV < getMaxVie(playerLevel)) {
-        setPlayerPV(Math.min(getMaxVie(playerLevel), playerPV + pvRegen));
+      const pvRegen = getMaxVie(window.PLAYER_LEVEL) * 0.2;
+      const manaRegen = getMaxMana(window.PLAYER_LEVEL) * 0.02;
+      if (playerPV < getMaxVie(window.PLAYER_LEVEL)) {
+        setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), playerPV + pvRegen));
         updated = true;
       }
-      if (playerMana < getMaxMana(playerLevel)) {
-        setPlayerMana(Math.min(getMaxMana(playerLevel), playerMana + manaRegen));
+      if (playerMana < getMaxMana(window.PLAYER_LEVEL)) {
+        setPlayerMana(Math.min(getMaxMana(window.PLAYER_LEVEL), playerMana + manaRegen));
         updated = true;
       }
       if (updated) {
@@ -583,3 +726,14 @@ window.afficherGameOver = function(...args) {
 
 // Appeler updateXPBar au chargement du script pour afficher la barre correctement
 updateXPBar();
+
+// On ne garde qu'une seule version de setCombat, qui met simplement à jour le flag du combat.
+export function setCombat(actif) {
+  combatActif = actif;
+  console.log(`État du combat: ${combatActif ? "En cours" : "Terminé"}.`);
+  if (!combatActif) {
+    startRegen();
+  } else {
+    stopRegen();
+  }
+}

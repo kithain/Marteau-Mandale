@@ -12,7 +12,8 @@
           "effectText": "BOUM !",
           "type": "attack",
           "damage": 4,
-          "niveauRequis": 1
+          "niveauRequis": 1,
+          "zone": "adjacent"
         },
         {
           "id": "barbare_util",
@@ -24,7 +25,8 @@
           "type": "utility",
           "boostType": "stun",
           "duration": 5000,
-          "niveauRequis": 3
+          "niveauRequis": 3,
+          "zone": "adjacent"
         },
         {
           "id": "barbare_def",
@@ -37,7 +39,9 @@
           "defenseType": "dot",
           "value": 2,
           "duration": 4000,
-          "niveauRequis": 5
+          "niveauRequis": 5,
+          "zone": "adjacent",
+          "dotScaling": 0.5
         },
         {
           "id": "barbare_rage_du_boucher",
@@ -48,7 +52,8 @@
           "effectText": "GRRRAH !",
           "type": "attack",
           "damage": 8,
-          "niveauRequis": 7
+          "niveauRequis": 7,
+          "zone": "adjacent"
         },
         {
           "id": "barbare_brise_arme",
@@ -61,7 +66,8 @@
           "boostType": "debuff_atk",
           "value": -2,
           "duration": 5000,
-          "niveauRequis": 9
+          "niveauRequis": 9,
+          "zone": "adjacent"
         }
       ]
     },
@@ -77,7 +83,8 @@
           "effectText": " Feu",
           "type": "attack",
           "damage": 2,
-          "niveauRequis": 1
+          "niveauRequis": 1,
+          "zone": "adjacent"
         },
         {
           "id": "mage_util",
@@ -89,7 +96,8 @@
           "type": "utility",
           "boostType": "poison",
           "duration": 4000,
-          "niveauRequis": 3
+          "niveauRequis": 3,
+          "zone": "adjacent"
         },
         {
           "id": "mage_def",
@@ -102,7 +110,8 @@
           "defenseType": "shield",
           "duration": 4000,
           "value": 4,
-          "niveauRequis": 5
+          "niveauRequis": 5,
+          "zone": "adjacent"
         },
         {
           "id": "mage_eclair",
@@ -113,7 +122,8 @@
           "effectText": "Éclair ! ",
           "type": "attack",
           "damage": 7,
-          "niveauRequis": 7
+          "niveauRequis": 7,
+          "zone": "adjacent"
         },
         {
           "id": "mage_tempete",
@@ -124,7 +134,8 @@
           "effectText": "Tempête ! ",
           "type": "attack",
           "damage": 10,
-          "niveauRequis": 9
+          "niveauRequis": 9,
+          "zone": "adjacent"
         }
       ]
     },
@@ -153,7 +164,8 @@
           "type": "utility",
           "boostType": "stun",
           "duration": 5000,
-          "niveauRequis": 3
+          "niveauRequis": 3,
+          "zone": "adjacent"
         },
         {
           "id": "paladin_def",
@@ -166,7 +178,8 @@
           "defenseType": "shield",
           "duration": 4000,
           "value": 4,
-          "niveauRequis": 5
+          "niveauRequis": 5,
+          "zone": "adjacent"
         },
         {
           "id": "paladin_lumiere",
@@ -178,7 +191,8 @@
           "type": "utility",
           "boostType": "heal",
           "value": 8,
-          "niveauRequis": 7
+          "niveauRequis": 7,
+          "zone": "adjacent"
         },
         {
           "id": "paladin_garde",
@@ -191,7 +205,8 @@
           "boostType": "shield",
           "duration": 6000,
           "value": 8,
-          "niveauRequis": 9
+          "niveauRequis": 9,
+          "zone": "adjacent"
         }
       ]
     },
@@ -207,7 +222,8 @@
           "effectText": "Tir Rapide ",
           "type": "attack",
           "damage": 2,
-          "niveauRequis": 1
+          "niveauRequis": 1,
+          "zone": "adjacent"
         },
         {
           "id": "voleur_util",
@@ -219,7 +235,8 @@
           "type": "utility",
           "boostType": "evasion",
           "duration": 4000,
-          "niveauRequis": 3
+          "niveauRequis": 3,
+          "zone": "adjacent"
         },
         {
           "id": "voleur_def",
@@ -232,7 +249,9 @@
           "defenseType": "dot",
           "duration": 4000,
           "value": 2,
-          "niveauRequis": 5
+          "niveauRequis": 5,
+          "zone": "adjacent",
+          "dotScaling": 0.5
         },
         {
           "id": "voleur_assaut",
@@ -243,7 +262,8 @@
           "effectText": "Coup sournois !",
           "type": "attack",
           "damage": 8,
-          "niveauRequis": 7
+          "niveauRequis": 7,
+          "zone": "adjacent"
         },
         {
           "id": "voleur_siphon",
@@ -255,7 +275,8 @@
           "type": "attack",
           "damage": 4,
           "heal": 4,
-          "niveauRequis": 9
+          "niveauRequis": 9,
+          "zone": "adjacent"
         }
       ]
     }
