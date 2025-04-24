@@ -1,0 +1,31 @@
+Gestion des Joueurs & Progression
+- Création de compte & connexion 
+- Sauvegarde/chargement des données joueur 
+- Gestion de l’XP, montée de niveau, progression des stats
+- Système de talents débloqués par niveau, activation clavier, cooldowns, effets visuels
+- Stats dynamiques
+
+Système de Monstres
+- Définition des monstres 
+- Apparition dynamique selon difficulté 
+- Gestion des combats
+- IA de déplacement vers le joueur, blocage si case occupée (a tester )
+
+Cartes & Déplacements
+- Gestion des maps 
+- Déplacement joueur 
+- Camera & affichage 
+
+Interface & Frontend
+- Menu, page de jeu, index
+- Affichage dynamique (stats, notifications, animations)
+- Déplacement, talents, interactions
+
+Système de Rencontres
+- Gestion des rencontres par difficulté
+- Génération de rencontre et scaling (position/difficulté)
+
+Utilitaires & Divers
+- Gestion des cooldowns, effets temporaires
+- Sauvegardes côté serveur et client
+- Boucle de jeu principale, gestion des monstres/talents, progression, sauvegarde/restauration et interface

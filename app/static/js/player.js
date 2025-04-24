@@ -1,11 +1,19 @@
 // player.js
 
 // === Variables exportées (globales) ===
-export let playerMana = 10;
-export let playerPV = 10;
+// Ces variables sont initialisées à 0, puis mises à jour selon le niveau du joueur au chargement de la partie ou lors d'un level-up
 export let cooldowns = {};
 export let combatActif = false;
-export let playerShield = 0;
+export let playerDef = 0; // Nouvelle stat de défense, calculée par niveau
+
+import { getPlayerPV, setPlayerPV, getPlayerMana, setPlayerMana } from './playerState.js';
+
+// Fonction pour initialiser les stats selon le niveau
+export function initialiserStatsJoueur(level) {
+  setPlayerPV(getMaxVie(level));
+  setPlayerMana(getMaxMana(level));
+  playerDef = getPlayerBaseDef(level);
+}
 
 // === XP et Niveau ===
 export let playerXP = 0;
@@ -28,6 +36,7 @@ export { createFloatingText, applyBoost, applyShield, applyStun, applyPoison, af
 
 import { getMaxVie, getMaxMana } from './progression.js';
 import { getPlayerBaseAtk, filterTalentsByLevel } from './progression.js';
+import { getPlayerBaseDef } from './progression.js'; // Import de la fonction getPlayerBaseDef
 import { recevoirDegats, getMonstreActif, applyStatusEffect, stopAllMonsters } from './monstre.js';
 
 import {
@@ -74,14 +83,14 @@ export function getPlayerY() {
 export function updateManaBar() {
   const manaFill = document.getElementById("mana-fill");
   if (!manaFill) return;
-  const percent = (playerMana / getMaxMana(window.PLAYER_LEVEL)) * 100;
+  const percent = (getPlayerMana() / getMaxMana(window.PLAYER_LEVEL)) * 100;
   manaFill.style.width = percent + "%";
 }
 
 export function updateVieBar() {
   const vieFill = document.getElementById("vie-fill");
   if (!vieFill) return;
-  const percent = (playerPV / getMaxVie(window.PLAYER_LEVEL)) * 100;
+  const percent = (getPlayerPV() / getMaxVie(window.PLAYER_LEVEL)) * 100;
   vieFill.style.width = percent + "%";
 }
 
@@ -113,6 +122,7 @@ export function levelUp() {
   window.PLAYER_XP -= xpToNextLevel;
   window.PLAYER_LEVEL += 1;
   xpToNextLevel = Math.floor(xpToNextLevel * 1.5);
+  initialiserStatsJoueur(window.PLAYER_LEVEL);
   createFloatingText(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
   initialiserTalents();
 }
@@ -132,7 +142,7 @@ export function updateXPBar() {
 // === Utilisation d'un talent ===
 export function utiliserTalent(talent, index) {
   if (cooldowns[index]) return;
-  if (playerMana < talent.cost) return;
+  if (getPlayerMana() < talent.cost) return;
 
   animerAttaque();
 
@@ -157,7 +167,7 @@ export function utiliserTalent(talent, index) {
     createFloatingText(talent.effectText, talent.color || "white");
   }
 
-  playerMana -= talent.cost;
+  setPlayerMana(getPlayerMana() - talent.cost);
   updateManaBar();
 
   cooldowns[index] = true;
@@ -187,7 +197,7 @@ export function utiliserTalent(talent, index) {
                 break;
               case "heal":
               case "soin":
-                setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), playerPV + (talent.value || 0)));
+                setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), getPlayerPV() + (talent.value || 0)));
                 if (typeof afficherMessage === 'function') {
                   afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
                 }
@@ -256,7 +266,7 @@ export function utiliserTalent(talent, index) {
             break;
           case "heal":
           case "soin":
-            setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), playerPV + (talent.value || 0)));
+            setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), getPlayerPV() + (talent.value || 0)));
             if (typeof afficherMessage === 'function') {
               afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
             }
@@ -382,8 +392,6 @@ export function dashBackwards() {
   });
 }
 
-
-
 // === Régénération automatique ===
 let regenInterval = null;
 let isGameOver = false;
@@ -404,54 +412,20 @@ window.afficherGameOver = function(...args) {
 
 updateXPBar();
 
-export function setPlayerPV(val) {
-  playerPV = val;
-  window.PLAYER_VIE = val;
-  updateVieBar();
-}
-
-export function setPlayerMana(val) {
-  playerMana = val;
-  window.PLAYER_MANA = val;
-  updateManaBar();
-}
-
-export async function loadPlayerData(saveData) {
-  const isNewGame = (saveData && saveData.niveau === 1 && saveData.experience === 0);
-  window.PLAYER_LEVEL = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : 1;
-  if (isNewGame) {
-    setPlayerPV(getMaxVie(window.PLAYER_LEVEL));
-    setPlayerMana(getMaxMana(window.PLAYER_LEVEL));
-  } else {
-    if (saveData && typeof saveData.vie === 'number') {
-      setPlayerPV(saveData.vie);
-    } else {
-      setPlayerPV(getMaxVie(window.PLAYER_LEVEL));
-    }
-    if (saveData && typeof saveData.mana === 'number') {
-      setPlayerMana(saveData.mana);
-    } else {
-      setPlayerMana(getMaxMana(window.PLAYER_LEVEL));
-    }
-  }
-  if (saveData && typeof saveData.experience === 'number') {
-    window.PLAYER_XP = saveData.experience;
-    playerXP = window.PLAYER_XP;
-  } else {
-    window.PLAYER_XP = 0;
-    playerXP = 0;
-  }
-  updateXPBar();
-}
-
 export function getPlayerSaveData() {
   return {
-    vie: playerPV,
-    mana: playerMana,
+    vie: getPlayerPV(), // vie restante (actuelle)
+    mana: getPlayerMana(), // mana restant (actuel)
     experience: playerXP,
     niveau: window.PLAYER_LEVEL,
-    statistiques: window.PLAYER_STATS || {},
+    statistiques: {
+      ...(window.PLAYER_STATS || {}),
+      vie: getMaxVie(window.PLAYER_LEVEL) // vie max (calculée dynamiquement)
+    },
     carte: window.PLAYER_CARTE || '',
+    inventaire: window.PLAYER_INVENTAIRE || [],
+    position: getPlayerPosition(),
+    deplacementSansRencontre: (typeof window.DEP_SANS_RENCONTRE === 'number') ? window.DEP_SANS_RENCONTRE : undefined
   };
 }
 
@@ -503,4 +477,25 @@ export function setCombat(actif) {
   } else {
     stopRegen();
   }
+}
+
+export async function loadPlayerData(saveData) {
+  const isNewGame = (saveData && saveData.niveau === 1 && saveData.experience === 0);
+  window.PLAYER_LEVEL = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : 1;
+  initialiserStatsJoueur(window.PLAYER_LEVEL);
+  if (saveData && typeof saveData.experience === 'number') {
+    window.PLAYER_XP = saveData.experience;
+    playerXP = window.PLAYER_XP;
+  } else {
+    window.PLAYER_XP = 0;
+    playerXP = 0;
+  }
+  // Correction : restaurer PV et mana si présents dans la sauvegarde et non nuls
+  if (typeof saveData.vie === 'number' && saveData.vie !== null) {
+    setPlayerPV(saveData.vie);
+  }
+  if (typeof saveData.mana === 'number' && saveData.mana !== null) {
+    setPlayerMana(saveData.mana);
+  }
+  updateXPBar();
 }

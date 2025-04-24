@@ -1,20 +1,20 @@
 {
-  "classe": "Voleur",
-  "carte": "K6",
-  "niveau": 10,
-  "experience": 3829,
+  "classe": "Paladin",
+  "carte": "P7",
+  "niveau": 1,
+  "experience": 10,
   "statistiques": {
-    "agilite": 9,
-    "force": 4,
-    "intelligence": 5,
-    "vie": 100
+    "agilite": 3,
+    "force": 8,
+    "intelligence": 4,
+    "vie": 120
   },
   "inventaire": [],
   "position": {
-    "x": 2,
-    "y": 7
+    "x": 3,
+    "y": 8
   },
-  "deplacementSansRencontre": 4,
-  "vie": 480,
-  "mana": 60
+  "deplacementSansRencontre": 5,
+  "vie": null,
+  "mana": null
 }

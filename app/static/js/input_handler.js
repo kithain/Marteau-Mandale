@@ -83,10 +83,13 @@ export function handleKeydown(e) {
       window.combatActif = true;
       console.log('Combat automatiquement déclenché car un monstre est présent sur la case ou en case adjacente.');
     }
-    // Bloque le déplacement
-    e.preventDefault();
-    console.log('Déplacement bloqué : vous ne pouvez pas quitter la case tant qu\'un monstre est présent ou adjacent.');
-    return;
+    // Vérifie si le joueur est furtif : dans ce cas, on autorise le déplacement même si un monstre est adjacent
+    if (!window.furtif) {
+      // Bloque le déplacement
+      e.preventDefault();
+      console.log('Déplacement bloqué : vous ne pouvez pas quitter la case tant qu\'un monstre est présent ou adjacent.');
+      return;
+    }
   }
   
   // Calcul de la nouvelle position en fonction de la touche fléchée pressée
@@ -115,7 +118,8 @@ export function handleKeydown(e) {
     const my = parseInt(m.element.style.top) / 64;
     return mx === newX && my === newY;
   });
-  if (monstreSurCaseDeplacement) {
+  // Correction : autorise le déplacement si furtif
+  if (monstreSurCaseDeplacement && !window.furtif) {
     console.log("Déplacement bloqué : case occupée par un monstre");
     return;
   }

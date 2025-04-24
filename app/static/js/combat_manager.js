@@ -16,6 +16,11 @@ export function getDeplacementSansRencontre() {
   return deplacementSansRencontre;
 }
 
+export function resetDeplacementSansRencontre() {
+  deplacementSansRencontre = 3;
+  window.DEP_SANS_RENCONTRE = 3;
+}
+
 export function verifierRencontre() {
   if (combatActif) return;
   if (deplacementSansRencontre > 0) {
@@ -75,6 +80,8 @@ export function detecterSortie(exitZones) {
 // Nouvelle fonction pour détecter un monstre adjacent et démarrer le combat
 
 export function verifierCombatAdjMonstre() {
+  // Ajout : Ne détecte pas le combat si furtif
+  if (window.furtif) return false;
   const px = getPlayerX();
   const py = getPlayerY();
   const directions = [

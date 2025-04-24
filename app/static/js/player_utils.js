@@ -1,6 +1,10 @@
 // player_utils.js
 // Fonctions utilitaires et effets visuels/statuts extraites de player.js
 
+// --- IMPORTS ---
+import { setPlayerPV, setPlayerMana, getPlayerPV, getPlayerMana } from './playerState.js';
+import { getMaxVie, getMaxMana, getPlayerBaseDef } from './progression.js';
+
 // === Texte flottant ===
 export function createFloatingText(text, color) {
   const player = document.getElementById("player");
@@ -36,12 +40,7 @@ export function applyBoost(boostType, amount, duration) {
 
 // === Bouclier temporaire ===
 export function applyShield(value, duration) {
-  if (!window.playerShield) window.playerShield = 0;
-  window.playerShield += value;
-  setTimeout(() => {
-    window.playerShield -= value;
-    if (window.playerShield < 0) window.playerShield = 0;
-  }, duration);
+  // Supprimé
 }
 
 // === Stun ===
@@ -84,17 +83,7 @@ export function afficherDegats(valeur) {
 
 // === Dégâts au joueur ===
 export function infligerDegatsAuJoueur(valeur) {
-  if (window.playerShield && window.playerShield > 0) {
-    const shieldAbsorb = Math.min(window.playerShield, valeur);
-    window.playerShield -= shieldAbsorb;
-    valeur -= shieldAbsorb;
-    if (valeur <= 0) return;
-  }
-  if (typeof window.playerPV === 'number') {
-    window.playerPV -= valeur;
-    if (window.playerPV < 0) window.playerPV = 0;
-    // Optionnel : mettre à jour la barre de vie ici si besoin
-  }
+  setPlayerPV(getPlayerPV() - valeur);
 }
 
 // === Game Over ===
@@ -106,21 +95,32 @@ export function afficherGameOver(...args) {
   }
 }
 
-// === Régénération automatique ===
+// --- Régénération automatique ---
 let regenInterval = null;
+
+// Nouvelle version : délègue la regen à playerState.js si disponible
 export function startRegen() {
+  if (typeof import('./playerState.js').then === 'function') {
+    import('./playerState.js').then(mod => {
+      if (mod && typeof mod.startRegen === 'function') mod.startRegen();
+    });
+    return;
+  }
   if (regenInterval) return;
   regenInterval = setInterval(() => {
     if (window.isGameOver || window.combatActif) return;
-    if (typeof window.playerPV === 'number' && typeof window.getMaxVie === 'function') {
-      window.playerPV = Math.min(window.playerPV + 1, window.getMaxVie(window.PLAYER_LEVEL));
-    }
-    if (typeof window.playerMana === 'number' && typeof window.getMaxMana === 'function') {
-      window.playerMana = Math.min(window.playerMana + 1, window.getMaxMana(window.PLAYER_LEVEL));
-    }
+    setPlayerPV(Math.min(getPlayerPV() + 1, getMaxVie(window.PLAYER_LEVEL)));
+    setPlayerMana(Math.min(getPlayerMana() + 1, getMaxMana(window.PLAYER_LEVEL)));
   }, 2000);
 }
+
 export function stopRegen() {
+  if (typeof import('./playerState.js').then === 'function') {
+    import('./playerState.js').then(mod => {
+      if (mod && typeof mod.stopRegen === 'function') mod.stopRegen();
+    });
+    return;
+  }
   if (regenInterval) clearInterval(regenInterval);
   regenInterval = null;
 }

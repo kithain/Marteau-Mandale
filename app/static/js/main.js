@@ -3,6 +3,14 @@ import { initConnexion, initSmokeAnimation, initParticles } from './utils.js';
 import { handleKeydown } from './input_handler.js';
 import { chargerNouvelleCarte } from './map.js';
 import { initialiserTalents } from './player.js';
+import { resetDeplacementSansRencontre } from './combat_manager.js';
+import {
+  updatePlayerStatsPanel,
+  updatePVBar,
+  updateManaBar,
+  updateXPBar,
+  updateAllPlayerUI
+} from './playerUI.js';
 
 // Fonction utilitaire pour affichage non bloquant
 function showToast(message, color = '#333') {
@@ -48,6 +56,7 @@ function chargerTalentsEtDemarrerJeu() {
 }
 
 function demarrerJeu() {
+  resetDeplacementSansRencontre();
   initConnexion();
   initSmokeAnimation();
   initParticles();
@@ -112,13 +121,15 @@ function demarrerJeu() {
     } catch (err) {
       console.error("[ERROR] Initialisation talents échouée:", err);
     }
+    // Mettre à jour l'interface utilisateur
+    updateAllPlayerUI();
   }
 
   // === Sauvegarde de la partie ===
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
-      // On récupère les données à sauvegarder (adapter selon ton jeu)
+      // Ajout debug PV/mana avant sauvegarde
       const saveData = {
         classe: window.PLAYER_CLASS,
         carte: window.PLAYER_MAP,
@@ -131,6 +142,10 @@ function demarrerJeu() {
         vie: window.PLAYER_VIE !== undefined ? window.PLAYER_VIE : (typeof playerPV !== 'undefined' ? playerPV : null),
         mana: window.PLAYER_MANA !== undefined ? window.PLAYER_MANA : (typeof playerMana !== 'undefined' ? playerMana : null)
       };
+      console.log('[DEBUG] PV/Mana au moment de la sauvegarde :', saveData.vie, saveData.mana);
+      if (typeof saveData.vie !== 'number' || typeof saveData.mana !== 'number') {
+        console.warn('[ALERTE] PV ou Mana non valides au moment de la sauvegarde !');
+      }
       try {
         const response = await fetch('/api/save', {
           method: 'POST',

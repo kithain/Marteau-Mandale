@@ -1,7 +1,8 @@
 // monstre.js
-import { infligerDegatsAuJoueur, setCombat, getPlayerX, getPlayerY, playerPV } from './player.js';
+import { infligerDegatsAuJoueur, setCombat, getPlayerX, getPlayerY } from './player.js';
+import { getPlayerDef } from './playerState.js';
 import { afficherMobDegats } from './utils.js';
-import { getMonsterPV, getMonsterAtk, getMonsterDef, getMonsterXP, getPlayerBaseDef } from './progression.js';
+import { getMonsterPV, getMonsterAtk, getMonsterDef, getMonsterXP } from './progression.js';
 
 const tileSize = 64;
 let monstresActifs = [];
@@ -175,8 +176,10 @@ export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
 }
 
 function attaqueJoueur(uniqueId) {
+  // Empêche l'attaque si le joueur est furtif
+  if (window.furtif) return;
   // Si le joueur est mort, on arrête tous les monstres
-  if (playerPV <= 0) {
+  if (infligerDegatsAuJoueur(1) === 0) {
     stopAllMonsters();
     return;
   }
@@ -201,11 +204,8 @@ function attaqueJoueur(uniqueId) {
   if ((dx <= 1 && dy <= 1)) {
     // Attaque si adjacent
     const atk = monstre.data.atk ?? 0;
-    // Récupère la défense réelle du joueur
-    let playerDefense = 0;
-    if (typeof getPlayerBaseDef === 'function' && typeof window.PLAYER_LEVEL !== 'undefined') {
-      playerDefense = getPlayerBaseDef(window.PLAYER_LEVEL);
-    }
+    // Utilise la défense du module (playerDef)
+    let playerDefense = getPlayerDef();
     const degats = Math.max(0, atk - playerDefense);
     console.log(`[COMBAT] ${monstre.data.nom} attaque le joueur ! ATK=${atk}, DEF joueur=${playerDefense}, dégâts infligés=${degats}`);
     if (degats === 0) {
