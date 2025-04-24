@@ -11,10 +11,10 @@
   },
   "inventaire": [],
   "position": {
-    "x": 3,
-    "y": 8
+    "x": 2,
+    "y": 7
   },
-  "deplacementSansRencontre": 5,
+  "deplacementSansRencontre": 4,
   "vie": 480,
   "mana": 60
 }
