@@ -382,21 +382,7 @@ export function dashBackwards() {
   });
 }
 
-// === Texte flottant ===
 
-// === Boost temporaire ===
-
-// === Bouclier temporaire ===
-
-// === Stun ===
-
-// === Poison ===
-
-// === Affichage des dégâts ===
-
-// === Dégâts au joueur ===
-
-// === Game Over ===
 
 // === Régénération automatique ===
 let regenInterval = null;
