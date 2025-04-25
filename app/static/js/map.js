@@ -1,10 +1,7 @@
 // map.js
 const IMAGE_BASE_URL = '/static';
 const API_BASE_URL = '/api';
-import { getPlayerClass, getPlayerX, getPlayerY, setPlayerPosition as setGlobalPlayerPosition } from './player.js';
-import { getMonstreActif, stopAllMonsters } from './monstre.js';
-import { movePlayer } from './camera.js';
-import { verifierRencontre, detecterSortie } from './combat_manager.js';
+import * as modules from './modules.js';
 
 export let currentMap = "A1";
 export let exitZones = [];
@@ -35,10 +32,10 @@ export function isBlocked(x, y) {
 
 export function setPlayerPosition(x, y) {
   if (!isBlocked(x, y)) {
-    setGlobalPlayerPosition(x, y);
-    movePlayer();
-    verifierRencontre();
-    const sortie = detecterSortie(exitZones);
+    modules.setPlayerPositionPlayer(x, y);
+    modules.movePlayer();
+    modules.verifierRencontre();
+    const sortie = modules.detecterSortie(exitZones);
     if (sortie) {
       chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
     }
@@ -51,10 +48,10 @@ export function setPlayerPosition(x, y) {
       const tryX = x + dx;
       const tryY = y + dy;
       if (!isBlocked(tryX, tryY)) {
-        setGlobalPlayerPosition(tryX, tryY);
-        movePlayer();
-        verifierRencontre();
-        const sortie = detecterSortie(exitZones);
+        modules.setPlayerPositionPlayer(tryX, tryY);
+        modules.movePlayer();
+        modules.verifierRencontre();
+        const sortie = modules.detecterSortie(exitZones);
         if (sortie) {
           chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
         }
@@ -89,8 +86,8 @@ export function deplacementVersCarte(direction) {
 
   const nouvelleCarte = colonnes[newCol] + newLigne;
 
-  let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : getPlayerX();
-  let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : getPlayerY();
+  let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : modules.getPlayerPositionPlayer().x;
+  let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : modules.getPlayerPositionPlayer().y;
 
   fetch(`${IMAGE_BASE_URL}/maps/${nouvelleCarte}.tmj`)
     .then(res => res.json())
@@ -118,16 +115,17 @@ export function deplacementVersCarte(direction) {
     .catch(err => console.error("Erreur de chargement de carte :", err));
 }
 
-export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
+export function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
+  modules.setPlayerMap(nomCarte);
   // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
-  stopAllMonsters();
+  modules.stopAllMonsters();
   window.monstresActifs = [];
   window.combatActif = false;
-  window.PLAYER_MAP = nomMap; // Synchronisation pour la sauvegarde
+  window.PLAYER_MAP = nomCarte; // Synchronisation pour la sauvegarde
   isTransitioning = true;
-  currentMap = nomMap;
+  currentMap = nomCarte;
 
-  fetch(`${IMAGE_BASE_URL}/maps/${nomMap}.tmj`)
+  fetch(`${IMAGE_BASE_URL}/maps/${nomCarte}.tmj`)
     .then(res => res.json())
     .then(async mapData => {
       const container = document.getElementById("map-inner");
@@ -229,7 +227,7 @@ export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
           playerDiv.style.position = "absolute";
           playerDiv.style.width = "64px";
           playerDiv.style.height = "64px";
-          playerDiv.style.backgroundImage = `url(/static/img/classes/${getPlayerClass().toLowerCase()}_idle.png)`;
+          playerDiv.style.backgroundImage = `url(/static/img/classes/${modules.getPlayerClassPlayer().toLowerCase()}_idle.png)`;
           playerDiv.style.backgroundSize = "64px 64px";
           playerDiv.style.imageRendering = "pixelated";
           playerDiv.style.backgroundRepeat = "no-repeat";
@@ -238,7 +236,7 @@ export function chargerNouvelleCarte(nomMap, spawnX = null, spawnY = null) {
           playerDiv.style.zIndex = "10";
           container.appendChild(playerDiv);
 
-          movePlayer();
+          modules.movePlayer();
 
           isTransitioning = false;
         } catch (error) {

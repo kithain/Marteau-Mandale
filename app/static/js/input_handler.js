@@ -1,10 +1,5 @@
 // input_handler.js
-import { utiliserTalent, getTalents } from './player.js';
-import { setPlayerPosition, getPlayerX, getPlayerY } from './player.js';
-import { deplacementVersCarte, exitZones, isBlocked } from './map.js';
-import { getMonstreParId, demarrerCombat, getMonstreActif } from './monstre.js';
-import { movePlayer } from './camera.js';
-import { verifierRencontre, detecterSortie, verifierCombatAdjMonstre } from './combat_manager.js';
+import * as modules from './modules.js';
 
 export function handleKeydown(e) {
   // Mémorise la direction pour d'autres fonctionnalités
@@ -25,7 +20,7 @@ export function handleKeydown(e) {
   const talentIndex = keyMap[e.key];
   
   // Récupération des talents dynamiquement
-  const talentsData = getTalents();
+  const talentsData = modules.getTalents();
   if (!talentsData || talentsData.length === 0) {
     console.warn("Les talents ne sont pas encore chargés");
     return;
@@ -33,7 +28,7 @@ export function handleKeydown(e) {
   const skills = Array.isArray(talentsData) ? talentsData : talentsData.talents;
   
   if (talentIndex !== undefined && skills && skills[talentIndex]) {
-    utiliserTalent(skills[talentIndex], talentIndex);
+    modules.utiliserTalent(skills[talentIndex], talentIndex);
     return;
   }
 
@@ -42,9 +37,7 @@ export function handleKeydown(e) {
     // Animation d'attaque (optionnel)
     if (typeof animerAttaque === 'function') animerAttaque();
     // Inflige des dégâts à tous les monstres autour (adjacents ou sur la même case)
-    import('./monstre.js').then(module => {
-      module.recevoirDegats();
-    });
+    modules.recevoirDegats();
     e.preventDefault();
     return;
   }
@@ -53,8 +46,8 @@ export function handleKeydown(e) {
   let monstreAdj = false;
 
   // Vérification : Empêcher de quitter la case si un monstre est présent
-  const currentX = getPlayerX();
-  const currentY = getPlayerY();
+  const currentX = modules.getPlayerX();
+  const currentY = modules.getPlayerY();
   const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
   for (const monsterDiv of monsterElements) {
     const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
@@ -74,9 +67,9 @@ export function handleKeydown(e) {
         const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
         const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
         if (Math.abs(currentX - monstreX) <= 1 && Math.abs(currentY - monstreY) <= 1) {
-          const monstre = getMonstreParId(monsterDiv.id.replace('combat-monstre-', ''));
+          const monstre = modules.getMonstreParId(monsterDiv.id.replace('combat-monstre-', ''));
           if (monstre) {
-            demarrerCombat(monstre.data, monstre.pv, monstreX, monstreY);
+            modules.demarrerCombat(monstre.data, monstre.pv, monstreX, monstreY);
           }
         }
       }
@@ -101,13 +94,13 @@ export function handleKeydown(e) {
   if (e.key === 'ArrowRight') newX++;
   
   // Gestion des déplacements entre les cartes (bordures)
-  if (newX < 0) return deplacementVersCarte('gauche');
-  if (newX >= 16) return deplacementVersCarte('droite');
-  if (newY < 0) return deplacementVersCarte('haut');
-  if (newY >= 16) return deplacementVersCarte('bas');
+  if (newX < 0) return modules.deplacementVersCarte('gauche');
+  if (newX >= 16) return modules.deplacementVersCarte('droite');
+  if (newY < 0) return modules.deplacementVersCarte('haut');
+  if (newY >= 16) return modules.deplacementVersCarte('bas');
   
   // Vérification si la case est bloquée
-  if (isBlocked(newX, newY)) {
+  if (modules.isBlocked(newX, newY)) {
     console.log("Déplacement bloqué : case non accessible");
     return;
   }
@@ -126,10 +119,11 @@ export function handleKeydown(e) {
   
   // Si la case d'arrivée n'est pas bloquée et que le joueur se déplace, on met à jour sa position
   if (newX !== currentX || newY !== currentY) {
-    setPlayerPosition(newX, newY);
-    movePlayer();
-    verifierRencontre();
-    verifierCombatAdjMonstre();
-    detecterSortie(exitZones);
+    // Correction : utilise modules.setPlayerPositionPlayer pour déplacer le joueur
+    modules.setPlayerPositionPlayer(newX, newY);
+    modules.movePlayer();
+    modules.verifierRencontre();
+    modules.verifierCombatAdjMonstre();
+    modules.detecterSortie(modules.exitZones);
   }
 } 

@@ -2,8 +2,7 @@
 // Fonctions utilitaires et effets visuels/statuts extraites de player.js
 
 // --- IMPORTS ---
-import { setPlayerPV, setPlayerMana, getPlayerPV, getPlayerMana } from './playerState.js';
-import { getMaxVie, getMaxMana, getPlayerBaseDef } from './progression.js';
+import * as modules from './modules.js';
 
 // === Texte flottant ===
 export function createFloatingText(text, color) {
@@ -83,7 +82,7 @@ export function afficherDegats(valeur) {
 
 // === Dégâts au joueur ===
 export function infligerDegatsAuJoueur(valeur) {
-  setPlayerPV(getPlayerPV() - valeur);
+  modules.setPlayerPV(modules.getPlayerPV() - valeur);
 }
 
 // === Game Over ===
@@ -109,8 +108,8 @@ export function startRegen() {
   if (regenInterval) return;
   regenInterval = setInterval(() => {
     if (window.isGameOver || window.combatActif) return;
-    setPlayerPV(Math.min(getPlayerPV() + 1, getMaxVie(window.PLAYER_LEVEL)));
-    setPlayerMana(Math.min(getPlayerMana() + 1, getMaxMana(window.PLAYER_LEVEL)));
+    modules.setPlayerPV(Math.min(modules.getPlayerPV() + 1, modules.getMaxVie(window.PLAYER_LEVEL)));
+    modules.setPlayerMana(Math.min(modules.getPlayerMana() + 1, modules.getMaxMana(window.PLAYER_LEVEL)));
   }, 2000);
 }
 

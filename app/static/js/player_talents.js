@@ -1,8 +1,8 @@
 // player_talents.js
 // Fonctions de gestion des talents extraites de player.js
 
-// Importe les setters/getters centralisés si besoin
-import { setPlayerPV, getPlayerPV, setPlayerMana, getPlayerMana } from './playerState.js';
+// Centralise tous les imports locaux via modules.js
+import * as modules from './modules.js';
 
 // Récupère tous les talents disponibles (toutes classes)
 export function getAllTalentsList() {
@@ -30,7 +30,7 @@ export function getTalents() {
 
 // Dash furtif intelligent : dash de 3 cases dans la direction qui maximise la distance au monstre le plus proche
 export function dashStealth(dureeFurtivite = 2000) {
-  import('./player.js').then(playerModule => {
+  modules.importPlayer().then(playerModule => {
     const getPlayerX = playerModule.getPlayerX;
     const getPlayerY = playerModule.getPlayerY;
     const setCombat = playerModule.setCombat;
@@ -39,9 +39,9 @@ export function dashStealth(dureeFurtivite = 2000) {
     let currentY = getPlayerY();
     setCombat(false);
     stopAllMonsters();
-    import('./map.js').then(module => {
+    modules.importMap().then(module => {
       const { isBlocked, setPlayerPosition } = module;
-      import('./monstre.js').then(monstreModule => {
+      modules.importMonstre().then(monstreModule => {
         const monstresActifs = window.monstresActifs || [];
         // Directions (8)
         const directions = [
@@ -98,12 +98,12 @@ export function dashStealth(dureeFurtivite = 2000) {
           if (typeof afficherMessage === 'function') {
             afficherMessage("Vous êtes furtif pendant " + (dureeFurtivite/1000) + "s", "success");
           }
-          setPlayerMana(getPlayerMana() - 10); // Utilise le setter pour modifier le mana
+          modules.setPlayerMana(modules.getPlayerMana() - 10); // Utilise le setter pour modifier le mana
           window.furtif = true;
           setTimeout(() => {
             window.furtif = false;
             setCombat(true);
-            import('./combat_manager.js').then(cm => {
+            modules.importCombatManager().then(cm => {
               if (typeof cm.verifierCombatAdjMonstre === 'function') {
                 cm.verifierCombatAdjMonstre();
               }

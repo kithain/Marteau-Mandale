@@ -1,16 +1,5 @@
 // main.js
-import { initConnexion, initSmokeAnimation, initParticles } from './utils.js';
-import { handleKeydown } from './input_handler.js';
-import { chargerNouvelleCarte } from './map.js';
-import { initialiserTalents } from './player.js';
-import { resetDeplacementSansRencontre } from './combat_manager.js';
-import {
-  updatePlayerStatsPanel,
-  updatePVBar,
-  updateManaBar,
-  updateXPBar,
-  updateAllPlayerUI
-} from './playerUI.js';
+import * as modules from './modules.js';
 
 // Fonction utilitaire pour affichage non bloquant
 function showToast(message, color = '#333') {
@@ -56,11 +45,11 @@ function chargerTalentsEtDemarrerJeu() {
 }
 
 function demarrerJeu() {
-  resetDeplacementSansRencontre();
-  initConnexion();
-  initSmokeAnimation();
-  initParticles();
-  document.addEventListener('keydown', handleKeydown);
+  modules.resetDeplacementSansRencontre();
+  modules.initConnexion();
+  modules.initSmokeAnimation();
+  modules.initParticles();
+  document.addEventListener('keydown', modules.handleKeydown);
 
   // Initialisation du jeu si on est sur la page de jeu (script JSON présent)
   const dataElem = document.getElementById('player-data');
@@ -76,11 +65,7 @@ function demarrerJeu() {
       return;
     }
     // Synchronisation vie/mana depuis la sauvegarde
-    import('./player.js').then(module => {
-      if (module.loadPlayerData) {
-        module.loadPlayerData(saveData);
-      }
-    });
+    modules.loadPlayerDataPlayer(saveData);
     // Définition des variables globales pour la compatibilité
     window.PLAYER_CLASS = saveData.classe;
     // window.PLAYER_TALENTS n'est plus utilisé
@@ -92,11 +77,7 @@ function demarrerJeu() {
     window.PLAYER_POSITION = saveData.position;
     // Ajout : synchronisation du compteur de déplacement sans rencontre
     window.DEP_SANS_RENCONTRE = (typeof saveData.deplacementSansRencontre === 'number') ? saveData.deplacementSansRencontre : 3;
-    import('./combat_manager.js').then(module => {
-      if (module.setDeplacementSansRencontre) {
-        module.setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
-      }
-    });
+    modules.setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
     // Si la position est {x: 0, y: 0}, on considère qu'il faut utiliser le player_start de la carte
     let pos = saveData.position;
     let usePlayerStart = false;
@@ -107,9 +88,9 @@ function demarrerJeu() {
     try {
       console.log("[DEBUG] Chargement de la carte:", saveData.carte, saveData.position);
       if (usePlayerStart) {
-        chargerNouvelleCarte(saveData.carte, null, null);
+        modules.chargerNouvelleCarte(saveData.carte, null, null);
       } else {
-        chargerNouvelleCarte(saveData.carte, saveData.position.x, saveData.position.y);
+        modules.chargerNouvelleCarte(saveData.carte, saveData.position.x, saveData.position.y);
       }
     } catch (err) {
       console.error("[ERROR] Chargement carte échoué:", err);
@@ -117,12 +98,12 @@ function demarrerJeu() {
     // Initialiser les talents du joueur
     try {
       console.log("[DEBUG] Initialisation des talents");
-      initialiserTalents();
+      modules.initialiserTalents();
     } catch (err) {
       console.error("[ERROR] Initialisation talents échouée:", err);
     }
     // Mettre à jour l'interface utilisateur
-    updateAllPlayerUI();
+    modules.updateAllPlayerUI();
   }
 
   // === Sauvegarde de la partie ===
@@ -130,18 +111,7 @@ function demarrerJeu() {
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       // Ajout debug PV/mana avant sauvegarde
-      const saveData = {
-        classe: window.PLAYER_CLASS,
-        carte: window.PLAYER_MAP,
-        niveau: window.PLAYER_LEVEL,
-        experience: window.PLAYER_XP,
-        statistiques: window.PLAYER_STATS,
-        inventaire: window.PLAYER_INVENTAIRE,
-        position: window.PLAYER_POSITION,
-        deplacementSansRencontre: window.DEP_SANS_RENCONTRE || 3,
-        vie: window.PLAYER_VIE !== undefined ? window.PLAYER_VIE : (typeof playerPV !== 'undefined' ? playerPV : null),
-        mana: window.PLAYER_MANA !== undefined ? window.PLAYER_MANA : (typeof playerMana !== 'undefined' ? playerMana : null)
-      };
+      const saveData = modules.getPlayerSaveData();
       console.log('[DEBUG] PV/Mana au moment de la sauvegarde :', saveData.vie, saveData.mana);
       if (typeof saveData.vie !== 'number' || typeof saveData.mana !== 'number') {
         console.warn('[ALERTE] PV ou Mana non valides au moment de la sauvegarde !');

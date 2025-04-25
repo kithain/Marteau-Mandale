@@ -1,7 +1,5 @@
 // combat_manager.js
-import { getPlayerX, getPlayerY, combatActif } from './player.js';
-import { demarrerCombat } from './monstre.js';
-import { currentMap } from './map.js';
+import * as modules from './modules.js';
 
 let deplacementSansRencontre = 3;
 
@@ -22,14 +20,14 @@ export function resetDeplacementSansRencontre() {
 }
 
 export function verifierRencontre() {
-  if (combatActif) return;
+  if (modules.combatActif) return;
   if (deplacementSansRencontre > 0) {
     deplacementSansRencontre--;
     window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
     return;
   }
 
-  fetch(`/api/rencontre?x=${getPlayerX()}&y=${getPlayerY()}&carte=${currentMap}`)
+  fetch(`/api/rencontre?x=${modules.getPlayerX()}&y=${modules.getPlayerY()}&carte=${modules.currentMap}`)
     .then(res => {
       if (!res.ok) throw new Error('Erreur de réseau');
       return res.json();
@@ -39,8 +37,8 @@ export function verifierRencontre() {
         const monstre = data.monstre;
         const pv = monstre.pv;
         // Cherche une case libre à distance 2 max pour le monstre
-        const px = getPlayerX();
-        const py = getPlayerY();
+        const px = modules.getPlayerX();
+        const py = modules.getPlayerY();
         let found = null;
         for (let dx = -2; dx <= 2; dx++) {
           for (let dy = -2; dy <= 2; dy++) {
@@ -57,7 +55,7 @@ export function verifierRencontre() {
         // Si pas de case libre, spawn sur le joueur (fallback)
         const spawnX = found ? found.x : px;
         const spawnY = found ? found.y : py;
-        demarrerCombat(monstre, pv, spawnX, spawnY);
+        modules.demarrerCombat(monstre, pv, spawnX, spawnY);
         deplacementSansRencontre = 5;
         window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
       }
@@ -69,10 +67,10 @@ export function verifierRencontre() {
 
 export function detecterSortie(exitZones) {
   const sortie = exitZones.find(zone =>
-    getPlayerX() >= zone.x &&
-    getPlayerX() < zone.x + zone.width &&
-    getPlayerY() >= zone.y &&
-    getPlayerY() < zone.y + zone.height
+    modules.getPlayerX() >= zone.x &&
+    modules.getPlayerX() < zone.x + zone.width &&
+    modules.getPlayerY() >= zone.y &&
+    modules.getPlayerY() < zone.y + zone.height
   );
   return sortie;
 }
@@ -82,8 +80,8 @@ export function detecterSortie(exitZones) {
 export function verifierCombatAdjMonstre() {
   // Ajout : Ne détecte pas le combat si furtif
   if (window.furtif) return false;
-  const px = getPlayerX();
-  const py = getPlayerY();
+  const px = modules.getPlayerX();
+  const py = modules.getPlayerY();
   const directions = [
     [1,0], [-1,0], [0,1], [0,-1],
     [1,1], [1,-1], [-1,1], [-1,-1]
@@ -99,8 +97,8 @@ export function verifierCombatAdjMonstre() {
     });
     if (monstre) {
       // Démarre le combat si pas déjà actif
-      if (!window.combatActif) {
-        demarrerCombat(monstre.data, monstre.pv, nx, ny);
+      if (!modules.combatActif) {
+        modules.demarrerCombat(monstre.data, monstre.pv, nx, ny);
       }
       return true;
     }

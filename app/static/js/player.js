@@ -6,112 +6,72 @@ export let cooldowns = {};
 export let combatActif = false;
 export let playerDef = 0; // Nouvelle stat de défense, calculée par niveau
 
-import { getPlayerPV, setPlayerPV, getPlayerMana, setPlayerMana } from './playerState.js';
+import * as modules from './modules.js';
+import { setPlayerPosition as setPlayerPositionState } from './playerState.js';
+import { getCentralPlayerPosition } from './playerState.js';
 
 // Fonction pour initialiser les stats selon le niveau
 export function initialiserStatsJoueur(level) {
-  setPlayerPV(getMaxVie(level));
-  setPlayerMana(getMaxMana(level));
-  playerDef = getPlayerBaseDef(level);
+  modules.setPlayerPV(modules.getMaxVie(level));
+  modules.setPlayerMana(modules.getMaxMana(level));
+  playerDef = modules.getPlayerBaseDef(level);
 }
 
 // === XP et Niveau ===
 export let playerXP = 0;
 export let xpToNextLevel = 100;
 
-import {
-  createFloatingText,
-  applyBoost,
-  applyShield,
-  applyStun,
-  applyPoison,
-  afficherDegats,
-  infligerDegatsAuJoueur,
-  afficherGameOver,
-  startRegen,
-  stopRegen
-} from './player_utils.js';
-
-export { createFloatingText, applyBoost, applyShield, applyStun, applyPoison, afficherDegats, infligerDegatsAuJoueur, afficherGameOver, startRegen, stopRegen };
-
-import { getMaxVie, getMaxMana } from './progression.js';
-import { getPlayerBaseAtk, filterTalentsByLevel } from './progression.js';
-import { getPlayerBaseDef } from './progression.js'; // Import de la fonction getPlayerBaseDef
-import { recevoirDegats, getMonstreActif, applyStatusEffect, stopAllMonsters } from './monstre.js';
-
-import {
-  getAllTalentsList,
-  getTalentsFromIds,
-  getTalents
-} from './player_talents.js';
-
-export { getAllTalentsList, getTalentsFromIds, getTalents };
-
-export { dashStealth } from './player_talents.js';
-
-// Fonction utilitaire pour obtenir l'XP nécessaire pour atteindre le niveau donné
-function getXpToNextLevel(level) {
-  let xp = 100; 
-  for (let i = 1; i < level; i++) {
-    xp = Math.floor(xp * 1.5);
-  }
-  return xp;
-}
-
 // === Position du joueur ===
-const playerPosition = { x: 0, y: 0 };
-
-export function getPlayerPosition() {
-  return { ...playerPosition };
-}
-
 export function setPlayerPosition(x, y) {
-  playerPosition.x = x;
-  playerPosition.y = y;
-  window.PLAYER_POSITION = { x, y }; 
+  setPlayerPositionState(x, y);
 }
-
+export function getPlayerPosition() {
+  return getCentralPlayerPosition();
+}
 export function getPlayerX() {
-  return playerPosition.x;
+  return getCentralPlayerPosition().x;
 }
-
 export function getPlayerY() {
-  return playerPosition.y;
+  return getCentralPlayerPosition().y;
 }
 
 // === Vie // Mana ===
 export function updateManaBar() {
   const manaFill = document.getElementById("mana-fill");
   if (!manaFill) return;
-  const percent = (getPlayerMana() / getMaxMana(window.PLAYER_LEVEL)) * 100;
+  const percent = (modules.getPlayerMana() / modules.getMaxMana(window.PLAYER_LEVEL)) * 100;
   manaFill.style.width = percent + "%";
 }
 
 export function updateVieBar() {
   const vieFill = document.getElementById("vie-fill");
   if (!vieFill) return;
-  const percent = (getPlayerPV() / getMaxVie(window.PLAYER_LEVEL)) * 100;
+  const percent = (modules.getPlayerPV() / modules.getMaxVie(window.PLAYER_LEVEL)) * 100;
   vieFill.style.width = percent + "%";
 }
 
 // === XP ===
 export function gainXP(amount) {
   if (window.PLAYER_LEVEL >= 10) {
-    const maxXP = getXpToNextLevel(10);
+    const maxXP = modules.getXpToNextLevel(10);
     playerXP = Math.min(playerXP, maxXP);
     window.PLAYER_XP = playerXP;
+    modules.setPlayerXP(playerXP); // Synchronise le state centralisé
     updateXPBar();
     return;
   }
   playerXP += amount;
+  modules.setPlayerXP(playerXP); // Synchronise le state centralisé
   while (playerXP >= xpToNextLevel) {
     levelUp();
     if (window.PLAYER_LEVEL >= 10) {
-      playerXP = getXpToNextLevel(10);
+      playerXP = modules.getXpToNextLevel(10);
+      modules.setPlayerXP(playerXP);
       break;
     }
   }
   window.PLAYER_XP = playerXP;
+  modules.setPlayerXP(playerXP);
   updateXPBar();
 }
 
@@ -120,10 +80,11 @@ export function levelUp() {
     return;
   }
   window.PLAYER_XP -= xpToNextLevel;
+  modules.setPlayerXP(window.PLAYER_XP); // Synchronise le state centralisé
   window.PLAYER_LEVEL += 1;
-  xpToNextLevel = Math.floor(xpToNextLevel * 1.5);
+  xpToNextLevel = modules.getXpToNextLevel(window.PLAYER_LEVEL);
   initialiserStatsJoueur(window.PLAYER_LEVEL);
-  createFloatingText(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
+  modules.createFloatingText(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
   initialiserTalents();
 }
 
@@ -132,7 +93,7 @@ export function updateXPBar() {
   if (!xpFill) return;
   let maxXP = xpToNextLevel;
   if (window.PLAYER_LEVEL >= 10) {
-    maxXP = getXpToNextLevel(10);
+    maxXP = modules.getXpToNextLevel(10);
     playerXP = Math.min(playerXP, maxXP);
   }
   const percent = Math.min(100, (playerXP / maxXP) * 100);
@@ -142,7 +103,7 @@ export function updateXPBar() {
 // === Utilisation d'un talent ===
 export function utiliserTalent(talent, index) {
   if (cooldowns[index]) return;
-  if (getPlayerMana() < talent.cost) return;
+  if (modules.getPlayerMana() < talent.cost) return;
 
   animerAttaque();
 
@@ -164,10 +125,10 @@ export function utiliserTalent(talent, index) {
   }
 
   if (talent.effectText) {
-    createFloatingText(talent.effectText, talent.color || "white");
+    modules.createFloatingText(talent.effectText, talent.color || "white");
   }
 
-  setPlayerMana(getPlayerMana() - talent.cost);
+  modules.setPlayerMana(modules.getPlayerMana() - talent.cost);
   updateManaBar();
 
   cooldowns[index] = true;
@@ -181,138 +142,136 @@ export function utiliserTalent(talent, index) {
 
   if (combatActif) {
     if (talent.zone === 'adjacent' || talent.zone === 'zone') {
-      import('./monstre.js').then(module => {
-        const monstres = module.getMonstresAdjacentsEtSurCase ? module.getMonstresAdjacentsEtSurCase() : [];
-        monstres.forEach(monstre => {
-          if (talent.type === "attack") {
-            let degats = talent.damage;
-            if ((talent.niveauRequis || 1) === 1) {
-              degats = getPlayerBaseAtk(window.PLAYER_LEVEL);
-            }
-            module.recevoirDegats(degats, monstre.data.uniqueId);
-          } else if (talent.type === "utility") {
-            switch (talent.boostType) {
-              case "stun":
-                module.applyStatusEffect(monstre.data.uniqueId, "stunned", talent.duration);
-                break;
-              case "heal":
-              case "soin":
-                setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), getPlayerPV() + (talent.value || 0)));
-                if (typeof afficherMessage === 'function') {
-                  afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
-                }
-                break;
-              case "poison":
-                module.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration);
-                break;
-              case "burn":
-                module.applyStatusEffect(monstre.data.uniqueId, "burning", talent.duration);
-                break;
-              case "dot":
-                module.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, talent.value);
-                break;
-              case "debuff_atk":
-                module.applyStatusEffect(monstre.data.uniqueId, "debuff_atk", talent.duration, talent.value);
-                break;
-              case "evasion":
-                dashBackwards();
-                setCombat(false);
-                stopAllMonsters();
-                setTimeout(() => {
-                  const currentX = getPlayerX();
-                  const currentY = getPlayerY();
-                  const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
-                  for (const monsterDiv of monsterElements) {
-                    const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
-                    const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
-                  }
-                }, 100);
-                if (typeof afficherMessage === 'function') {
-                  afficherMessage("Vous vous échappez discrètement du combat !", "success");
-                }
-                break;
-              default:
-                break;
-            }
-          } else if (talent.type === "defense") {
-            switch (talent.defenseType) {
-              case "dot":
-                const dotScaling = talent.dotScaling !== undefined ? talent.dotScaling : 0.5;
-                const dotValue = Math.max(1, Math.round(talent.value + (window.PLAYER_LEVEL - 1) * dotScaling));
-                module.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, dotValue);
-                break;
-              default:
-                break;
-            }
+      modules.getMonstresAdjacentsEtSurCase().forEach(monstre => {
+        if (talent.type === "attack") {
+          let degats = talent.damage;
+          if ((talent.niveauRequis || 1) === 1) {
+            degats = modules.getPlayerBaseAtk(window.PLAYER_LEVEL);
           }
-        });
+          modules.recevoirDegats(degats, monstre.data.uniqueId);
+        } else if (talent.type === "utility") {
+          switch (talent.boostType) {
+            case "stun":
+              modules.applyStatusEffect(monstre.data.uniqueId, "stunned", talent.duration);
+              break;
+            case "heal":
+            case "soin":
+              modules.setPlayerPV(Math.min(modules.getMaxVie(window.PLAYER_LEVEL), modules.getPlayerPV() + (talent.value || 0)));
+              if (typeof afficherMessage === 'function') {
+                afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
+              }
+              break;
+            case "poison":
+              modules.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration);
+              break;
+            case "burn":
+              modules.applyStatusEffect(monstre.data.uniqueId, "burning", talent.duration);
+              break;
+            case "dot":
+              modules.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, talent.value);
+              break;
+            case "debuff_atk":
+              modules.applyStatusEffect(monstre.data.uniqueId, "debuff_atk", talent.duration, talent.value);
+              break;
+            case "evasion":
+              dashBackwards();
+              setCombat(false);
+              modules.stopAllMonsters();
+              setTimeout(() => {
+                const currentX = getPlayerX();
+                const currentY = getPlayerY();
+                const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
+                for (const monsterDiv of monsterElements) {
+                  const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
+                  const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+                }
+              }, 100);
+              if (typeof afficherMessage === 'function') {
+                afficherMessage("Vous vous échappez discrètement du combat !", "success");
+              }
+              break;
+            default:
+              break;
+          }
+        } else if (talent.type === "defense") {
+          switch (talent.defenseType) {
+            case "dot":
+              const dotScaling = talent.dotScaling !== undefined ? talent.dotScaling : 0.5;
+              const dotValue = Math.max(1, Math.round(talent.value + (window.PLAYER_LEVEL - 1) * dotScaling));
+              modules.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, dotValue);
+              break;
+            default:
+              break;
+          }
+        }
       });
       return;
     }
-    const monstreActif = getMonstreActif();
-    if (!monstreActif) return;
-    switch (talent.type) {
-      case "attack":
-        let degats = talent.damage;
-        if ((talent.niveauRequis || 1) === 1) {
-          degats = getPlayerBaseAtk(window.PLAYER_LEVEL);
-        }
-        recevoirDegats(degats, monstreActif.data.uniqueId);
-        break;
-      case "utility":
-        switch (talent.boostType) {
-          case "stun":
-            applyStatusEffect(monstreActif.data.uniqueId, "stunned", talent.duration);
-            break;
-          case "heal":
-          case "soin":
-            setPlayerPV(Math.min(getMaxVie(window.PLAYER_LEVEL), getPlayerPV() + (talent.value || 0)));
-            if (typeof afficherMessage === 'function') {
-              afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
-            }
-            break;
-          case "poison":
-            applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
-            break;
-          case "burn":
-            applyStatusEffect(monstreActif.data.uniqueId, "burning", talent.duration);
-            break;
-          case "dot":
-            applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, talent.value);
-            break;
-          case "debuff_atk":
-            applyStatusEffect(monstreActif.data.uniqueId, "debuff_atk", talent.duration, talent.value);
-            break;
-          case "evasion":
-            dashBackwards();
-            setCombat(false);
-            stopAllMonsters();
-            setTimeout(() => {
-              const currentX = getPlayerX();
-              const currentY = getPlayerY();
-              const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
-              for (const monsterDiv of monsterElements) {
-                const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
-                const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+    const monstreActif = modules.getMonstreActif();
+    if (monstreActif) {
+      switch (talent.type) {
+        case "attack":
+          let degats = talent.damage;
+          if ((talent.niveauRequis || 1) === 1) {
+            degats = modules.getPlayerBaseAtk(window.PLAYER_LEVEL);
+          }
+          modules.recevoirDegats(degats, monstreActif.data.uniqueId);
+          break;
+        case "utility":
+          switch (talent.boostType) {
+            case "stun":
+              modules.applyStatusEffect(monstreActif.data.uniqueId, "stunned", talent.duration);
+              break;
+            case "heal":
+            case "soin":
+              modules.setPlayerPV(Math.min(modules.getMaxVie(window.PLAYER_LEVEL), modules.getPlayerPV() + (talent.value || 0)));
+              if (typeof afficherMessage === 'function') {
+                afficherMessage(`+${talent.value || 0} PV soignés !`, "success");
               }
-            }, 100);
-            if (typeof afficherMessage === 'function') {
-              afficherMessage("Vous vous échappez discrètement du combat !", "success");
-            }
-            break;
-          default:
-            break;
-        }
-        break;
-      case "defense":
-        if (talent.defenseType === "shield") {
-          applyShield(talent.value, talent.duration);
-        } else if (talent.defenseType === "dot") {
-          const dotScaling = talent.dotScaling !== undefined ? talent.dotScaling : 0.5;
-          const dotValue = Math.max(1, Math.round(talent.value + (window.PLAYER_LEVEL - 1) * dotScaling));
-          applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, dotValue);
-        }
-        break;
+              break;
+            case "poison":
+              modules.applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration);
+              break;
+            case "burn":
+              modules.applyStatusEffect(monstreActif.data.uniqueId, "burning", talent.duration);
+              break;
+            case "dot":
+              modules.applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, talent.value);
+              break;
+            case "debuff_atk":
+              modules.applyStatusEffect(monstreActif.data.uniqueId, "debuff_atk", talent.duration, talent.value);
+              break;
+            case "evasion":
+              dashBackwards();
+              setCombat(false);
+              modules.stopAllMonsters();
+              setTimeout(() => {
+                const currentX = getPlayerX();
+                const currentY = getPlayerY();
+                const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
+                for (const monsterDiv of monsterElements) {
+                  const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
+                  const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
+                }
+              }, 100);
+              if (typeof afficherMessage === 'function') {
+                afficherMessage("Vous vous échappez discrètement du combat !", "success");
+              }
+              break;
+            default:
+              break;
+          }
+          break;
+        case "defense":
+          if (talent.defenseType === "shield") {
+            modules.applyShield(talent.value, talent.duration);
+          } else if (talent.defenseType === "dot") {
+            const dotScaling = talent.dotScaling !== undefined ? talent.dotScaling : 0.5;
+            const dotValue = Math.max(1, Math.round(talent.value + (window.PLAYER_LEVEL - 1) * dotScaling));
+            modules.applyStatusEffect(monstreActif.data.uniqueId, "poisoned", talent.duration, dotValue);
+          }
+          break;
+      }
     }
   }
 }
@@ -320,7 +279,7 @@ export function utiliserTalent(talent, index) {
 // === Initialisation des talents ===
 export function initialiserTalents() {
   const talentButtons = document.getElementById('talents-buttons');
-  const talentsData = getTalents();
+  const talentsData = modules.getTalents();
   const skills = Array.isArray(talentsData)
     ? talentsData.filter(t => t && t.id && (t.niveauRequis || 1) <= window.PLAYER_LEVEL)
     : [];
@@ -375,28 +334,28 @@ export function dashBackwards() {
     { dx: -1, dy: -1 } 
   ];
 
-  import('./map.js').then(module => {
-    const { isBlocked, setPlayerPosition } = module;
-    let found = false;
-    for (const dir of directions) {
-      const tryX = currentX + dir.dx;
-      const tryY = currentY + dir.dy;
-      if (!isBlocked(tryX, tryY)) {
-        setPlayerPosition(tryX, tryY);
-        found = true;
-        break;
-      }
+  modules.isBlocked(currentX, currentY);
+  let found = false;
+  for (const dir of directions) {
+    const tryX = currentX + dir.dx;
+    const tryY = currentY + dir.dy;
+    if (!modules.isBlocked(tryX, tryY)) {
+      setPlayerPosition(tryX, tryY);
+      found = true;
+      break;
     }
-    if (!found) {
-    }
-  });
+  }
+  if (!found) {
+  }
 }
 
 // === Régénération automatique ===
 let regenInterval = null;
 let isGameOver = false;
 
-startRegen();
+import { startRegen as startRegenState } from './playerState.js';
+
+startRegenState();
 
 // Correction double déclaration : ne déclare originalAfficherGameOver qu'une seule fois
 if (typeof originalAfficherGameOver === 'undefined') {
@@ -404,7 +363,7 @@ if (typeof originalAfficherGameOver === 'undefined') {
 }
 window.afficherGameOver = function(...args) {
   isGameOver = true;
-  stopRegen();
+  modules.stopRegen();
   if (originalAfficherGameOver) {
     originalAfficherGameOver.apply(this, args);
   }
@@ -413,48 +372,19 @@ window.afficherGameOver = function(...args) {
 updateXPBar();
 
 export function getPlayerSaveData() {
-  return {
-    vie: getPlayerPV(), // vie restante (actuelle)
-    mana: getPlayerMana(), // mana restant (actuel)
-    experience: playerXP,
-    niveau: window.PLAYER_LEVEL,
-    statistiques: {
-      ...(window.PLAYER_STATS || {}),
-      vie: getMaxVie(window.PLAYER_LEVEL) // vie max (calculée dynamiquement)
-    },
-    carte: window.PLAYER_CARTE || '',
-    inventaire: window.PLAYER_INVENTAIRE || [],
-    position: getPlayerPosition(),
-    deplacementSansRencontre: (typeof window.DEP_SANS_RENCONTRE === 'number') ? window.DEP_SANS_RENCONTRE : undefined
-  };
+  return modules.getPlayerSaveData();
 }
 
-export async function updatePlayerStats(stats) {
-  try {
-    const response = await fetch('/api/player/stats', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(stats)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erreur lors de la mise à jour des statistiques');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Erreur:', error);
-    return null;
-  }
+export async function loadPlayerData(saveData) {
+  await modules.loadPlayerDataSave(saveData);
+  updateXPBar();
 }
 
 export function getPlayerClass() {
   return window.PLAYER_CLASS;
 }
 
-startRegen();
+startRegenState();
 
 // Correction double déclaration : ne déclare originalAfficherGameOver qu'une seule fois
 if (typeof originalAfficherGameOver === 'undefined') {
@@ -462,7 +392,7 @@ if (typeof originalAfficherGameOver === 'undefined') {
 }
 window.afficherGameOver = function(...args) {
   isGameOver = true;
-  stopRegen();
+  modules.stopRegen();
   if (originalAfficherGameOver) {
     originalAfficherGameOver.apply(this, args);
   }
@@ -473,29 +403,8 @@ updateXPBar();
 export function setCombat(actif) {
   combatActif = actif;
   if (!combatActif) {
-    startRegen();
+    startRegenState();
   } else {
-    stopRegen();
+    modules.stopRegen();
   }
-}
-
-export async function loadPlayerData(saveData) {
-  const isNewGame = (saveData && saveData.niveau === 1 && saveData.experience === 0);
-  window.PLAYER_LEVEL = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : 1;
-  initialiserStatsJoueur(window.PLAYER_LEVEL);
-  if (saveData && typeof saveData.experience === 'number') {
-    window.PLAYER_XP = saveData.experience;
-    playerXP = window.PLAYER_XP;
-  } else {
-    window.PLAYER_XP = 0;
-    playerXP = 0;
-  }
-  // Correction : restaurer PV et mana si présents dans la sauvegarde et non nuls
-  if (typeof saveData.vie === 'number' && saveData.vie !== null) {
-    setPlayerPV(saveData.vie);
-  }
-  if (typeof saveData.mana === 'number' && saveData.mana !== null) {
-    setPlayerMana(saveData.mana);
-  }
-  updateXPBar();
 }

@@ -4,7 +4,7 @@
 // Fonction pour calculer l'XP nécessaire pour passer au niveau suivant
 export function getXpToNextLevel(level) {
     // Progression exponentielle simple, à ajuster selon l'équilibrage
-    return Math.floor(100 * Math.pow(1.5, level - 1));
+    return Math.floor(10* Math.pow(1.5, level - 1));
 }
 
 // Filtrer les talents accessibles selon le niveau du joueur

@@ -1,28 +1,21 @@
-import {
-  getPlayerPV, getMaxPlayerPV,
-  getPlayerMana, getMaxPlayerMana,
-  getPlayerXP, getPlayerLevel,
-  getPlayerAtk, getPlayerDef,
-  getPlayerClass
-} from './playerState.js';
-import { getXpToNextLevel } from './progression.js';
+import * as modules from './modules.js';
 
 // Affiche uniquement les stats secondaires dans le panneau, pas PV/mana/xp
 export function updatePlayerStatsPanel() {
   if (document.getElementById('stat-atk'))
-    document.getElementById('stat-atk').textContent = `ATK : ${getPlayerAtk()}`;
+    document.getElementById('stat-atk').textContent = `ATK : ${modules.getPlayerAtk()}`;
   if (document.getElementById('stat-def'))
-    document.getElementById('stat-def').textContent = `DEF : ${getPlayerDef()}`;
+    document.getElementById('stat-def').textContent = `DEF : ${modules.getPlayerDef()}`;
   if (document.getElementById('stat-class'))
-    document.getElementById('stat-class').textContent = `Classe : ${getPlayerClass()}`;
+    document.getElementById('stat-class').textContent = `Classe : ${modules.getPlayerClassPlayer()}`;
   if (document.getElementById('stat-level'))
-    document.getElementById('stat-level').textContent = `Niveau : ${getPlayerLevel()}`;
+    document.getElementById('stat-level').textContent = `Niveau : ${modules.getPlayerLevel()}`;
   // On n'affiche plus PV/mana/xp ici
 }
 
 export function updatePVBar() {
-  const pv = getPlayerPV();
-  const pvMax = getMaxPlayerPV();
+  const pv = modules.getPlayerPV();
+  const pvMax = modules.getMaxPlayerPV();
   const percent = Math.floor((pv / pvMax) * 100);
   const fill = document.getElementById('vie-fill');
   const val = document.getElementById('vie-value');
@@ -31,8 +24,8 @@ export function updatePVBar() {
 }
 
 export function updateManaBar() {
-  const mana = getPlayerMana();
-  const manaMax = getMaxPlayerMana();
+  const mana = modules.getPlayerMana();
+  const manaMax = modules.getMaxPlayerMana();
   const percent = Math.floor((mana / manaMax) * 100);
   const fill = document.getElementById('mana-fill');
   const val = document.getElementById('mana-value');
@@ -41,9 +34,9 @@ export function updateManaBar() {
 }
 
 export function updateXPBar() {
-  const xp = getPlayerXP();
-  const lvl = getPlayerLevel();
-  const xpNext = getXpToNextLevel(lvl);
+  const xp = modules.getPlayerXP();
+  const lvl = modules.getPlayerLevel();
+  const xpNext = modules.getXpToNextLevel(lvl);
   const percent = Math.floor((xp / xpNext) * 100);
   const fill = document.getElementById('xp-fill');
   const val = document.getElementById('xp-value');

@@ -9,6 +9,7 @@ let state = {
   atk: 3,
   def: 2,
   classe: "Paladin",
+  carte: "A1", // Ajout de la carte courante
   position: { x: 0, y: 0 },
   inventaire: [],
   talents: [],
@@ -36,6 +37,10 @@ export function getPlayerClass() { return state.classe; }
 export function getPlayerPosition() { return { ...state.position }; }
 export function getPlayerInventory() { return [...state.inventaire]; }
 export function getPlayerTalents() { return [...state.talents]; }
+export function getPlayerMap() { return state.carte; }
+
+// Ajout : getter centralisé pour la position (pour modules.js)
+export function getCentralPlayerPosition() { return { ...state.position }; }
 
 export function getCurrentClassModifiers() {
   return CLASS_MODIFIERS[state.classe] || { atk: 0, def: 0, hp: 0, mana: 0 };
@@ -101,6 +106,7 @@ export function setPlayerClass(classe) { state.classe = classe; emitPlayerStatsC
 export function setPlayerPosition(x, y) { state.position = { x, y }; emitPlayerStatsChanged(); }
 export function setPlayerInventory(inv) { state.inventaire = [...inv]; emitPlayerStatsChanged(); }
 export function setPlayerTalents(tal) { state.talents = [...tal]; emitPlayerStatsChanged(); }
+export function setPlayerMap(map) { state.carte = map; emitPlayerStatsChanged(); }
 
 // --- Reset/Init ---
 export function initPlayerState(initData = {}) {

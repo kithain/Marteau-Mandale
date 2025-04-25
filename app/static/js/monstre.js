@@ -1,8 +1,5 @@
 // monstre.js
-import { infligerDegatsAuJoueur, setCombat, getPlayerX, getPlayerY } from './player.js';
-import { getPlayerDef } from './playerState.js';
-import { afficherMobDegats } from './utils.js';
-import { getMonsterPV, getMonsterAtk, getMonsterDef, getMonsterXP } from './progression.js';
+import * as modules from './modules.js';
 
 const tileSize = 64;
 let monstresActifs = [];
@@ -60,7 +57,7 @@ function updateMonsterStatus(monstre) {
     statusContainer.appendChild(burnIcon);
   }
 
-  if (typeof monstre.data.atk === 'number' && monstre.data.atk < getMonsterAtk(monstre.data.difficulte || 1)) {
+  if (typeof monstre.data.atk === 'number' && monstre.data.atk < modules.getMonsterAtk(monstre.data.difficulte || 1)) {
     const debuffIcon = document.createElement('div');
     debuffIcon.className = 'monster-status-icon monster-status-debuff-atk';
     debuffIcon.textContent = '↓';
@@ -80,8 +77,8 @@ function applyAttackDebuff(monstre, value, duration) {
 }
 
 function moveMonsterTowardPlayer(monstre) {
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
+  const playerX = modules.getPlayerX();
+  const playerY = modules.getPlayerY();
   let monstreX = parseInt(monstre.element.style.left) / tileSize;
   let monstreY = parseInt(monstre.element.style.top) / tileSize;
 
@@ -129,7 +126,7 @@ export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
     if (!existing.chaseInterval) {
       existing.chaseInterval = setInterval(() => moveMonsterTowardPlayer(existing), 500);
     }
-    setCombat(true);
+    modules.setCombat(true);
     return;
   }
 
@@ -146,9 +143,9 @@ export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
 
   // Progression dynamique des stats du monstre selon sa difficulte (niveau)
   const niveau = Math.round(monstreData.difficulte || 1);
-  const pvMonstre = getMonsterPV(niveau);
-  const atkMonstre = getMonsterAtk(niveau);
-  const defMonstre = getMonsterDef(niveau);
+  const pvMonstre = modules.getMonsterPV(niveau);
+  const atkMonstre = modules.getMonsterAtk(niveau);
+  const defMonstre = modules.getMonsterDef(niveau);
   monstreData.atk = atkMonstre;
   monstreData.defense = defMonstre;
 
@@ -172,14 +169,14 @@ export function demarrerCombat(monstreData, pvInitial, posX = 0, posY = 0) {
 
   monstresActifs.push(monstreObj);
   updateMonsterStatus(monstreObj);
-  setCombat(true);
+  modules.setCombat(true);
 }
 
 function attaqueJoueur(uniqueId) {
   // Empêche l'attaque si le joueur est furtif
   if (window.furtif) return;
   // Si le joueur est mort, on arrête tous les monstres
-  if (infligerDegatsAuJoueur(1) === 0) {
+  if (modules.infligerDegatsAuJoueur(1) === 0) {
     stopAllMonsters();
     return;
   }
@@ -193,8 +190,8 @@ function attaqueJoueur(uniqueId) {
     return;
   }
 
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
+  const playerX = modules.getPlayerX();
+  const playerY = modules.getPlayerY();
   const monsterX = parseInt(monstre.element.style.left) / tileSize;
   const monsterY = parseInt(monstre.element.style.top) / tileSize;
 
@@ -205,14 +202,14 @@ function attaqueJoueur(uniqueId) {
     // Attaque si adjacent
     const atk = monstre.data.atk ?? 0;
     // Utilise la défense du module (playerDef)
-    let playerDefense = getPlayerDef();
+    let playerDefense = modules.getPlayerDef();
     const degats = Math.max(0, atk - playerDefense);
     console.log(`[COMBAT] ${monstre.data.nom} attaque le joueur ! ATK=${atk}, DEF joueur=${playerDefense}, dégâts infligés=${degats}`);
     if (degats === 0) {
       console.log(`${monstre.data.nom} est trop affaibli pour infliger des dégâts ! (ATK=${atk})`);
     }
-    infligerDegatsAuJoueur(degats);
-    afficherMobDegats(degats);
+    modules.infligerDegatsAuJoueur(degats);
+    modules.afficherMobDegats(degats);
     animerAttaqueMonstre(monstre.data.uniqueId);
   }
 }
@@ -226,39 +223,49 @@ function animerAttaqueMonstre(uniqueId) {
   }, 200);
 }
 
-export function recevoirDegats(valeur = 1) {
+export function recevoirDegats(valeur = 1, uniqueId = null) {
+  // Si uniqueId est fourni, cible uniquement ce monstre
+  if (uniqueId) {
+    const monstre = monstresActifs.find(m => m.data.uniqueId === uniqueId);
+    if (!monstre) return;
+    appliquerDegatsAuMonstre(monstre, valeur);
+    return;
+  }
+  // Sinon, comportement d'origine (tous les monstres adjacents)
   monstresActifs.forEach(monstre => {
-    const playerX = getPlayerX();
-    const playerY = getPlayerY();
+    const playerX = modules.getPlayerX();
+    const playerY = modules.getPlayerY();
     const monstreX = parseInt(monstre.element.style.left) / tileSize;
     const monstreY = parseInt(monstre.element.style.top) / tileSize;
-    // Modif : accepte monstre sur case adjacente OU sur la même case
     const dx = Math.abs(playerX - monstreX);
     const dy = Math.abs(playerY - monstreY);
-    if ((dx <= 1 && dy <= 1)) { // autorise aussi dx==0 && dy==0 (sur la même case)
-      // Calcul des dégâts en tenant compte de la défense
-      const defense = monstre.data.defense ?? 0;
-      const dmgInfliges = Math.max(0, valeur - defense);
-      const pvAvant = monstre.pv;
-      monstre.pv = Math.max(0, monstre.pv - dmgInfliges);
-      console.log(`[COMBAT] ${monstre.data.nom} reçoit une attaque ! Dégâts bruts=${valeur}, DEF=${defense}, Dégâts infligés=${dmgInfliges}, PV avant=${pvAvant}, PV après=${monstre.pv}`);
-      // Mise à jour de la barre de vie
-      const healthFill = monstre.element.querySelector('.monster-health-fill');
-      if (healthFill) {
-        healthFill.style.width = `${(monstre.pv / monstre.maxPv) * 100}%`;
-      }
-      if (monstre.element) {
-        monstre.element.style.filter = "brightness(150%)";
-        setTimeout(() => {
-          monstre.element.style.filter = "";
-        }, 300);
-      }
-      if (monstre.pv === 0) {
-        console.log(`[COMBAT] ${monstre.data.nom} est vaincu !`);
-        finCombat(monstre.data.uniqueId);
-      }
+    if ((dx <= 1 && dy <= 1)) {
+      appliquerDegatsAuMonstre(monstre, valeur);
     }
   });
+}
+
+function appliquerDegatsAuMonstre(monstre, valeur) {
+  const defense = monstre.data.defense ?? 0;
+  const dmgInfliges = Math.max(0, valeur - defense);
+  const pvAvant = monstre.pv;
+  monstre.pv = Math.max(0, monstre.pv - dmgInfliges);
+  console.log(`[COMBAT] ${monstre.data.nom} reçoit une attaque ! Dégâts bruts=${valeur}, DEF=${defense}, Dégâts infligés=${dmgInfliges}, PV avant=${pvAvant}, PV après=${monstre.pv}`);
+  // Mise à jour de la barre de vie
+  const healthFill = monstre.element.querySelector('.monster-health-fill');
+  if (healthFill) {
+    healthFill.style.width = `${(monstre.pv / monstre.maxPv) * 100}%`;
+  }
+  if (monstre.element) {
+    monstre.element.style.filter = "brightness(150%)";
+    setTimeout(() => {
+      monstre.element.style.filter = "";
+    }, 300);
+  }
+  if (monstre.pv === 0) {
+    console.log(`[COMBAT] ${monstre.data.nom} est vaincu !`);
+    finCombat(monstre.data.uniqueId);
+  }
 }
 
 export function finCombat(uniqueId) {
@@ -272,9 +279,7 @@ export function finCombat(uniqueId) {
   // Attribution de l'XP au joueur si le monstre est mort
   if (monstre.pv === 0 && monstre.element) {
     // On suppose que monstre.data.xpValue existe, sinon mettre une valeur par défaut
-    import('./player.js').then(({ gainXP }) => {
-      gainXP(monstre.data.xpValue || 10);
-    });
+    modules.gainXP(monstre.data.xpValue || 10);
     monstre.element.classList.add("fade-out");
     monstre.element.addEventListener('animationend', () => {
       monstre.element.remove();
@@ -284,14 +289,14 @@ export function finCombat(uniqueId) {
   monstresActifs.splice(index, 1);
 
   if (monstresActifs.length === 0) {
-    setCombat(false);
+    modules.setCombat(false);
   }
 }
 
 export function getMonstreActif() {
   // Retourne le premier monstre actif sur la case du joueur
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
+  const playerX = modules.getPlayerX();
+  const playerY = modules.getPlayerY();
   return monstresActifs.find(monstre => {
     const x = parseInt(monstre.element.style.left) / tileSize;
     const y = parseInt(monstre.element.style.top) / tileSize;
@@ -339,8 +344,8 @@ export function applyStatusEffect(monsterId, effect, duration, value = 1) {
 }
 
 export function getMonstresAdjacentsEtSurCase() {
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
+  const playerX = modules.getPlayerX();
+  const playerY = modules.getPlayerY();
   return monstresActifs.filter(monstre => {
     const monstreX = parseInt(monstre.element.style.left) / tileSize;
     const monstreY = parseInt(monstre.element.style.top) / tileSize;
@@ -362,7 +367,7 @@ export function stopAllMonsters() {
       m.chaseInterval = null;
     }
   });
-  setCombat(false);
+  modules.setCombat(false);
 }
 
 // --- Utilitaire pour parser monstre_id au format id_lvlX ---
@@ -388,11 +393,11 @@ export function creerMonstreDepuisId(monstre_id) {
   // On applique la progression dynamique avec le niveau parsé
   return {
     ...monstreData,
-    pv: getMonsterPV(niveau),
-    maxPv: getMonsterPV(niveau),
-    atk: getMonsterAtk(niveau),
-    def: getMonsterDef(niveau),
-    xpValue: getMonsterXP(niveau),
+    pv: modules.getMonsterPV(niveau),
+    maxPv: modules.getMonsterPV(niveau),
+    atk: modules.getMonsterAtk(niveau),
+    def: modules.getMonsterDef(niveau),
+    xpValue: modules.getMonsterXP(niveau),
     difficulte: niveau,
     niveau: niveau
   };

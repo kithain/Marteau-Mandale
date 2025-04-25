@@ -41,7 +41,7 @@ export function initConnexion() {
   }
 }
 
-function afficherMessage(message, type = 'info') {
+export function afficherMessage(message, type = 'info') {
   let feedback = document.getElementById('feedback');
   if (!feedback) {
     feedback = document.createElement('p');
