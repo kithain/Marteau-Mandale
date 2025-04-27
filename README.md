@@ -56,27 +56,69 @@ flask run
 ```
 📁 Marteau-Mandale/
 │
-├── 📄 app.py                   # Point d'entrée principal
-├── 📄 requirements.txt         # Dépendances Python
+├── 📄 app.py                   # Point d'entrée principal - Initialise l'application Flask
+├── 📄 requirements.txt         # Liste des dépendances Python nécessaires
+├── 📄 LICENSE                  # Licence MIT
 │
-├── 📁 app/                     # Application Flask
-│   ├── 📄 __init__.py          
-│   ├── 📄 routes.py            
-│   ├── 📄 player_manager.py    
-│   ├── 📄 utils.py             
+├── 📁 app/                     # Module principal de l'application
+│   ├── 📄 __init__.py          # Initialise le package Flask et les extensions
+│   ├── 📄 routes.py            # Contient toutes les routes de l'application
+│   ├── 📄 player_manager.py    # Gère la création et l'authentification des joueurs
+│   ├── 📄 utils.py             # Fonctions utilitaires partagées
+│   ├── 📄 utils_liste_difficultes.py # Gestion des niveaux de difficulté
+│   ├── 📄 utils_rencontres.py  # Gestion des rencontres avec monstres
 │   │
-│   ├── 📁 static/              # Assets statiques
+│   ├── 📁 static/              # Contient tous les assets statiques
 │   │   ├── 📁 css/
-│   │   ├── 📁 img/
-│   │   └── 📁 js/
+│   │   │   └── 📄 style.css    # Style principal de l'application
+│   │   │
+│   │   ├── 📁 img/             # Assets visuels du jeu
+│   │   │   ├── 📁 classes/     # Sprites des personnages jouables
+│   │   │   │   ├── 📄 barbare.png, barbare_attack.png, barbare_idle.png
+│   │   │   │   ├── 📄 mage.png, mage_attack.png, mage_idle.png
+│   │   │   │   ├── 📄 paladin.png, paladin_attack.png, paladin_idle.png
+│   │   │   │   └── 📄 voleur.png, voleur_attack.png, voleur_idle.png
+│   │   │   │
+│   │   │   ├── 📁 monstres/    # Sprites des ennemis
+│   │   │   │   ├── 📄 bandit.png, geunaude.png, ghost.png
+│   │   │   │   ├── 📄 ghost_miner.png, gobelin.png, golem.png
+│   │   │   │   └── 📄 [20+ autres sprites de monstres...]
+│   │   │   │
+│   │   │   ├── 📄 background.jpg # Arrière-plan
+│   │   │   ├── 📄 logo.jpg     # Logo du jeu
+│   │   │   ├── 📄 favicon.ico  # Icône du site
+│   │   │   ├── 📄 fumee.png    # Effets visuels
+│   │   │   └── 📄 spark1.png, spark2.png # Particules
+│   │   │
+│   │   ├── 📁 js/              # Logique JavaScript
+│   │   │   ├── 📄 main_entry_point.js # Point d'entrée
+│   │   │   ├── 📄 camera_main_logic.js # Gestion caméra
+│   │   │   ├── 📄 combat_manager_logic.js # Système de combat
+│   │   │   ├── 📄 [15+ autres fichiers de logique...]
+│   │   │
+│   │   ├── 📁 maps/            # Cartes du jeu (Tiled)
+│   │   │   ├── 📄 A1.tmj à P8.tmj # Cartes des différents niveaux
+│   │   │   ├── 📄 Sprite-foret.png # Tileset
+│   │   │   └── 📄 Sprite-foret.tsx # Configuration Tiled
+│   │   │
+│   │   ├── 📁 monstres/        # Données des monstres
+│   │   │   ├── 📄 monstres.json # Statistiques des monstres
+│   │   │   └── 📄 talents_monstres.json # Capacités spéciales
+│   │   │
+│   │   ├── 📁 rencontres/      # Tables de rencontres
+│   │   │   ├── 📄 difficulte_1.json à difficulte_10.json
+│   │   │
+│   │   └── 📁 talents/         # Système de talents
+│   │       └── 📄 talents.json # Arbres de talents
 │   │
 │   ├── 📁 templates/           # Templates HTML
-│   │   ├── 📄 jeu.html
-│   │   └── 📄 menu.html
+│   │   ├── 📄 index.html       # Page d'accueil
+│   │   ├── 📄 jeu.html         # Interface de jeu
+│   │   └── 📄 menu.html        # Menu principal
 │   │
-│   └── 📁 save_data/           # Sauvegardes
+│   └── 📁 __pycache__/         # Cache Python (généré automatiquement)
 │
-└── 📄 README.md                # Ce fichier
+└── 📄 README.md                # Documentation du projet
 ```
 
 ## 🤝 Contribution
