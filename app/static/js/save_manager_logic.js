@@ -4,37 +4,23 @@
 
 // --- Imports principaux ---
 import { 
-  get_player_save_data as get_central_player_save_data,
-  set_player_pv,
-  set_player_mana,
-  get_max_player_pv,
-  get_max_player_mana
-} from './player_state_logic.js';
-
-import { 
+  set_player_position,
   set_player_inventory,
   set_player_talents,
   init_player_state,
   set_player_xp,
+  set_player_level,
+  set_player_atk,
+  set_player_def,
+  set_player_class,
   set_player_map,
-  set_player_position as set_player_position_player
-} from './player_main_logic.js';
-
-import { start_regen_utils } from './player_visual_utils.js';
+  get_player_save_data // Utilisation de la fonction centrale
+} from './player_state_logic.js';
 
 // --- Sauvegarde de l'état du joueur ---
-// Récupère les données de sauvegarde du joueur (état complet)
-/**
- * Récupère les données de sauvegarde du joueur (état complet)
- * @returns {object} Données JSON de sauvegarde
- */
-function get_player_save_data() {
-  // Ajoute la carte courante dans la sauvegarde
-  const data = get_central_player_save_data();
-  return {
-    ...data,
-    carte: data.carte // pour compatibilité JSON
-  };
+function save_player_state() {
+  const saveData = get_player_save_data(); // Utilisation de la fonction importée
+  localStorage.setItem('playerSave', JSON.stringify(saveData));
 }
 
 // --- Chargement de l'état du joueur ---
@@ -59,7 +45,7 @@ function load_player_data(saveData) {
   }
   // Position : toujours restaurer si présente
   if (saveData.position && typeof saveData.position.x === 'number' && typeof saveData.position.y === 'number') {
-    set_player_position_player(saveData.position.x, saveData.position.y);
+    set_player_position(saveData.position.x, saveData.position.y);
   }
   // Restaure PV/mana ou valeurs max si null/absent
   if (typeof saveData.vie === 'number' && saveData.vie !== null) {
@@ -82,11 +68,11 @@ function load_player_data(saveData) {
     set_player_talents(saveData.talents);
   }
   // Correction : utilise modules.startRegenUtils (alias de player_utils.js) pour la régénération
-  start_regen_utils();
+  start_regen();
 }
 
 // --- Exports publics à la fin ---
 export {
-  get_player_save_data,
+  save_player_state,
   load_player_data
 };

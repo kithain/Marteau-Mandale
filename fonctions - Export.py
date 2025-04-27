@@ -69,7 +69,7 @@ for root, dirs, files in os.walk(base_path):
                 print(f"Erreur lecture fichier {file_path}: {e}")
 
 # Exporter en CSV
-with open(r"D:\mon_projet_dungeon_crawler\Marteau-Mandale\liste_fonction.csv", "w", newline='', encoding="utf-8") as csvfile:
+with open(r"D:\mon_projet_dungeon_crawler\Marteau-Mandale\liste_fonction_export.csv", "w", newline='', encoding="utf-8") as csvfile:
     fieldnames = ["FunctionName", "Type", "DefinedIn", "ExportedIn", "UsageFile", "UsageLineNumber", "UsageLineContent"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=";")
     writer.writeheader()

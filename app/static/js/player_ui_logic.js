@@ -6,7 +6,7 @@
 import { 
   get_player_atk,
   get_player_def,
-  get_player_class_state,
+  get_player_class,
   get_player_level,
   get_player_pv,
   get_max_player_pv,
@@ -27,7 +27,7 @@ function update_player_stats_panel() {
   if (document.getElementById('stat-def'))
     document.getElementById('stat-def').textContent = `DEF : ${get_player_def()}`;
   if (document.getElementById('stat-class'))
-    document.getElementById('stat-class').textContent = `Classe : ${get_player_class_state()}`;
+    document.getElementById('stat-class').textContent = `Classe : ${get_player_class()}`;
   if (document.getElementById('stat-level'))
     document.getElementById('stat-level').textContent = `Niveau : ${get_player_level()}`;
   // PV/mana/xp ne sont pas affichés ici

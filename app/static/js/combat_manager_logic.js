@@ -1,6 +1,6 @@
 // combat_manager_logic.js
 // Centralise toute la logique de combat et de rencontres du jeu
-// Refactorisé pour clarté, maintenabilité et cohérence
+// Refactorise pour clarte, maintenabilite et coherence
 
 import { 
   creer_monstre,
@@ -18,86 +18,87 @@ import {
   appliquer_poison,
   appliquer_stun,
   appliquer_debuff_atk_monstre,
-  estempoisonne,
+  est_empoisonne,
   retirer_poison,
-  stop_all_monstres,
-  get_monstre_pv,
   supprimer_monstre
 } from './monstre_main_logic.js';
 
-import { gain_xp } from './player_main_logic.js';
+import { 
+  get_position_joueur,
+  get_player_pv, 
+  get_player_def, 
+  get_player_class,
+  get_player_effective_stats 
+} from './player_state_logic.js';
 
-import { get_monster_atk } from './progression_main_logic.js';
-import { afficher_mob_degats } from './player_visual_utils.js';
-import { register_game_interval, clear_game_interval } from './player_visual_utils.js';
+import { infliger_degats_au_joueur } from './player_visual_utils.js';
 
-import { getPlayerX, getPlayerY, getPlayerPV } from './player_main_logic.js';
-import { getPlayerDef, infligerDegatsAuJoueur } from './player_state_logic.js';
-import { isBlocked } from './map_main_logic.js';
+import { 
+  DEPLACEMENT_SANS_RENCONTRE_INIT 
+} from './map_constants_logic.js';
 
 // --- Variables globales ---
-const DEPLACEMENT_SANS_RENCONTRE_INIT = 3;
-let deplacementSansRencontre = DEPLACEMENT_SANS_RENCONTRE_INIT;
-let combatActif = false;
-let currentMonstre = null;
-let monstreInterval = null;
+let deplacement_sans_rencontre = DEPLACEMENT_SANS_RENCONTRE_INIT;
+let combat_actif = false;
+let current_monstre = null;
+let monstre_interval = null;
 
 // Initialisation des variables globales window
-window.combatActif = false;
-window.currentMonstre = null;
+window.combat_actif = false;
+window.current_monstre = null;
 
-// --- Fonctions de gestion du déplacement sans rencontre ---
+// --- Fonctions de gestion du deplacement sans rencontre ---
 function set_deplacement_sans_rencontre(val) {
   if (typeof val === 'number' && !isNaN(val)) {
-    deplacementSansRencontre = val;
-    window.DEP_SANS_RENCONTRE = val;
+    deplacement_sans_rencontre = val;
+    window.dep_sans_rencontre = val;
   }
 }
 
 function get_deplacement_sans_rencontre() {
-  return deplacementSansRencontre;
+  return deplacement_sans_rencontre;
 }
 
 function reset_deplacement_sans_rencontre() {
-  deplacementSansRencontre = DEPLACEMENT_SANS_RENCONTRE_INIT;
-  window.DEP_SANS_RENCONTRE = DEPLACEMENT_SANS_RENCONTRE_INIT;
+  deplacement_sans_rencontre = DEPLACEMENT_SANS_RENCONTRE_INIT;
+  window.dep_sans_rencontre = DEPLACEMENT_SANS_RENCONTRE_INIT;
 }
 
 // --- Combat principal ---
 function creer_monstre_et_demarrer_combat(monstre, pv, x, y) {
-  // Création et affichage du monstre sur la carte
-  const monstreObj = creer_monstre({
+  // Creation et affichage du monstre sur la carte
+  const monstre_obj = creer_monstre({
     ...monstre,
     pv,
-    posX: x,
-    posY: y
+    pos_x: x,
+    pos_y: y
   });
   
-  // Démarrer le combat immédiatement si le monstre est proche
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  const dx = Math.abs(playerX - x);
-  const dy = Math.abs(playerY - y);
+  // Demarrer le combat immediatement si le monstre est proche
+  const player_x = get_position_joueur().x;
+  const player_y = get_position_joueur().y;
+  const dx = Math.abs(player_x - x);
+  const dy = Math.abs(player_y - y);
   
   if (dx <= 1 && dy <= 1) {
-    demarrer_combat(monstreObj);
+    demarrer_combat(monstre_obj);
   }
   
-  return monstreObj;
+  return monstre_obj;
 }
 
 function demarrer_combat(monstre) {
-  if (window.combatActif || window.isGameOver) return;
-  window.combatActif = true;
-  window.currentMonstre = monstre;
+  if (window.combat_actif || window.is_game_over) return;
+  window.combat_actif = true;
+  window.current_monstre = monstre;
   
-  // Arrêter le déplacement des monstres
+  // Arreter le deplacement des monstres
   arreter_deplacement_monstres();
   
-  // Démarrer l'attaque automatique du monstre
-  window.monstreAttackInterval = setInterval(() => {
-    if (!window.combatActif || window.isGameOver) {
-      clearInterval(window.monstreAttackInterval);
+  // Demarrer l'attaque automatique du monstre
+  window.monstre_attack_interval = setInterval(() => {
+    if (!window.combat_actif || window.is_game_over) {
+      clearInterval(window.monstre_attack_interval);
       return;
     }
     attaquer_joueur(monstre);
@@ -107,12 +108,12 @@ function demarrer_combat(monstre) {
 }
 
 function finir_combat() {
-  window.currentMonstre = null;
-  window.combatActif = false;
+  window.current_monstre = null;
+  window.combat_actif = false;
   
-  if (window.monstreAttackInterval) {
-    clearInterval(window.monstreAttackInterval);
-    window.monstreAttackInterval = null;
+  if (window.monstre_attack_interval) {
+    clearInterval(window.monstre_attack_interval);
+    window.monstre_attack_interval = null;
   }
   
   document.dispatchEvent(new CustomEvent('combatEnded'));
@@ -120,97 +121,97 @@ function finir_combat() {
 
 // --- Attaques ---
 function attaquer_joueur(monstre) {
-  if (!window.currentMonstre || window.isGameOver) return;
+  if (!window.current_monstre || window.is_game_over) return;
   
-  // Vérifier si le joueur est adjacent au monstre
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  const monsterPos = get_monstre_position(monstre.state);
-  const dx = Math.abs(playerX - monsterPos.x);
-  const dy = Math.abs(playerY - monsterPos.y);
+  // Verifier si le joueur est adjacent au monstre
+  const player_x = get_position_joueur().x;
+  const player_y = get_position_joueur().y;
+  const monster_pos = get_monstre_position(monstre.state);
+  const dx = Math.abs(player_x - monster_pos.x);
+  const dy = Math.abs(player_y - monster_pos.y);
   
   // Si le monstre n'est pas adjacent, ne pas attaquer
   if (dx > 1 || dy > 1) {
     return;
   }
   
-  // Utilise la bonne clé d'attaque (atk ou attaque)
+  // Utilise la bonne cle d'attaque (atk ou attaque)
   const atk = (monstre.state && (typeof monstre.state.atk === 'number' ? monstre.state.atk : monstre.state.attaque)) || 10;
-  const def = getPlayerDef();
+  const def = get_player_def();
   const degats = Math.max(1, atk - def);
-  infligerDegatsAuJoueur(degats);
+  infliger_degats_au_joueur(degats);
   
-  if (getPlayerPV() <= 0) {
+  if (get_player_pv() <= 0) {
     finir_combat();
   }
 }
 
 function attaquer_monstre(valeur) {
-  if (!window.currentMonstre || window.isGameOver) return;
+  if (!window.current_monstre || window.is_game_over) return;
   
-  // Vérifier si le joueur est adjacent au monstre
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  const monsterPos = get_monstre_position(window.currentMonstre.state);
-  const dx = Math.abs(playerX - monsterPos.x);
-  const dy = Math.abs(playerY - monsterPos.y);
+  // Verifier si le joueur est adjacent au monstre
+  const player_x = get_position_joueur().x;
+  const player_y = get_position_joueur().y;
+  const monster_pos = get_monstre_position(window.current_monstre.state);
+  const dx = Math.abs(player_x - monster_pos.x);
+  const dy = Math.abs(player_y - monster_pos.y);
   
   // Si le joueur n'est pas adjacent, ne pas attaquer
   if (dx > 1 || dy > 1) {
     return;
   }
   
-  // Si currentMonstre est bien {state, element}
-  appliquer_degats_au_monstre(window.currentMonstre, valeur);
-  if (get_monstre_pv(window.currentMonstre.state) <= 0) {
+  // Si current_monstre est bien {state, element}
+  appliquer_degats_au_monstre(window.current_monstre, valeur);
+  if (get_monstre_pv(window.current_monstre.state) <= 0) {
     finir_combat();
   }
 }
 
-// --- Accès à l'état du combat ---
+// --- Acces a l'etat du combat ---
 function get_combat_actif() {
-  return window.combatActif;
+  return window.combat_actif;
 }
 
 function get_current_monstre() {
-  return window.currentMonstre;
+  return window.current_monstre;
 }
 
-// --- Gestion des rencontres aléatoires ---
+// --- Gestion des rencontres aleatoires ---
 function verifier_rencontre() {
   if (get_combat_actif()) return;
-  if (deplacementSansRencontre > 0) {
-    deplacementSansRencontre--;
-    window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
+  if (deplacement_sans_rencontre > 0) {
+    deplacement_sans_rencontre--;
+    window.dep_sans_rencontre = deplacement_sans_rencontre;
     return;
   }
 
-  fetch(`/api/rencontre?x=${getPlayerX()}&y=${getPlayerY()}&carte=${modules.currentMap}`)
+  fetch(`/api/rencontre?x=${get_position_joueur().x}&y=${get_position_joueur().y}&carte=${modules.current_map}`)
     .then(res => {
-      if (!res.ok) throw new Error('Erreur de réseau');
+      if (!res.ok) throw new Error('Erreur de reseau');
       return res.json();
     })
     .then(data => {
-      console.log('[DEBUG] Réponse de /api/rencontre:', data);
+      console.log('[DEBUG] Reponse de /api/rencontre:', data);
       if (data.monstre) {
         const monstre = data.monstre;
         const pv = monstre.pv;
-        // Ajoute baseId pour lier à la fiche de base
-        let baseId = monstre.id;
-        if (baseId && baseId.includes('_lvl')) {
-          baseId = baseId.split('_lvl')[0];
+        // Ajoute base_id pour lier a la fiche de base
+        let base_id = monstre.id;
+        if (base_id && base_id.includes('_lvl')) {
+          base_id = base_id.split('_lvl')[0];
         }
-        monstre.baseId = baseId;
-        // Cherche une case libre à distance 2 max pour le monstre
-        const px = getPlayerX();
-        const py = getPlayerY();
+        monstre.base_id = base_id;
+        // Cherche une case libre a distance 2 max pour le monstre
+        const px = get_position_joueur().x;
+        const py = get_position_joueur().y;
         let found = null;
         for (let dx = -2; dx <= 2; dx++) {
           for (let dy = -2; dy <= 2; dy++) {
             if (dx === 0 && dy === 0) continue; // ne pas pop sur la case du joueur
             const nx = px + dx;
             const ny = py + dy;
-            if (!window.isBlocked || !window.isBlocked(nx, ny)) {
+            if (!window.is_blocked || !window.is_blocked(nx, ny)) {
               found = {x: nx, y: ny};
               break;
             }
@@ -218,82 +219,87 @@ function verifier_rencontre() {
           if (found) break;
         }
         // Si pas de case libre, spawn sur le joueur (fallback)
-        const spawnX = found ? found.x : px;
-        const spawnY = found ? found.y : py;
-        const monstreObj = creer_monstre_et_demarrer_combat(monstre, pv, spawnX, spawnY);
-        deplacementSansRencontre = 5;
-        window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
+        const spawn_x = found ? found.x : px;
+        const spawn_y = found ? found.y : py;
+        const monstre_obj = creer_monstre_et_demarrer_combat(monstre, pv, spawn_x, spawn_y);
+        deplacement_sans_rencontre = 5;
+        window.dep_sans_rencontre = deplacement_sans_rencontre;
       } else {
-        console.warn('[DEBUG] Aucun monstre généré:', data);
+        console.warn('[DEBUG] Aucun monstre genere:', data);
       }
     })
     .catch(error => {
-      console.error('Erreur lors de la vérification des rencontres:', error);
+      console.error('Erreur lors de la verification des rencontres:', error);
     });
 }
 
-// --- Détection de sortie de zone ---
-function detecter_sortie(exitZones) {
-  const sortie = exitZones.find(zone =>
-    getPlayerX() >= zone.x &&
-    getPlayerX() < zone.x + zone.width &&
-    getPlayerY() >= zone.y &&
-    getPlayerY() < zone.y + zone.height
+export function generer_rencontre() {
+  // Implémentation de la logique de génération de rencontre
+  return verifier_rencontre();
+}
+
+// --- Detection de sortie de zone ---
+function detecter_sortie(exit_zones) {
+  const sortie = exit_zones.find(zone =>
+    get_position_joueur().x >= zone.x &&
+    get_position_joueur().x < zone.x + zone.width &&
+    get_position_joueur().y >= zone.y &&
+    get_position_joueur().y < zone.y + zone.height
   );
   return sortie;
 }
 
-// --- Détection de monstre adjacent et démarrage du combat ---
+// --- Detection de monstre adjacent et demarrage du combat ---
 function verifier_combat_adj_monstre() {
-  // Ne détecte pas le combat si furtif
+  // Ne detecte pas le combat si furtif
   if (window.furtif) return false;
-  const px = getPlayerX();
-  const py = getPlayerY();
+  const px = get_position_joueur().x;
+  const py = get_position_joueur().y;
   const directions = [
     [1,0], [-1,0], [0,1], [0,-1],
     [1,1], [1,-1], [-1,1], [-1,-1]
   ];
-  const monstresActifs = get_monstres_actifs();
+  const monstres_actifs = get_monstres_actifs();
   
-  console.log('[DEBUG] Vérification combat adjacent', {
-    playerX: px, 
-    playerY: py, 
-    monstresActifs: monstresActifs.length,
-    monstresEnCombat: monstresActifs.filter(m => m === window.currentMonstre).length
+  console.log('[DEBUG] Verification combat adjacent', {
+    player_x: px, 
+    player_y: py, 
+    monstres_actifs: monstres_actifs.length,
+    monstres_en_combat: monstres_actifs.filter(m => m === window.current_monstre).length
   });
   
-  for (const monstre of monstresActifs) {
-    // Vérification des données de position
+  for (const monstre of monstres_actifs) {
+    // Verification des donnees de position
     if (!monstre.element || !monstre.element.style.left || !monstre.element.style.top) {
-      console.warn('[COMBAT] Élément monstre sans position', monstre);
+      console.warn('[COMBAT] Element monstre sans position', monstre);
       continue;
     }
     
-    const monsterPos = get_monstre_position(monstre.state);
-    const monsterX = monsterPos.x;
-    const monsterY = monsterPos.y;
+    const monster_pos = get_monstre_position(monstre.state);
+    const monster_x = monster_pos.x;
+    const monster_y = monster_pos.y;
     
     console.log('[DEBUG] Position monstre', { 
       id: monstre.state.id,
-      monsterX, 
-      monsterY, 
-      playerX: px, 
-      playerY: py,
-      enCombat: (window.currentMonstre && window.currentMonstre.state.id === monstre.state.id) ? 1 : 0
+      monster_x, 
+      monster_y, 
+      player_x: px, 
+      player_y: py,
+      en_combat: (window.current_monstre && window.current_monstre.state.id === monstre.state.id) ? 1 : 0
     });
     
-    // Vérifie si le monstre est adjacent (dans une case adjacente)
-    const isAdjacent = directions.some(([dx, dy]) => 
-      monsterX === px + dx && monsterY === py + dy
+    // Verifie si le monstre est adjacent (dans une case adjacente)
+    const is_adjacent = directions.some(([dx, dy]) => 
+      monster_x === px + dx && monster_y === py + dy
     );
     
-    if (isAdjacent) {
-      // Si le monstre est déjà en combat, ne pas démarrer un nouveau combat
-      if (window.currentMonstre && window.currentMonstre.state.id === monstre.state.id) {
+    if (is_adjacent) {
+      // Si le monstre est deja en combat, ne pas demarrer un nouveau combat
+      if (window.current_monstre && window.current_monstre.state.id === monstre.state.id) {
         continue;
       }
       
-      // Démarrer le combat avec ce monstre
+      // Demarrer le combat avec ce monstre
       demarrer_combat(monstre);
       return true;
     }
@@ -302,7 +308,7 @@ function verifier_combat_adj_monstre() {
   return false;
 }
 
-// --- Exports publics harmonisés ---
+// --- Exports publics harmonises ---
 export {
   reset_deplacement_sans_rencontre,
   set_deplacement_sans_rencontre,
@@ -315,6 +321,7 @@ export {
   get_combat_actif,
   get_current_monstre,
   verifier_rencontre,
+  generer_rencontre,
   detecter_sortie,
   verifier_combat_adj_monstre,
   get_monstre_pv,
@@ -328,8 +335,8 @@ export {
   appliquer_poison,
   appliquer_stun,
   appliquer_debuff_atk_monstre,
-  estempoisonne,
+  est_empoisonne,
   retirer_poison,
-  stop_all_monstres,
+  stopper_tous_monstres,
   supprimer_monstre
 };

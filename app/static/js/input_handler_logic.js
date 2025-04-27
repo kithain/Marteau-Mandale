@@ -2,10 +2,10 @@
 // Gestion centralisée des entrées clavier du joueur
 // Refactorisé pour plus de clarté et de maintenabilité
 
-import { deplacerJoueur } from './player_main_logic.js';
-import { demarrerCombat } from './combat_manager_logic.js';
-import { getPositionJoueur } from './player_state_logic.js';
-import { utiliserTalent, getTalents } from './player_talents_logic.js';
+import { deplacer_joueur } from './player_main_logic.js';
+import { demarrer_combat } from './combat_manager_logic.js';
+import { get_position_joueur } from './player_main_logic.js';
+import { utiliser_talent, get_talents } from './player_talents_logic.js';
 
 // --- Constantes globales ---
 const TALENT_KEYS = ["&", "é", '"', "'", "(", "-", "è", "_", "ç", "à"];
@@ -49,7 +49,7 @@ function triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, curr
             image: monsterDiv.style.backgroundImage.replace(/^url\(['"](.+)['"]\)$/, '$1'),
             baseId: monstre.state.baseId
           };
-          demarrerCombat(monstreData, monstreData.pv, monstreX, monstreY);
+          demarrer_combat(monstreData, monstreData.pv, monstreX, monstreY);
         }
       }
     }
@@ -67,14 +67,27 @@ function isMoveBlockedByMonster(newX, newY) {
   });
 }
 
-// --- Fonction pour utiliser un talent en combat ---
-function utiliserTalentEnCombat(talent) {
+// --- Gestion des talents ---
+function utiliser_talent_en_combat(talent) {
   if (!window.combatActif) {
     console.warn('[TALENT] Impossible d\'utiliser un talent hors combat');
     return false;
   }
-
-  return utiliserTalent(talent);
+  
+  const talents = get_talents();
+  const talentIndex = talents.findIndex(t => t.id === talent.id);
+  if (talentIndex === -1) return;
+  
+  utiliser_talent(talent, talentIndex);
+  
+  // Mettre à jour l'UI
+  const btn = document.getElementById(`talent-btn-${talentIndex}`);
+  if (btn) {
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.disabled = false;
+    }, talent.cooldown);
+  }
 }
 
 // --- Gestionnaire principal ---
@@ -86,23 +99,22 @@ function handleKeydown(e) {
 
   // 2. Activation d'un talent
   const talentIndex = KEY_MAP[e.key];
-  const talentsData = getTalents();
+  const talentsData = get_talents();
   
   if (window.combatActif && talentIndex !== undefined) {
     const skills = Array.isArray(talentsData) ? talentsData : talentsData.talents;
     if (skills && skills[talentIndex]) {
       const talent = skills[talentIndex];
-      utiliserTalentEnCombat(talent);
+      utiliser_talent_en_combat(talent);
       return; // Empêche tout autre comportement pendant le combat
     }
   }
 
   // 3. Vérification de la présence de monstres
-  const currentX = getPositionJoueur().x;
-  const currentY = getPositionJoueur().y;
-  const { monstreSurCase, monstreAdj, monsterElements } = detectMonsters(currentX, currentY);
+  const { x, y } = get_position_joueur();
+  const { monstreSurCase, monstreAdj, monsterElements } = detectMonsters(x, y);
   if (monstreSurCase || monstreAdj) {
-    triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, currentX, currentY);
+    triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, x, y);
     if (!window.furtif) {
       e.preventDefault();
       console.log('Déplacement bloqué : vous ne pouvez pas quitter la case tant qu\'un monstre est présent ou adjacent.');
@@ -111,18 +123,18 @@ function handleKeydown(e) {
   }
 
   // 4. Calcul de la nouvelle position
-  let newX = currentX;
-  let newY = currentY;
+  let newX = x;
+  let newY = y;
   if (e.key === 'ArrowUp') newY--;
   if (e.key === 'ArrowDown') newY++;
   if (e.key === 'ArrowLeft') newX--;
   if (e.key === 'ArrowRight') newX++;
 
   // 5. Gestion des déplacements entre cartes
-  if (newX < 0) return deplacerJoueur('gauche');
-  if (newX >= 16) return deplacerJoueur('droite');
-  if (newY < 0) return deplacerJoueur('haut');
-  if (newY >= 16) return deplacerJoueur('bas');
+  if (newX < 0) return deplacer_joueur('gauche');
+  if (newX >= 16) return deplacer_joueur('droite');
+  if (newY < 0) return deplacer_joueur('haut');
+  if (newY >= 16) return deplacer_joueur('bas');
 
   // 6. Vérification si la case est bloquée
   if (modules.isBlocked(newX, newY)) {
@@ -138,8 +150,8 @@ function handleKeydown(e) {
   }
 
   // 8. Mise à jour de la position du joueur
-  if (newX !== currentX || newY !== currentY) {
-    deplacerJoueur(newX, newY);
+  if (newX !== x || newY !== y) {
+    deplacer_joueur(newX, newY);
     modules.verifierRencontre();
     modules.verifierCombatAdjMonstre();
     modules.detecterSortie(modules.exitZones);
@@ -149,6 +161,6 @@ function handleKeydown(e) {
 // --- Exports publics à la fin ---
 export {
   handleKeydown,
-  utiliserTalentEnCombat,
+  utiliser_talent_en_combat,
   detectMonsters
 };

@@ -12,16 +12,20 @@ let regen_interval = null;
 let is_game_over = false;
 
 import { 
-  set_combat,
-  utiliser_talent_en_combat,
-  get_talents
+  get_talents,
+  set_combat
 } from './player_talents_logic.js';
 
 import { 
-  set_player_position as set_player_position_state, 
-  get_central_player_position, 
-  getPlayerSaveData 
+  get_position_joueur,
+  get_player_save_data,
+  set_player_position,
+  set_player_pv,
+  set_player_mana,
+  set_player_xp
 } from './player_state_logic.js';
+
+import { utiliser_talent_en_combat } from './input_handler_logic.js';
 
 // === Stats ===
 function initialiser_stats_joueur(level) {
@@ -81,16 +85,7 @@ function update_xp_bar() {
 // === Position du joueur ===
 // Fonction pour définir la position du joueur
 function deplacer_joueur(x, y) {
-  set_player_position_state(x, y);
-}
-function get_position_joueur() {
-  return get_central_player_position();
-}
-function get_position_joueur_x() {
-  return get_central_player_position().x;
-}
-function get_position_joueur_y() {
-  return get_central_player_position().y;
+  set_player_position(x, y);
 }
 
 // === Vie / Mana ===
@@ -209,8 +204,8 @@ function animer_attaque() {
 // === Dash arrière ===
 // Fonction pour réaliser le dash arrière
 function dash_backwards() {
-  let current_x = get_position_joueur_x();
-  let current_y = get_position_joueur_y();
+  let current_x = get_position_joueur().x;
+  let current_y = get_position_joueur().y;
 
   const directions = [
     { dx: 0, dy: -1 }, 
@@ -259,29 +254,9 @@ function set_combat(actif) {
   window.combat_actif = actif;
 }
 
-// --- Exports publics à la fin ---
+// === Exports publics à la fin ---
 export {
-  cooldowns,
-  combat_actif,
-  player_def,
-  player_xp,
-  xp_to_next_level,
   deplacer_joueur,
-  get_position_joueur,
-  get_position_joueur_x,
-  get_position_joueur_y,
-  update_mana_bar,
-  update_vie_bar,
-  initialiser_stats_joueur,
-  gagner_xp,
-  level_up,
-  update_xp_bar,
-  utiliser_talent,
-  initialiser_talents,
-  animer_attaque,
-  dash_backwards,
-  load_player_data,
   get_player_class,
-  set_combat,
-  getPlayerSaveData
+  set_combat
 };

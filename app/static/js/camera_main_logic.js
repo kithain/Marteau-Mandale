@@ -2,8 +2,8 @@
 // Gestion du positionnement du joueur et de la caméra sur la carte
 // Refactorisé pour plus de clarté et de maintenabilité
 
-import { getPositionJoueur } from './player_main_logic.js';
-import { TILE_SIZE, MAP_WIDTH, MAP_HEIGHT } from './map_main_logic.js';
+import { get_position_joueur } from './player_main_logic.js';
+import { TILE_SIZE, MAP_WIDTH, MAP_HEIGHT } from './map_constants_logic.js';
 
 // --- Constantes globales ---
 const MAP_SIZE = 16; // nombre de tuiles par côté
@@ -27,7 +27,7 @@ export function movePlayer() {
   if (!player) return;
 
   // 1. Positionnement du joueur
-  const { x: playerX, y: playerY } = getPositionJoueur();
+  const { x: playerX, y: playerY } = get_position_joueur();
   player.style.left = `${playerX * TILE_SIZE}px`;
   player.style.top = `${playerY * TILE_SIZE}px`;
 

@@ -3,19 +3,22 @@
 // Refactorisé pour clarté, organisation et maintenabilité
 
 import { 
-  initialiserStatsJoueur,
-  loadPlayerDataPlayer,
-  startRegenUtils
+  initialiser_stats_joueur,
+  load_player_data,
+  start_regen_utils
 } from './player_main_logic.js';
 
-import { chargerCarteInitiale, chargerNouvelleCarte } from './map_main_logic.js';
+import { 
+  charger_carte_initiale, 
+  chargerNouvelleCarte as charger_nouvelle_carte 
+} from './map_main_logic.js';
 
-import { initConnexion, initSmokeAnimation, initParticles } from './utils_main_logic.js';
-import { handleKeydown } from './input_handler_logic.js';
-import { resetDeplacementSansRencontre, setDeplacementSansRencontre } from './combat_manager_logic.js';
-import { initialiserTalents } from './player_talents_logic.js';
-import { updateAllPlayerUI } from './player_ui_logic.js';
-import { getPlayerSaveData } from './player_state_logic.js';
+import { init_connexion, init_smoke_animation, init_particles } from './utils_main_logic.js';
+import { handle_keydown } from './input_handler_logic.js';
+import { reset_deplacement_sans_rencontre, set_deplacement_sans_rencontre, generer_rencontre } from './combat_manager_logic.js';
+import { initialiser_talents } from './player_talents_logic.js';
+import { update_all_player_ui } from './player_ui_logic.js';
+import { get_player_save_data } from './player_state_logic.js';
 
 // --- Fonctions utilitaires globales ---
 /**
@@ -73,10 +76,10 @@ function chargerTalentsEtDemarrerJeu() {
  * Initialise et synchronise le jeu.
  */
 function demarrerJeu() {
-  resetDeplacementSansRencontre();
-  initConnexion();
-  initSmokeAnimation();
-  document.addEventListener('keydown', handleKeydown);
+  reset_deplacement_sans_rencontre();
+  init_connexion();
+  init_smoke_animation();
+  document.addEventListener('keydown', handle_keydown);
 
   // Initialisation du jeu si on est sur la page de jeu (script JSON présent)
   const dataElem = document.getElementById('player-data');
@@ -92,7 +95,7 @@ function demarrerJeu() {
       return;
     }
     // Synchronisation vie/mana depuis la sauvegarde
-    loadPlayerDataPlayer(saveData);
+    load_player_data(saveData);
     // Définition des variables globales pour la compatibilité
     window.PLAYER_CLASS = saveData.classe;
     // window.PLAYER_TALENTS n'est plus utilisé
@@ -106,7 +109,7 @@ function demarrerJeu() {
     window.combatActif = false;
     // Ajout : synchronisation du compteur de déplacement sans rencontre
     window.DEP_SANS_RENCONTRE = (typeof saveData.deplacementSansRencontre === 'number') ? saveData.deplacementSansRencontre : 3;
-    setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
+    set_deplacement_sans_rencontre(window.DEP_SANS_RENCONTRE);
     // Si la position est {x: 0, y: 0}, on considère qu'il faut utiliser le player_start de la carte
     let pos = saveData.position;
     let usePlayerStart = false;
@@ -117,9 +120,9 @@ function demarrerJeu() {
     try {
       console.log("[DEBUG] Chargement de la carte:", saveData.carte, saveData.position);
       if (usePlayerStart) {
-        chargerCarteInitiale(saveData.carte, null, null);
+        charger_carte_initiale(saveData.carte, null, null);
       } else {
-        chargerNouvelleCarte(saveData.carte, saveData.position.x, saveData.position.y);
+        charger_nouvelle_carte(saveData.carte, saveData.position.x, saveData.position.y);
       }
     } catch (err) {
       console.error("[ERROR] Chargement carte échoué:", err);
@@ -127,12 +130,12 @@ function demarrerJeu() {
     // Initialiser les talents du joueur
     try {
       console.log("[DEBUG] Initialisation des talents");
-      initialiserTalents();
+      initialiser_talents();
     } catch (err) {
       console.error("[ERROR] Initialisation talents échouée:", err);
     }
     // Mettre à jour l'interface utilisateur
-    updateAllPlayerUI();
+    update_all_player_ui();
   }
 
   // === Sauvegarde de la partie ===
@@ -140,7 +143,7 @@ function demarrerJeu() {
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       // Ajout debug PV/mana avant sauvegarde
-      const saveData = getPlayerSaveData();
+      const saveData = get_player_save_data();
       console.log('[DEBUG] PV/Mana au moment de la sauvegarde :', saveData.vie, saveData.mana);
       if (typeof saveData.vie !== 'number' || typeof saveData.mana !== 'number') {
         console.warn('[ALERTE] PV ou Mana non valides au moment de la sauvegarde !');
@@ -181,8 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chargerTalentsEtDemarrerJeu();
   }
   if (isPageLogin) {
-    initConnexion();
-    initParticles();
+    init_connexion();
+    init_particles();
   }
 });
 

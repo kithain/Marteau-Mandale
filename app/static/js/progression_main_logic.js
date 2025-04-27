@@ -14,6 +14,10 @@ function getXpToNextLevel(level) {
     return Math.floor(10 * Math.pow(1.5, level - 1));
 }
 
+function get_xp_to_next_level(level) {
+    return getXpToNextLevel(level);
+}
+
 // --- Talents et montée de niveau ---
 // Filtre les talents accessibles selon le niveau du joueur
 /**
@@ -109,6 +113,7 @@ function calculerXPMonstre(monstre) {
 // --- Exports publics à la fin ---
 export {
   getXpToNextLevel,
+  get_xp_to_next_level,
   filterTalentsByLevel,
   onLevelUp,
   getMaxVie,

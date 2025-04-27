@@ -2,15 +2,19 @@
 // Gestion de la carte, du positionnement et des déplacements du joueur
 // Refactorisé pour clarté, organisation et maintenabilité
 
-import { TILE_SIZE } from './game_constants.js';
-import { getPositionJoueur } from './player_main_logic.js';
+import { 
+  TILE_SIZE, 
+  IMAGE_BASE_URL, 
+  API_BASE_URL,
+  MAX_TILE_COUNT,
+  set_player_position
+} from './map_constants_logic.js';
+
+import { get_position_joueur } from './player_main_logic.js';
 import { genererRencontre } from './combat_manager_logic.js';
 
-// --- Constantes globales ---
-const IMAGE_BASE_URL = '/static';
-const API_BASE_URL = '/api';
-const tileSize = 64;
-const maxTileCount = 16;
+// --- Variables d'état ---
+const tileSize = TILE_SIZE;
 const blockedTiles = new Set();
 
 // --- Etat global ---
@@ -22,7 +26,7 @@ let isTransitioning = false;
 function getVisibleTileCount() {
   const minSize = Math.min(window.innerWidth, window.innerHeight);
   const rawCount = Math.floor(minSize / tileSize);
-  return Math.min(maxTileCount, Math.max(5, rawCount));
+  return Math.min(MAX_TILE_COUNT, Math.max(5, rawCount));
 }
 
 function extraireCoordonneesCarte(nom) {
@@ -40,39 +44,6 @@ function isBlocked(x, y) {
 }
 
 // --- Déplacement et positionnement du joueur ---
-function setPlayerPosition(x, y) {
-  if (!isBlocked(x, y)) {
-    getPositionJoueur().x = x;
-    getPositionJoueur().y = y;
-    genererRencontre();
-    const sortie = detecterSortie(exitZones);
-    if (sortie) {
-      chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
-    }
-    return true;
-  }
-  // Si la case demandée est bloquée, cherche une case libre autour
-  for (let dx = -1; dx <= 1; dx++) {
-    for (let dy = -1; dy <= 1; dy++) {
-      if (dx === 0 && dy === 0) continue;
-      const tryX = x + dx;
-      const tryY = y + dy;
-      if (!isBlocked(tryX, tryY)) {
-        getPositionJoueur().x = tryX;
-        getPositionJoueur().y = tryY;
-        genererRencontre();
-        const sortie = detecterSortie(exitZones);
-        if (sortie) {
-          chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
-        }
-        return true;
-      }
-    }
-  }
-  console.error("Aucun spawn libre autour de la position initiale");
-  return false;
-}
-
 function deplacementVersCarte(direction) {
   const colonnes = "ABCDEFGHIJKLMNOP";
   const { colonne, ligne } = extraireCoordonneesCarte(currentMap);
@@ -90,8 +61,8 @@ function deplacementVersCarte(direction) {
     return;
   }
   const nouvelleCarte = colonnes[newCol] + newLigne;
-  let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : getPositionJoueur().x;
-  let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : getPositionJoueur().y;
+  let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : get_position_joueur().x;
+  let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : get_position_joueur().y;
   fetch(`${IMAGE_BASE_URL}/maps/${nouvelleCarte}.tmj`)
     .then(res => res.json())
     .then(mapData => {
@@ -103,19 +74,21 @@ function deplacementVersCarte(direction) {
       const gid = rawGid & GID_MASK;
       const relativeGid = gid - firstGID;
       const GIDsLibres = new Set([0, 1, 2, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27,
-        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-        75, 76, 77, 85, 86, 87, 88, 89, 95, 96, 97, 98, 99]);
+        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+        42, 43, 44, 45, 46, 47, 48, 49,
+        75, 76, 77, 85, 86, 87, 88, 89, 95, 96, 97, 98, 99
+      ]);
       if (!GIDsLibres.has(relativeGid)) {
         console.warn(`❌ Case bloquée en entrée sur ${nouvelleCarte} (${spawnX},${spawnY})`);
         return;
       }
       // ✅ Tout est bon → on charge la nouvelle carte
-      chargerNouvelleCarte(nouvelleCarte, spawnX, spawnY);
+      charger_nouvelle_carte(nouvelleCarte, spawnX, spawnY);
     })
     .catch(err => console.error("Erreur de chargement de carte :", err));
 }
 
-function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
+export function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
   // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
   // stopAllMonsters();
   // window.monstresActifs = [];
@@ -212,7 +185,7 @@ function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
             Math.max(0, Math.min(spawnY, mapData.height - 1)) :
             Math.floor(spawn.y / mapData.tileheight);
 
-          if (!setPlayerPosition(targetX, targetY)) {
+          if (!set_player_position(targetX, targetY, true)) {
             throw new Error("Impossible de placer le joueur");
           }
 
@@ -226,7 +199,7 @@ function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
           playerDiv.style.position = "absolute";
           playerDiv.style.width = "64px";
           playerDiv.style.height = "64px";
-          playerDiv.style.backgroundImage = `url(/static/img/classes/${getPositionJoueur().classe.toLowerCase()}_idle.png)`;
+          playerDiv.style.backgroundImage = `url(/static/img/classes/${get_position_joueur().classe.toLowerCase()}_idle.png)`;
           playerDiv.style.backgroundSize = "64px 64px";
           playerDiv.style.imageRendering = "pixelated";
           playerDiv.style.backgroundRepeat = "no-repeat";
@@ -257,14 +230,32 @@ function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
     });
 }
 
+// --- Chargement initial ---
+export function charger_carte_initiale() {
+  return charger_nouvelle_carte("A1"); // Laisser chargerNouvelleCarte gérer le player_start
+}
+
+// Renommage pour cohérence :
+export const generer_rencontre = genererRencontre; // Alias snake_case
+
+export function est_bloquee(x, y) { // Renommage français + snake_case
+  return blockedTiles.has(getBlockedKey(x, y));
+}
+
 // --- Exports publics à la fin ---
 export {
   IMAGE_BASE_URL,
   API_BASE_URL,
-  isBlocked,
+  tileSize,
+  MAX_TILE_COUNT,
+  blockedTiles,
+  currentMap,
+  exitZones,
+  isTransitioning,
+  getVisibleTileCount,
   extraireCoordonneesCarte,
-  chargerNouvelleCarte,
-  setPlayerPosition,
+  getBlockedKey,
+  isBlocked,
   deplacementVersCarte,
-  isBlocked
+  charger_nouvelle_carte
 };

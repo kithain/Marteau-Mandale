@@ -3,214 +3,219 @@
 // Refactorisé pour utiliser monstreState.js et monstre_utils.js
 
 import {
-  createMonstreState,
-  setMonstrePV,
-  getMonstrePV,
-  setMonstrePosition,
-  getMonstrePosition,
-  setMonstreStatut,
-  appliquerEffet,
-  appliquerDebuffAtk,
-  aEffet,
-  retirerEffet
+  set_monstre_pv,
+  get_monstre_pv,
+  set_monstre_position,
+  get_monstre_position,
+  set_monstre_statut,
+  appliquer_effet,
+  appliquer_debuff_atk,
+  a_effet,
+  retirer_effet
 } from './monstre_state_logic.js';
 import {
-  afficherDegatsMonstre,
-  afficherSoinMonstre,
-  afficherBuffMonstre,
-  afficherDebuffMonstre,
-  afficherMissMonstre
+  afficher_degats_monstre,
+  afficher_soin_monstre,
+  afficher_buff_monstre,
+  afficher_debuff_monstre,
+  afficher_miss_monstre
 } from './monstre_visual_utils.js';
-import { registerGameInterval, clearGameInterval } from './player_visual_utils.js';
+import { register_game_interval, clear_game_interval } from './player_visual_utils.js';
+import {
+  get_position_joueur,
+  get_player_def,
+  infliger_degats_au_joueur,
+  get_player_pv,
+  is_blocked
+} from './player_state_logic.js';
 import { 
-  getPlayerX,
-  getPlayerY,
-  getPlayerDef,
-  infligerDegatsAuJoueur,
-  getPlayerPV,
-  isBlocked
-} from './player_main_logic.js';
-import { 
-  demarrerCombat,
-  finirCombat
+  demarrer_combat,
+  finir_combat
 } from './combat_manager_logic.js';
 
 // --- Constantes ---
-const tileSize = 64;
+const tile_size = 64;
 
 // --- Etat global (liste des monstres actifs) ---
-let monstresActifs = [];
+let monstres_actifs = [];
 
 // --- Création d'un monstre ---
-function creerMonstre({ id, nom, niveau, pv, atk, def, image, baseId, posX = 0, posY = 0 }) {
+function create_monstre_state(monstre_data) {
+  return {
+    pv: monstre_data.pv,
+    position: { x: monstre_data.pos_x, y: monstre_data.pos_y },
+    statut: 'normal',
+    effets: []
+  };
+}
+
+function creer_monstre({ id, nom, niveau, pv, atk, def, image, base_id, pos_x = 0, pos_y = 0 }) {
   // Fallback image : tente de retrouver dans la fiche de base
   if (!image) {
-    let ficheBase = null;
+    let fiche_base = null;
     
-    // 1. Essaie par baseId
-    if (baseId && window.LISTE_MONSTRES_BASE) {
-      ficheBase = window.LISTE_MONSTRES_BASE.find(m => m.id === baseId);
+    // 1. Essaie par base_id
+    if (base_id && window.LISTE_MONSTRES_BASE) {
+      fiche_base = window.LISTE_MONSTRES_BASE.find(m => m.id === base_id);
     }
     
     // 2. Si pas trouvé, essaie par nom (insensible à la casse)
-    if (!ficheBase && nom && window.LISTE_MONSTRES_BASE) {
-      ficheBase = window.LISTE_MONSTRES_BASE.find(m => 
+    if (!fiche_base && nom && window.LISTE_MONSTRES_BASE) {
+      fiche_base = window.LISTE_MONSTRES_BASE.find(m => 
         m.nom.toLowerCase() === nom.toLowerCase()
       );
     }
     
     // Récupère l'image si une fiche est trouvée
-    if (ficheBase && ficheBase.image) {
-      image = ficheBase.image;
+    if (fiche_base && fiche_base.image) {
+      image = fiche_base.image;
     }
   }
   
   if (!image) {
-    throw new Error(`[MONSTRE] Aucune image trouvée pour le monstre id=${id}, nom=${nom}, baseId=${baseId}`);
+    throw new Error(`[MONSTRE] Aucune image trouvée pour le monstre id=${id}, nom=${nom}, base_id=${base_id}`);
   }
   
-  const monstreState = createMonstreState({ id, nom, niveau, pv, atk, def });
-  monstreState.position = { x: posX, y: posY }; // Stocker la position dans le state
+  const monstre_state = create_monstre_state({ id, nom, niveau, pv, atk, def, pos_x, pos_y });
+  const monstre_div = creer_element_monstre(image, id, pos_x, pos_y);
+  set_monstre_position(monstre_state, pos_x, pos_y);
   
-  const monstreDiv = creerElementMonstre(image, id, posX, posY);
-  setMonstrePosition(monstreState, posX, posY);
-  
-  const monstreActif = { state: monstreState, element: monstreDiv };
-  monstresActifs.push(monstreActif);
+  const monstre_actif = { state: monstre_state, element: monstre_div };
+  monstres_actifs.push(monstre_actif);
 
   // Vérifier si le monstre est à plus de 1 case du joueur
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  const dx = Math.abs(playerX - posX);
-  const dy = Math.abs(playerY - posY);
+  const player_x = get_position_joueur().x;
+  const player_y = get_position_joueur().y;
+  const dx = Math.abs(player_x - pos_x);
+  const dy = Math.abs(player_y - pos_y);
   
   if (dx > 1 || dy > 1) {
     // Démarrer le déplacement des monstres si ce n'est pas déjà fait
-    demarrerDeplacementMonstres();
+    demarrer_deplacement_monstres();
   } else {
     // Si le monstre est proche, démarrer le combat directement
-    // demarrerCombat(monstreActif);
+    // demarrer_combat(monstre_actif);
   }
   
-  return monstreActif;
+  return monstre_actif;
 }
 
 // --- Création et gestion visuelle (DOM) ---
-function creerElementMonstre(image, uniqueId, posX = 0, posY = 0) {
-  const monstreDiv = document.createElement('div');
-  monstreDiv.id = `combat-monstre-${uniqueId}`;
-  monstreDiv.className = 'monstre';
-  monstreDiv.style.width = '64px';
-  monstreDiv.style.height = '64px';
-  monstreDiv.style.left = `${posX * tileSize}px`;
-  monstreDiv.style.top = `${posY * tileSize}px`;
+function creer_element_monstre(image, unique_id, pos_x = 0, pos_y = 0) {
+  const monstre_div = document.createElement('div');
+  monstre_div.id = `combat-monstre-${unique_id}`;
+  monstre_div.className = 'monstre';
+  monstre_div.style.width = '64px';
+  monstre_div.style.height = '64px';
+  monstre_div.style.left = `${pos_x * tile_size}px`;
+  monstre_div.style.top = `${pos_y * tile_size}px`;
   
   // Correction du chemin de l'image
-  const imagePath = image.startsWith('/') ? image : `/static/img/monstres/${image}`;
-  monstreDiv.style.backgroundImage = `url(${imagePath})`;
+  const image_path = image.startsWith('/') ? image : `/static/img/monstres/${image}`;
+  monstre_div.style.backgroundImage = `url(${image_path})`;
   
   // Barre de vie
-  const healthBar = document.createElement('div');
-  healthBar.className = 'monster-health-bar';
-  const healthFill = document.createElement('div');
-  healthFill.className = 'monster-health-fill';
-  healthBar.appendChild(healthFill);
-  monstreDiv.appendChild(healthBar);
+  const health_bar = document.createElement('div');
+  health_bar.className = 'monster-health-bar';
+  const health_fill = document.createElement('div');
+  health_fill.className = 'monster-health-fill';
+  health_bar.appendChild(health_fill);
+  monstre_div.appendChild(health_bar);
   
   // Conteneur d'états
-  const statusContainer = document.createElement('div');
-  statusContainer.className = 'monster-status';
-  monstreDiv.appendChild(statusContainer);
+  const status_container = document.createElement('div');
+  status_container.className = 'monster-status';
+  monstre_div.appendChild(status_container);
   
-  document.getElementById('map-inner').appendChild(monstreDiv);
-  return monstreDiv;
+  document.getElementById('map-inner').appendChild(monstre_div);
+  return monstre_div;
 }
 
 // --- Déplacement des monstres ---
-function deplacerMonstre(monstre) {
+function deplacer_monstre(monstre) {
   if (!monstre || !monstre.state || !monstre.element) return;
   
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  const monsterPos = getMonstrePosition(monstre.state);
+  const player_x = get_position_joueur().x;
+  const player_y = get_position_joueur().y;
+  const monster_pos = get_monstre_position(monstre.state);
   
   // Calculer la direction vers le joueur
-  const dx = playerX - monsterPos.x;
-  const dy = playerY - monsterPos.y;
+  const dx = player_x - monster_pos.x;
+  const dy = player_y - monster_pos.y;
   
   // Déplacement en diagonale autorisé
-  let newX = monsterPos.x;
-  let newY = monsterPos.y;
+  let new_x = monster_pos.x;
+  let new_y = monster_pos.y;
   
   // Déplacement horizontal
-  if (dx > 0) newX++;
-  else if (dx < 0) newX--;
+  if (dx > 0) new_x++;
+  else if (dx < 0) new_x--;
   
   // Déplacement vertical
-  if (dy > 0) newY++;
-  else if (dy < 0) newY--;
+  if (dy > 0) new_y++;
+  else if (dy < 0) new_y--;
   
   // Vérifier si la nouvelle position est libre
-  if (!isBlocked || !isBlocked(newX, newY)) {
+  if (!is_blocked || !is_blocked(new_x, new_y)) {
     console.log('[MONSTRE] Déplacement', {
-      from: monsterPos,
-      to: { x: newX, y: newY }
+      from: monster_pos,
+      to: { x: new_x, y: new_y }
     });
     
     // Mettre à jour la position dans le state et l'élément
-    setMonstrePosition(monstre.state, newX, newY);
-    monstre.element.style.left = `${newX * tileSize}px`;
-    monstre.element.style.top = `${newY * tileSize}px`;
+    set_monstre_position(monstre.state, new_x, new_y);
+    monstre.element.style.left = `${new_x * tile_size}px`;
+    monstre.element.style.top = `${new_y * tile_size}px`;
   }
 }
 
 // Ajouter un gestionnaire pour déplacer tous les monstres
-function deplacerTousMonstres() {
-  if (window.isGameOver) return;
+function deplacer_tous_monstres() {
+  if (window.is_game_over) return;
   
   // S'il n'y a pas de monstres actifs, arrêter le déplacement
-  if (monstresActifs.length === 0) {
-    arreterDeplacementMonstres();
+  if (monstres_actifs.length === 0) {
+    arreter_deplacement_monstres();
     return;
   }
   
   // Si on est en combat, vérifier que le monstre est toujours adjacent
-  if (window.currentMonstre) {
-    const playerX = getPlayerX();
-    const playerY = getPlayerY();
-    const monsterPos = getMonstrePosition(window.currentMonstre.state);
-    const dx = Math.abs(playerX - monsterPos.x);
-    const dy = Math.abs(playerY - monsterPos.y);
+  if (window.current_monstre) {
+    const player_x = get_position_joueur().x;
+    const player_y = get_position_joueur().y;
+    const monster_pos = get_monstre_position(window.current_monstre.state);
+    const dx = Math.abs(player_x - monster_pos.x);
+    const dy = Math.abs(player_y - monster_pos.y);
     
     // Si le monstre n'est plus adjacent, arrêter le combat
     if (dx > 1 || dy > 1) {
-      // finirCombat();
+      // finir_combat();
     }
     return; // Ne pas déplacer les autres monstres pendant un combat
   }
   
-  monstresActifs.forEach(monstre => {
+  monstres_actifs.forEach(monstre => {
     // Vérifier si le monstre est adjacent au joueur
-    const playerX = getPlayerX();
-    const playerY = getPlayerY();
-    const monsterPos = getMonstrePosition(monstre.state);
-    const dx = Math.abs(playerX - monsterPos.x);
-    const dy = Math.abs(playerY - monsterPos.y);
+    const player_x = get_position_joueur().x;
+    const player_y = get_position_joueur().y;
+    const monster_pos = get_monstre_position(monstre.state);
+    const dx = Math.abs(player_x - monster_pos.x);
+    const dy = Math.abs(player_y - monster_pos.y);
     
     console.log('[DEBUG] État monstre', { 
       id: monstre.state.id,
-      enCombat: window.currentMonstre ? 1 : 0,
+      en_combat: window.current_monstre ? 1 : 0,
       stun: monstre.state.stun ? 1 : 0,
-      distanceX: dx,
-      distanceY: dy
+      distance_x: dx,
+      distance_y: dy
     });
     
     // Si le monstre est adjacent au joueur, démarrer le combat
     if (dx <= 1 && dy <= 1) {
       // Démarrer le combat si le monstre est adjacent
-      window.currentMonstre = monstre;
-      window.combatActif = true;
-      // demarrerCombat(monstre);
+      window.current_monstre = monstre;
+      window.combat_actif = true;
+      // demarrer_combat(monstre);
       return;
     }
     
@@ -218,191 +223,183 @@ function deplacerTousMonstres() {
     if (!monstre.state.stun) {
       console.log('[MONSTRE] Tentative de déplacement', { 
         id: monstre.state.id,
-        position: monsterPos,
-        distanceX: dx,
-        distanceY: dy
+        position: monster_pos,
+        distance_x: dx,
+        distance_y: dy
       });
-      deplacerMonstre(monstre);
+      deplacer_monstre(monstre);
     }
   });
 }
 
 // Initialiser un intervalle pour déplacer les monstres
-let intervalDeplacementMonstres = null;
+let interval_deplacement_monstres = null;
 
-function demarrerDeplacementMonstres() {
-  if (!intervalDeplacementMonstres) {
-    intervalDeplacementMonstres = setInterval(deplacerTousMonstres, 1000);
-    registerGameInterval(intervalDeplacementMonstres);
+function demarrer_deplacement_monstres() {
+  if (!interval_deplacement_monstres) {
+    interval_deplacement_monstres = setInterval(deplacer_tous_monstres, 1000);
+    register_game_interval(interval_deplacement_monstres);
   }
 }
 
-function arreterDeplacementMonstres() {
-  if (intervalDeplacementMonstres) {
-    clearGameInterval(intervalDeplacementMonstres);
-    intervalDeplacementMonstres = null;
+function arreter_deplacement_monstres() {
+  if (interval_deplacement_monstres) {
+    clear_game_interval(interval_deplacement_monstres);
+    interval_deplacement_monstres = null;
   }
 }
 
 // Initialiser le déplacement au démarrage
-window.combatActif = false; // Réinitialisation au démarrage
-demarrerDeplacementMonstres();
+window.combat_actif = false; // Réinitialisation au démarrage
+demarrer_deplacement_monstres();
 
 // Ajouter un écouteur pour arrêter le déplacement si un combat commence
 document.addEventListener('combatStarted', () => {
   // Ne pas arrêter le déplacement des autres monstres
-  // arreterDeplacementMonstres();
+  // arreter_deplacement_monstres();
 });
 
 document.addEventListener('combatEnded', () => {
   // S'assurer que l'intervalle est actif
-  demarrerDeplacementMonstres();
+  demarrer_deplacement_monstres();
 });
 
 // --- Helpers d'accès ---
-function getMonstreParId(id) {
-  return monstresActifs.find(m => m.state.id === id);
+function get_monstre_par_id(id) {
+  return monstres_actifs.find(m => m.state.id === id);
 }
 
-function getMonstresAdjacentsEtSurCase() {
-  const playerX = getPlayerX();
-  const playerY = getPlayerY();
-  return monstresActifs.filter(monstre => {
-    const { x, y } = getMonstrePosition(monstre.state);
-    const dx = Math.abs(playerX - x);
-    const dy = Math.abs(playerY - y);
+function get_monstres_adjacents_et_case() {
+  const player_x = get_position_joueur().x;
+  const player_y = get_position_joueur().y;
+  return monstres_actifs.filter(monstre => {
+    const { x, y } = get_monstre_position(monstre.state);
+    const dx = Math.abs(player_x - x);
+    const dy = Math.abs(player_y - y);
     return (dx <= 1 && dy <= 1);
   });
 }
 
-function getMonstresActifs() {
-  return monstresActifs;
+function get_monstres_actifs() {
+  return monstres_actifs;
 }
 
 // --- Application de dégâts et effets visuels ---
-function appliquerDegatsAuMonstre(monstre, valeur) {
-  const pvAvant = getMonstrePV(monstre.state);
-  setMonstrePV(monstre.state, pvAvant - valeur);
-  const pvApres = getMonstrePV(monstre.state);
-  console.log(`[DEGATS] ${monstre.state.nom} a reçu ${valeur} dégâts! (PV: ${pvAvant} → ${pvApres})`);
+function appliquer_degats_au_monstre(monstre, valeur) {
+  const pv_avant = get_monstre_pv(monstre.state);
+  set_monstre_pv(monstre.state, pv_avant - valeur);
+  const pv_apres = get_monstre_pv(monstre.state);
+  console.log(`[DEGATS] ${monstre.state.nom} a reçu ${valeur} dégâts! (PV: ${pv_avant} → ${pv_apres})`);
   
   // Mise à jour de la barre de vie
-  const healthFill = monstre.element.querySelector('.monster-health-fill');
-  if (healthFill) {
-    const pourcentageVie = (pvApres / monstre.state.pvMax) * 100;
-    healthFill.style.width = `${Math.max(0, pourcentageVie)}%`;
+  const health_fill = monstre.element.querySelector('.monster-health-fill');
+  if (health_fill) {
+    const pourcentage_vie = (pv_apres / monstre.state.pv_max) * 100;
+    health_fill.style.width = `${Math.max(0, pourcentage_vie)}%`;
   }
   
-  afficherDegatsMonstre(monstre.element, valeur);
+  afficher_degats_monstre(monstre.element, valeur);
 }
 
-function appliquerSoinAuMonstre(monstre, valeur) {
-  setMonstrePV(monstre.state, Math.min(getMonstrePV(monstre.state) + valeur, monstre.state.pvMax));
-  afficherSoinMonstre(monstre.element, valeur);
+function appliquer_soin_au_monstre(monstre, valeur) {
+  set_monstre_pv(monstre.state, Math.min(get_monstre_pv(monstre.state) + valeur, monstre.state.pv_max));
+  afficher_soin_monstre(monstre.element, valeur);
 }
 
-function appliquerBuffAuMonstre(monstre, nomBuff) {
-  setMonstreStatut(monstre.state, { type: 'buff', nom: nomBuff });
-  afficherBuffMonstre(monstre.element, nomBuff);
+function appliquer_buff_au_monstre(monstre, nom_buff) {
+  set_monstre_statut(monstre.state, { type: 'buff', nom: nom_buff });
+  afficher_buff_monstre(monstre.element, nom_buff);
 }
 
-function appliquerDebuffAuMonstre(monstre, nomDebuff) {
-  setMonstreStatut(monstre.state, { type: 'debuff', nom: nomDebuff });
-  afficherDebuffMonstre(monstre.element, nomDebuff);
+function appliquer_debuff_au_monstre(monstre, nom_debuff) {
+  set_monstre_statut(monstre.state, { type: 'debuff', nom: nom_debuff });
+  afficher_debuff_monstre(monstre.element, nom_debuff);
 }
 
-function appliquerMissAuMonstre(monstre) {
-  afficherMissMonstre(monstre.element);
+function appliquer_miss_au_monstre(monstre) {
+  afficher_miss_monstre(monstre.element);
 }
 
-// --- Application d'un effet de statut avancé sur un monstre (exemple poison, stun, debuff) ---
-// Exemple : Appliquer le poison à un monstre
-function appliquerPoison(monstre, valeur = 2, duree = 4000) {
-  appliquerEffet(monstre.state, 'poison', {
+function appliquer_poison(monstre, valeur = 2, duree = 4000) {
+  appliquer_effet(monstre.state, 'poison', {
     duree,
     valeur,
-    onTick: () => {
+    on_tick: () => {
       // Applique les dégâts à chaque tick
-      setMonstrePV(monstre.state, getMonstrePV(monstre.state) - valeur);
-      afficherDegatsMonstre(monstre.element, valeur);
+      set_monstre_pv(monstre.state, get_monstre_pv(monstre.state) - valeur);
+      afficher_degats_monstre(monstre.element, valeur);
       // Ici tu peux ajouter d'autres effets visuels si besoin
     },
-    onEnd: () => {
+    on_end: () => {
       // Fin du poison, feedback visuel possible
-      afficherDebuffMonstre(monstre.element, 'Poison terminé');
+      afficher_debuff_monstre(monstre.element, 'Poison terminé');
     }
   });
 }
 
-// Exemple : Appliquer un stun
-function appliquerStun(monstre, duree = 2000) {
-  appliquerEffet(monstre.state, 'stun', {
+function appliquer_stun(monstre, duree = 2000) {
+  appliquer_effet(monstre.state, 'stun', {
     duree,
-    onEnd: () => {
-      afficherBuffMonstre(monstre.element, 'Stun fini');
+    on_end: () => {
+      afficher_buff_monstre(monstre.element, 'Stun fini');
     }
   });
 }
 
-// Exemple : Appliquer un debuff d'attaque temporaire
-function appliquerDebuffAtkMonstre(monstre, valeur = -2, duree = 3000) {
-  appliquerDebuffAtk(monstre.state, valeur, duree);
-  afficherDebuffMonstre(monstre.element, 'ATK↓');
+function appliquer_debuff_atk_monstre(monstre, valeur = -2, duree = 3000) {
+  appliquer_debuff_atk(monstre.state, valeur, duree);
+  afficher_debuff_monstre(monstre.element, 'ATK↓');
 }
 
-// Exemple : Vérifier si un monstre est sous un effet
-function estempoisonne(monstre) {
-  return aEffet(monstre.state, 'poison');
+function est_empoisonne(monstre) {
+  return a_effet(monstre.state, 'poison');
 }
 
-// Exemple : Retirer un effet manuellement
-function retirerPoison(monstre) {
-  retirerEffet(monstre.state, 'poison');
+function retirer_poison(monstre) {
+  retirer_effet(monstre.state, 'poison');
 }
 
 // --- Suppression d'un monstre ---
-function supprimerMonstre(monstre) {
+function supprimer_monstre(monstre) {
   // Retirer du DOM
   if (monstre.element && monstre.element.parentNode) {
     monstre.element.parentNode.removeChild(monstre.element);
   }
   // Retirer de la liste des monstres actifs
-  const index = monstresActifs.findIndex(m => m === monstre);
+  const index = monstres_actifs.findIndex(m => m === monstre);
   if (index !== -1) {
-    monstresActifs.splice(index, 1);
+    monstres_actifs.splice(index, 1);
   }
 }
 
 // --- Nettoyage global ---
-function stopAllMonsters() {
-  arreterDeplacementMonstres();
-  monstresActifs = [];
-  window.monstresActifs = [];
-  window.combatActif = false;
-  window.currentMonstre = null;
+function stop_all_monstres() {
+  arreter_deplacement_monstres();
+  monstres_actifs = [];
+  window.monstres_actifs = [];
+  window.combat_actif = false;
+  window.current_monstre = null;
 }
 
 // --- Exports publics à la fin ---
 export {
-  creerMonstre,
-  creerElementMonstre,
-  deplacerMonstre,
-  deplacerTousMonstres,
-  demarrerDeplacementMonstres,
-  arreterDeplacementMonstres,
-  getMonstreParId,
-  getMonstresAdjacentsEtSurCase,
-  getMonstresActifs,
-  appliquerDegatsAuMonstre,
-  appliquerSoinAuMonstre,
-  appliquerBuffAuMonstre,
-  appliquerDebuffAuMonstre,
-  appliquerMissAuMonstre,
-  appliquerPoison,
-  appliquerStun,
-  appliquerDebuffAtkMonstre,
-  estempoisonne,
-  retirerPoison,
-  supprimerMonstre,
-  stopAllMonsters
+  creer_monstre,
+  deplacer_monstre,
+  get_monstre_par_id,
+  appliquer_degats_au_monstre,
+  demarrer_deplacement_monstres,
+  arreter_deplacement_monstres,
+  get_monstres_adjacents_et_case,
+  get_monstres_actifs,
+  appliquer_soin_au_monstre,
+  appliquer_buff_au_monstre,
+  appliquer_debuff_au_monstre,
+  appliquer_miss_au_monstre,
+  appliquer_poison,
+  appliquer_stun,
+  appliquer_debuff_atk_monstre,
+  est_empoisonne,
+  retirer_poison,
+  stop_all_monstres as stopper_tous_monstres,
+  supprimer_monstre
 };

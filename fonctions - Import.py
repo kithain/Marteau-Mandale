@@ -89,7 +89,7 @@ for root, dirs, files in os.walk(base_path):
                 print(f"Erreur lecture fichier {file_path}: {e}")
 
 # 3. Export CSV
-output_csv = r"D:\mon_projet_dungeon_crawler\import_mapping_full.csv"
+output_csv = r"D:\mon_projet_dungeon_crawler\Marteau-Mandale\liste_fonction_import.csv"
 with open(output_csv, "w", newline='', encoding="utf-8") as csvfile:
     fieldnames = ["FunctionImported", "ImportingFile", "ExportingFile", "ExportingPathReal"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=";")

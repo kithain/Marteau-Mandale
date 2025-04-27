@@ -165,10 +165,23 @@ function initParticles() {
   });
 }
 
+// --- Effets de statut ---
+/**
+ * Applique un effet spécial au joueur (buff, debuff, poison, etc.)
+ * @param {string} effect_type - Type d'effet à appliquer
+ * @param {number} value - Valeur de l'effet
+ * @param {number} duration - Durée en secondes
+ */
+function appliquer_effet(effect_type, value, duration) {
+  console.log(`[EFFET] Application de ${effect_type} (valeur: ${value}, durée: ${duration}s)`);
+  // Implémentation à compléter
+}
+
 // --- Exports publics à la fin ---
 export {
   initConnexion,
   afficherMessage,
   initSmokeAnimation,
-  initParticles
+  initParticles,
+  appliquer_effet
 };

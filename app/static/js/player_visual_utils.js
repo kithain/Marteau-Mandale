@@ -6,17 +6,12 @@
 import { 
   get_player_pv,
   get_player_mana,
-  get_player_xp
+  get_player_xp,
+  set_player_pv,
+  set_player_mana
 } from './player_state_logic.js';
 
 import { get_xp_to_next_level } from './progression_main_logic.js';
-
-import { 
-  set_player_pv,
-  set_player_mana
-} from './player_main_logic.js';
-
-import { get_player_pv } from './player_state_logic.js';
 
 // --- Texte flottant générique ---
 // Affiche un texte flottant au-dessus du joueur
@@ -245,39 +240,6 @@ function clear_all_intervals() {
   }
 }
 
-// --- Régénération automatique (wrappers) ---
-let regen_interval = null;
-/**
- * Démarre la régénération automatique de PV/Mana (wrapper)
- */
-function start_regen() {
-  if (typeof import('./player_state_logic.js').then === 'function') {
-    import('./player_state_logic.js').then(mod => {
-      if (mod && typeof mod.start_regen === 'function') mod.start_regen();
-    });
-    return;
-  }
-  if (regen_interval) return;
-  regen_interval = setInterval(() => {
-    if (window.is_game_over || window.combat_actif) return;
-    set_player_pv(Math.min(get_player_pv() + 1, get_max_vie(window.PLAYER_LEVEL)));
-    set_player_mana(Math.min(get_player_mana() + 1, get_max_mana(window.PLAYER_LEVEL)));
-  }, 2000);
-}
-/**
- * Arrête la régénération automatique (wrapper)
- */
-function stop_regen() {
-  if (typeof import('./player_state_logic.js').then === 'function') {
-    import('./player_state_logic.js').then(mod => {
-      if (mod && typeof mod.stop_regen === 'function') mod.stop_regen();
-    });
-    return;
-  }
-  if (regen_interval) clearInterval(regen_interval);
-  regen_interval = null;
-}
-
 // --- Helpers visuels spécialisés (wrappers autour de create_floating_text) ---
 /**
  * Affiche un texte flottant pour un soin reçu par le joueur
@@ -337,8 +299,6 @@ export {
   afficher_mob_degats,
   infliger_degats_au_joueur,
   afficher_game_over,
-  start_regen,
-  stop_regen,
   afficher_soin,
   afficher_critique,
   afficher_esquive,

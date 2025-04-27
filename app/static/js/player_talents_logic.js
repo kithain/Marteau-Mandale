@@ -3,8 +3,8 @@
 // Ce module fournit les accès, utilitaires et actions liés aux talents.
 
 // --- Imports principaux ---
-import { utiliserTalentEnCombat } from './input_handler_logic.js';
-import { getPlayerClassState, getPlayerEffectiveStats } from './player_state_logic.js';
+import { utiliser_talent_en_combat } from './input_handler_logic.js';
+import { get_player_class, get_player_effective_stats } from './player_state_logic.js';
 
 // Initialisation du système de cooldowns
 const cooldowns = {};
@@ -35,7 +35,7 @@ function getTalentsFromIds(ids) {
 /**
  * Retourne les talents accessibles pour la classe et le niveau du joueur.
  */
-function getTalents() {
+function get_talents() {
   const classe = window.PLAYER_CLASS;
   const niveau = (typeof window.PLAYER_LEVEL === 'number') ? window.PLAYER_LEVEL : 1;
   if (!classe || !window.talentsDisponibles || !window.talentsDisponibles[classe]) return [];
@@ -86,20 +86,20 @@ function utiliserTalent(talent, index) {
   }
 
   // Gestion des coûts de mana
-  const manaActuel = getPlayerEffectiveStats().mana;
+  const manaActuel = get_player_effective_stats().mana;
   if (talent.cost > manaActuel) {
     console.warn(`[TALENT] Pas assez de mana pour ${talent.name}`);
     return false;
   }
 
   // Réduction du mana
-  getPlayerClassState().mana -= talent.cost;
+  get_player_class().mana -= talent.cost;
 
   // Mise à jour du cooldown
   cooldowns[talent.id] = maintenant + talent.cooldown;
 
   // Utilisation du talent via player_main_logic
-  utiliserTalentEnCombat(talent);
+  utiliser_talent_en_combat(talent);
 
   // Logique d'application du talent selon son type
   switch (talent.type) {
@@ -206,7 +206,7 @@ function dashStealth(dureeFurtivite = 2000) {
           if (typeof afficherMessage === 'function') {
             afficherMessage("Vous êtes furtif pendant " + (dureeFurtivite/1000) + "s", "success");
           }
-          getPlayerClassState().mana -= 10; // Utilise le setter pour modifier le mana
+          get_player_class().mana -= 10; // Utilise le setter pour modifier le mana
           window.furtif = true;
           setTimeout(() => {
             window.furtif = false;
@@ -234,7 +234,7 @@ function dashStealth(dureeFurtivite = 2000) {
 export { 
   getAllTalentsList, 
   getTalentsFromIds, 
-  getTalents, 
+  get_talents, 
   utiliserTalent,
   dashStealth,
   cooldowns
