@@ -1,118 +1,93 @@
 # Marteau-Mandale
-_"Les Légendes Oubliées (et pas sans raison)" – Parce que certains héros auraient mieux fait de rester anonymes._
+_"Les Légendes Oubliées (et pas sans raison)" - Parce que certains héros auraient mieux fait de rester anonymes._
 
 ![Logo du Jeu](app/static/img/logo.jpg)
 
-## Description
+## 🎮 Description
 
-Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé sur Flask et jouable dans le navigateur.
+Bienvenue dans **Marteaux & Mandales**, un dungeon crawler basé sur Flask et jouable dans le navigateur. 
 
-## Fonctionnalités
+## ✨ Fonctionnalités
 
-- 🗺️ **Exploration de Donjons** : Parcourez des niveaux remplis de pièges et de trésors
-- ⚔️ **Combats Simples** : Affrontez des ennemis dans un style RPG
-- 😂 **Personnages Hauts en Couleur** : Héros aux capacités uniques et dialogues absurdes
-- 🔒 **Système de Compte Sécurisé** :
-  - Hachage sécurisé BLAKE2b + PBKDF2 pour les identifiants
-  - Fichiers utilisateurs individuels cryptographiquement sécurisés
-  - Protection contre les attaques par énumération
-- 🌟 **Effets Visuels** : Particules animées avec tsparticles
+- 🗺️ **Exploration des niveaux**
+- ⚔️ **Combats tactiques**
+- 🛡️ **4 Personnages uniques** - Chaque classe a des capacités spéciales
+- 🔒 **Système de compte sécurisé** - Sauvegarde de la progression
+- 🌟 **Effets visuels immersifs**
 
-## Technologies Utilisées
 
-- **Flask** : Backend Python léger
-- **HTML, CSS, JS** : Pour l'interface utilisateur
-- **tsparticles** : Effet d'étincelles
+## 🛠 Technologies Utilisées
+
+### Backend
+- **Python 3**
+- **Flask** - Framework web léger
+- **Jinja2** - Moteur de templates
 - **Cryptographie** :
-  - BLAKE2b pour le hachage des noms de fichiers
+  - BLAKE2b pour le hachage sécurisé
   - PBKDF2-HMAC-SHA256 pour les mots de passe (100 000 itérations)
-- **Jinja2** : Moteur de templates Flask
-- **pathlib** : Gestion sécurisée des chemins
 
-## Comment Jouer
+### Frontend
+- **HTML5, CSS3, JavaScript**
+- **tsparticles** - Effets visuels
+- **Responsive Design** - Compatible mobile
 
-1. Lancez le serveur Flask (`python app.py` ou `flask run`)
-2. Ouvrez le navigateur sur `http://localhost:5000`
-3. Créez un compte (les anciens comptes ont été réinitialisés)
-4. Lancez une nouvelle partie
+## 🚀 Installation
 
-## Arborescence du Projet
+1. Clonez le dépôt :
+```bash
+git clone https://github.com/votre-repo/Marteau-Mandale.git
+cd Marteau-Mandale
+```
+
+2. Installez les dépendances :
+```bash
+pip install -r requirements.txt
+```
+
+3. Lancez le serveur :
+```bash
+flask run
+```
+
+4. Ouvrez votre navigateur à l'adresse : `http://localhost:5000`
+
+## 📂 Structure du Projet
 
 ```
 📁 Marteau-Mandale/
 │
-├── 📄 app.py                   # Script principal pour lancer Flask
+├── 📄 app.py                   # Point d'entrée principal
 ├── 📄 requirements.txt         # Dépendances Python
 │
-├── 📁 app                      # Dossier contenant les modules Flask
-│   ├── 📄 __init__.py          # Initialisation du module Flask
-│   ├── 📄 routes.py            # Routes HTTP du jeu
-│   ├── 📄 player_manager.py    # Gestion sécurisée des joueurs
-│   ├── 📄 utils.py             # Fonctions utilitaires générales
+├── 📁 app/                     # Application Flask
+│   ├── 📄 __init__.py          
+│   ├── 📄 routes.py            
+│   ├── 📄 player_manager.py    
+│   ├── 📄 utils.py             
 │   │
-│   ├── 📁 save_data            # Dossier des sauvegardes sécurisées
-│   │   └── 📄 .gitkeep         # Fichier pour conserver le dossier dans Git
+│   ├── 📁 static/              # Assets statiques
+│   │   ├── 📁 css/
+│   │   ├── 📁 img/
+│   │   └── 📁 js/
 │   │
-│   ├── 📁 templates            # Templates HTML pour les pages
-│   │   ├── 📄 index.html       # Page d'accueil (connexion, inscription)
-│   │   ├── 📄 menu.html        # Page du menu principal
-│   │   └── 📄 jeu.html         # Interface du jeu
+│   ├── 📁 templates/           # Templates HTML
+│   │   ├── 📄 jeu.html
+│   │   └── 📄 menu.html
 │   │
-│   └── 📁 static               # Fichiers statiques (CSS, JS, Images)
-│       │
-│       ├── 📁 css
-│       │   └── 📄 style.css    # Style principal de l'application
-│       │
-│       ├── 📁 js
-│       │   └── 📄 particles-config.js  # Scripts JS complémentaires
-│       │
-│       ├── 📁 img              # Images générales du jeu
-│       │   ├── 📁 classes
-│       │   │   ├── 📄 paladin.png
-│       │   │   ├── 📄 mage.png
-│       │   │   ├── 📄 voleur.png
-│       │   │   └── 📄 barbare.png
-│       │   ├── 📄 background.jpg
-│       │   ├── 📄 logo.jpg
-│       │   └── 📄 favicon.ico
-│       │
-│       ├── 📁 maps             # Cartes générées avec Tiled
-│       │   ├── 📄 map1.json
-│       │   ├── 📄 Sprite-coline-0003.tsx
-│       │   └── 📄 Sprite-coline-0003.png
-│       │
-│       └── 📁 talents          # ⚠️ NOUVEAU dossier pour les talents des classes
-│           ├── 📄 paladin_talents.json   # Talents du Paladin
-│           ├── 📄 mage_talents.json      # Talents du Mage
-│           ├── 📄 voleur_talents.json    # Talents du Voleur
-│           └── 📄 barbare_talents.json   # Talents du Barbare
+│   └── 📁 save_data/           # Sauvegardes
 │
-├── 📁 save_data                # Stockage des données sauvegardées
-│   └── 📄 partie1.json         # Exemple de fichier de sauvegarde d'une partie
-│
-├── 📄 README.md                # Description et documentation du projet
-└── 📄 LICENSE                  # Licence du projet
+└── 📄 README.md                # Ce fichier
+```
 
-## Sécurité
+## 🤝 Contribution
 
-Ce projet implémente plusieurs bonnes pratiques de sécurité :
-- Aucun stockage en clair des identifiants
-- Sels cryptographiques uniques par utilisateur
-- Hachage sécurisé des noms de fichiers
-- Validation stricte des entrées utilisateur
+Les contributions sont les bienvenues ! Ouvrez une issue ou soumettez une pull request.
 
-## Contribution
+## 📜 Licence
 
-- Forkez le projet
-- Créez une branche (`git checkout -b feature/ma-feature`)
-- Committez (`git commit -m 'Ajout de ...'`)
-- Poussez (`git push origin feature/ma-feature`)
-- Ouvrez une Pull Request
+[MIT](LICENSE)
 
-## Licence
+## 🙏 Remerciements
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE).
-
----
-
-🎲 Amusez-vous bien dans **Marteaux & Mandales** ! Et rappelez-vous : même les héros ont le droit de se tromper (souvent).
+- Merci à la communauté Flask
+- Inspiration : Les vieux jeux zelda et dragon quest
