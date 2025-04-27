@@ -81,7 +81,12 @@ flask run
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Ouvrez une issue ou soumettez une pull request.
+Les contributions sont les bienvenues ! 
+- Forkez le projet
+- Créez une branche (`git checkout -b feature/ma-feature`)
+- Committez (`git commit -m 'Ajout de ...'`)
+- Poussez (`git push origin feature/ma-feature`)
+- Ouvrez une Pull Request
 
 ## 📜 Licence
 
