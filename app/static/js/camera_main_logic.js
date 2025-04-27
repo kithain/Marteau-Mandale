@@ -2,10 +2,10 @@
 // Gestion du positionnement du joueur et de la caméra sur la carte
 // Refactorisé pour plus de clarté et de maintenabilité
 
-import * as modules from './modules_main_logic.js';
+import { getPositionJoueur } from './player_main_logic.js';
+import { TILE_SIZE, MAP_WIDTH, MAP_HEIGHT } from './map_main_logic.js';
 
 // --- Constantes globales ---
-const TILE_SIZE = 64; // Défini directement ici pour éviter la dépendance circulaire
 const MAP_SIZE = 16; // nombre de tuiles par côté
 
 // --- Fonctions utilitaires privées ---
@@ -13,11 +13,11 @@ function getPlayerElement() {
   return document.getElementById('player');
 }
 
-function getMapInnerElement() {
+export function getMapInnerElement() {
   return document.getElementById('map-inner');
 }
 
-function getMapContainerElement() {
+export function getMapContainerElement() {
   return document.getElementById('map-container');
 }
 
@@ -27,8 +27,7 @@ export function movePlayer() {
   if (!player) return;
 
   // 1. Positionnement du joueur
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
+  const { x: playerX, y: playerY } = getPositionJoueur();
   player.style.left = `${playerX * TILE_SIZE}px`;
   player.style.top = `${playerY * TILE_SIZE}px`;
 
@@ -37,14 +36,12 @@ export function movePlayer() {
   const mapContainer = getMapContainerElement();
   const containerWidth = mapContainer.clientWidth;
   const containerHeight = mapContainer.clientHeight;
-  const mapWidth = TILE_SIZE * MAP_SIZE;
-  const mapHeight = TILE_SIZE * MAP_SIZE;
 
   let cameraX = playerX * TILE_SIZE - (containerWidth / 2 - TILE_SIZE / 2);
   let cameraY = playerY * TILE_SIZE - (containerHeight / 2 - TILE_SIZE / 2);
 
-  cameraX = Math.max(0, Math.min(cameraX, mapWidth - containerWidth));
-  cameraY = Math.max(0, Math.min(cameraY, mapHeight - containerHeight));
+  cameraX = Math.max(0, Math.min(cameraX, MAP_WIDTH - containerWidth));
+  cameraY = Math.max(0, Math.min(cameraY, MAP_HEIGHT - containerHeight));
 
   mapInner.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
 }

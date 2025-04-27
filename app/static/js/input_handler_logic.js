@@ -2,7 +2,9 @@
 // Gestion centralisée des entrées clavier du joueur
 // Refactorisé pour plus de clarté et de maintenabilité
 
-import * as modules from './modules_main_logic.js';
+import { deplacerJoueur } from './player_main_logic.js';
+import { demarrerCombat } from './combat_manager_logic.js';
+import { getPositionJoueur } from './player_state_logic.js';
 import { utiliserTalent, getTalents } from './player_talents_logic.js';
 
 // --- Constantes globales ---
@@ -47,7 +49,7 @@ function triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, curr
             image: monsterDiv.style.backgroundImage.replace(/^url\(['"](.+)['"]\)$/, '$1'),
             baseId: monstre.state.baseId
           };
-          modules.demarrerCombat(monstreData, monstreData.pv, monstreX, monstreY);
+          demarrerCombat(monstreData, monstreData.pv, monstreX, monstreY);
         }
       }
     }
@@ -96,8 +98,8 @@ function handleKeydown(e) {
   }
 
   // 3. Vérification de la présence de monstres
-  const currentX = modules.getPlayerX();
-  const currentY = modules.getPlayerY();
+  const currentX = getPositionJoueur().x;
+  const currentY = getPositionJoueur().y;
   const { monstreSurCase, monstreAdj, monsterElements } = detectMonsters(currentX, currentY);
   if (monstreSurCase || monstreAdj) {
     triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, currentX, currentY);
@@ -117,10 +119,10 @@ function handleKeydown(e) {
   if (e.key === 'ArrowRight') newX++;
 
   // 5. Gestion des déplacements entre cartes
-  if (newX < 0) return modules.deplacementVersCarte('gauche');
-  if (newX >= 16) return modules.deplacementVersCarte('droite');
-  if (newY < 0) return modules.deplacementVersCarte('haut');
-  if (newY >= 16) return modules.deplacementVersCarte('bas');
+  if (newX < 0) return deplacerJoueur('gauche');
+  if (newX >= 16) return deplacerJoueur('droite');
+  if (newY < 0) return deplacerJoueur('haut');
+  if (newY >= 16) return deplacerJoueur('bas');
 
   // 6. Vérification si la case est bloquée
   if (modules.isBlocked(newX, newY)) {
@@ -137,8 +139,7 @@ function handleKeydown(e) {
 
   // 8. Mise à jour de la position du joueur
   if (newX !== currentX || newY !== currentY) {
-    modules.setPlayerPositionPlayer(newX, newY);
-    modules.movePlayer();
+    deplacerJoueur(newX, newY);
     modules.verifierRencontre();
     modules.verifierCombatAdjMonstre();
     modules.detecterSortie(modules.exitZones);
@@ -148,5 +149,6 @@ function handleKeydown(e) {
 // --- Exports publics à la fin ---
 export {
   handleKeydown,
-  utiliserTalentEnCombat
+  utiliserTalentEnCombat,
+  detectMonsters
 };

@@ -3,22 +3,33 @@
 // Ce module gère l'affichage et la mise à jour des éléments UI liés au joueur.
 
 // --- Imports principaux ---
-import * as modules from './modules_main_logic.js';
+import { 
+  get_player_atk,
+  get_player_def,
+  get_player_class_state,
+  get_player_level,
+  get_player_pv,
+  get_max_player_pv,
+  get_player_mana,
+  get_max_player_mana,
+  get_player_xp,
+  get_xp_to_next_level
+} from './player_state_logic.js';
 
 // --- Mise à jour du panneau de stats secondaires ---
 // Met à jour l'affichage des stats secondaires (ATK, DEF, classe, niveau)
 /**
  * Met à jour l'affichage des stats secondaires (ATK, DEF, classe, niveau)
  */
-function updatePlayerStatsPanel() {
+function update_player_stats_panel() {
   if (document.getElementById('stat-atk'))
-    document.getElementById('stat-atk').textContent = `ATK : ${modules.getPlayerAtk()}`;
+    document.getElementById('stat-atk').textContent = `ATK : ${get_player_atk()}`;
   if (document.getElementById('stat-def'))
-    document.getElementById('stat-def').textContent = `DEF : ${modules.getPlayerDef()}`;
+    document.getElementById('stat-def').textContent = `DEF : ${get_player_def()}`;
   if (document.getElementById('stat-class'))
-    document.getElementById('stat-class').textContent = `Classe : ${modules.getPlayerClassPlayer()}`;
+    document.getElementById('stat-class').textContent = `Classe : ${get_player_class_state()}`;
   if (document.getElementById('stat-level'))
-    document.getElementById('stat-level').textContent = `Niveau : ${modules.getPlayerLevel()}`;
+    document.getElementById('stat-level').textContent = `Niveau : ${get_player_level()}`;
   // PV/mana/xp ne sont pas affichés ici
 }
 
@@ -27,9 +38,9 @@ function updatePlayerStatsPanel() {
 /**
  * Met à jour la barre de vie du joueur
  */
-function updatePVBar() {
-  const pv = modules.getPlayerPV();
-  const pvMax = modules.getMaxPlayerPV();
+function update_pv_bar() {
+  const pv = get_player_pv();
+  const pvMax = get_max_player_pv();
   const percent = Math.floor((pv / pvMax) * 100);
   const fill = document.getElementById('vie-fill');
   const val = document.getElementById('vie-value');
@@ -42,9 +53,9 @@ function updatePVBar() {
 /**
  * Met à jour la barre de mana du joueur
  */
-function updateManaBar() {
-  const mana = modules.getPlayerMana();
-  const manaMax = modules.getMaxPlayerMana();
+function update_mana_bar() {
+  const mana = get_player_mana();
+  const manaMax = get_max_player_mana();
   const percent = Math.floor((mana / manaMax) * 100);
   const fill = document.getElementById('mana-fill');
   const val = document.getElementById('mana-value');
@@ -57,10 +68,10 @@ function updateManaBar() {
 /**
  * Met à jour la barre d'expérience du joueur
  */
-function updateXPBar() {
-  const xp = modules.getPlayerXP();
-  const lvl = modules.getPlayerLevel();
-  const xpNext = modules.getXpToNextLevel(lvl);
+function update_xp_bar() {
+  const xp = get_player_xp();
+  const lvl = get_player_level();
+  const xpNext = get_xp_to_next_level(lvl);
   const percent = Math.floor((xp / xpNext) * 100);
   const fill = document.getElementById('xp-fill');
   const val = document.getElementById('xp-value');
@@ -73,21 +84,21 @@ function updateXPBar() {
 /**
  * Met à jour tous les éléments de l'UI liés au joueur
  */
-function updateAllPlayerUI() {
-  updatePlayerStatsPanel();
-  updatePVBar();
-  updateManaBar();
-  updateXPBar();
+function update_all_player_ui() {
+  update_player_stats_panel();
+  update_pv_bar();
+  update_mana_bar();
+  update_xp_bar();
 }
 
-window.addEventListener('DOMContentLoaded', updateAllPlayerUI);
-window.addEventListener('playerStatsChanged', updateAllPlayerUI);
+window.addEventListener('DOMContentLoaded', update_all_player_ui);
+window.addEventListener('playerStatsChanged', update_all_player_ui);
 
 // --- Exports publics à la fin ---
 export {
-  updatePlayerStatsPanel,
-  updatePVBar,
-  updateManaBar,
-  updateXPBar,
-  updateAllPlayerUI
+  update_player_stats_panel,
+  update_pv_bar,
+  update_mana_bar,
+  update_xp_bar,
+  update_all_player_ui
 };

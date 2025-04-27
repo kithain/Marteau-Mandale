@@ -24,6 +24,9 @@ def sauvegarder_json(path, data):
 
 # === Monstres ===
 
+# Dictionnaire pour suivre les monstres actifs (clé: position, valeur: True)
+monstres_actifs = {}
+
 def charger_monstres():
     """Charge la liste complète des monstres depuis monstres.json."""
     return charger_json(os.path.join(MONSTRE_DIR, 'monstres.json'))
@@ -46,6 +49,11 @@ def charger_table_rencontres(nom_carte):
 def generer_rencontre(x, y, nom_carte="map1"):
     key = f"{x},{y},{nom_carte}"
     print(f"[DEBUG] 🎲 Génération de rencontre : {key}")
+
+    # 🔒 Vérifier s'il y a déjà un monstre actif sur la carte
+    if any(monstres_actifs.values()):
+        print(f"[DEBUG] ⚠️ Un monstre est déjà présent sur la carte - pas de nouvelle génération")
+        return None
 
     # 🔒 Anti-rencontre : délai
     if key in dernieres_rencontres and dernieres_rencontres[key] > 0:
@@ -71,7 +79,17 @@ def generer_rencontre(x, y, nom_carte="map1"):
     print(f"[DEBUG] Monstre choisi dynamiquement pour {nom_carte} ({ligne}{colonne}): {monstre_id}")
     cooldown = 3  # cooldown générique, à adapter si besoin
     dernieres_rencontres[key] = cooldown
+    monstres_actifs[key] = True  # Marquer ce monstre comme actif
     return monstre_id
+
+def supprimer_monstre(x, y, nom_carte):
+    """Supprime un monstre actif après sa défaite"""
+    key = f"{x},{y},{nom_carte}"
+    if key in monstres_actifs:
+        del monstres_actifs[key]
+        print(f"[DEBUG] Monstre à {key} supprimé des actifs")
+    else:
+        print(f"[DEBUG] Aucun monstre actif trouvé à {key}")
 
 def est_tuile_bloquee(x, y, nom_carte):
     """Vérifie si la tuile est bloquée dans le calque obstacles de la map TMJ."""

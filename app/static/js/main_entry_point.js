@@ -2,7 +2,20 @@
 // Point d'entrée principal du jeu Marteau-Mandale (initialisation, UI, chargement, sauvegarde...)
 // Refactorisé pour clarté, organisation et maintenabilité
 
-import * as modules from './modules_main_logic.js';
+import { 
+  initialiserStatsJoueur,
+  loadPlayerDataPlayer,
+  startRegenUtils
+} from './player_main_logic.js';
+
+import { chargerCarteInitiale, chargerNouvelleCarte } from './map_main_logic.js';
+
+import { initConnexion, initSmokeAnimation, initParticles } from './utils_main_logic.js';
+import { handleKeydown } from './input_handler_logic.js';
+import { resetDeplacementSansRencontre, setDeplacementSansRencontre } from './combat_manager_logic.js';
+import { initialiserTalents } from './player_talents_logic.js';
+import { updateAllPlayerUI } from './player_ui_logic.js';
+import { getPlayerSaveData } from './player_state_logic.js';
 
 // --- Fonctions utilitaires globales ---
 /**
@@ -60,10 +73,10 @@ function chargerTalentsEtDemarrerJeu() {
  * Initialise et synchronise le jeu.
  */
 function demarrerJeu() {
-  modules.resetDeplacementSansRencontre();
-  modules.initConnexion();
-  modules.initSmokeAnimation();
-  document.addEventListener('keydown', modules.handleKeydown);
+  resetDeplacementSansRencontre();
+  initConnexion();
+  initSmokeAnimation();
+  document.addEventListener('keydown', handleKeydown);
 
   // Initialisation du jeu si on est sur la page de jeu (script JSON présent)
   const dataElem = document.getElementById('player-data');
@@ -79,7 +92,7 @@ function demarrerJeu() {
       return;
     }
     // Synchronisation vie/mana depuis la sauvegarde
-    modules.loadPlayerDataPlayer(saveData);
+    loadPlayerDataPlayer(saveData);
     // Définition des variables globales pour la compatibilité
     window.PLAYER_CLASS = saveData.classe;
     // window.PLAYER_TALENTS n'est plus utilisé
@@ -93,7 +106,7 @@ function demarrerJeu() {
     window.combatActif = false;
     // Ajout : synchronisation du compteur de déplacement sans rencontre
     window.DEP_SANS_RENCONTRE = (typeof saveData.deplacementSansRencontre === 'number') ? saveData.deplacementSansRencontre : 3;
-    modules.setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
+    setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
     // Si la position est {x: 0, y: 0}, on considère qu'il faut utiliser le player_start de la carte
     let pos = saveData.position;
     let usePlayerStart = false;
@@ -104,9 +117,9 @@ function demarrerJeu() {
     try {
       console.log("[DEBUG] Chargement de la carte:", saveData.carte, saveData.position);
       if (usePlayerStart) {
-        modules.chargerNouvelleCarte(saveData.carte, null, null);
+        chargerCarteInitiale(saveData.carte, null, null);
       } else {
-        modules.chargerNouvelleCarte(saveData.carte, saveData.position.x, saveData.position.y);
+        chargerNouvelleCarte(saveData.carte, saveData.position.x, saveData.position.y);
       }
     } catch (err) {
       console.error("[ERROR] Chargement carte échoué:", err);
@@ -114,12 +127,12 @@ function demarrerJeu() {
     // Initialiser les talents du joueur
     try {
       console.log("[DEBUG] Initialisation des talents");
-      modules.initialiserTalents();
+      initialiserTalents();
     } catch (err) {
       console.error("[ERROR] Initialisation talents échouée:", err);
     }
     // Mettre à jour l'interface utilisateur
-    modules.updateAllPlayerUI();
+    updateAllPlayerUI();
   }
 
   // === Sauvegarde de la partie ===
@@ -127,13 +140,13 @@ function demarrerJeu() {
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       // Ajout debug PV/mana avant sauvegarde
-      const saveData = modules.getPlayerSaveData();
+      const saveData = getPlayerSaveData();
       console.log('[DEBUG] PV/Mana au moment de la sauvegarde :', saveData.vie, saveData.mana);
       if (typeof saveData.vie !== 'number' || typeof saveData.mana !== 'number') {
         console.warn('[ALERTE] PV ou Mana non valides au moment de la sauvegarde !');
       }
       try {
-        const response = await fetch('/api/save', {
+        const response = await fetch('/api/sauvegarder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(saveData)
@@ -150,6 +163,13 @@ function demarrerJeu() {
   }
 }
 
+// --- Exports publics ---
+export {
+  showToast,
+  chargerTalentsEtDemarrerJeu,
+  demarrerJeu
+};
+
 // --- Détection de la page et lancement conditionnel ---
 document.addEventListener('DOMContentLoaded', () => {
   // Page de sélection de classe : présence de l'élément class-image
@@ -161,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chargerTalentsEtDemarrerJeu();
   }
   if (isPageLogin) {
-    modules.initConnexion();
-    modules.initParticles();
+    initConnexion();
+    initParticles();
   }
 });
 

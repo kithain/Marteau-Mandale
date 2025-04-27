@@ -2,7 +2,6 @@
 // Gestion globale des monstres (création, boucle, interactions)
 // Refactorisé pour utiliser monstreState.js et monstre_utils.js
 
-import * as modules from './modules_main_logic.js';
 import {
   createMonstreState,
   setMonstrePV,
@@ -23,6 +22,18 @@ import {
   afficherMissMonstre
 } from './monstre_visual_utils.js';
 import { registerGameInterval, clearGameInterval } from './player_visual_utils.js';
+import { 
+  getPlayerX,
+  getPlayerY,
+  getPlayerDef,
+  infligerDegatsAuJoueur,
+  getPlayerPV,
+  isBlocked
+} from './player_main_logic.js';
+import { 
+  demarrerCombat,
+  finirCombat
+} from './combat_manager_logic.js';
 
 // --- Constantes ---
 const tileSize = 64;
@@ -61,15 +72,15 @@ function creerMonstre({ id, nom, niveau, pv, atk, def, image, baseId, posX = 0, 
   const monstreState = createMonstreState({ id, nom, niveau, pv, atk, def });
   monstreState.position = { x: posX, y: posY }; // Stocker la position dans le state
   
-  const monstreDiv = createMonsterElement(image, id, posX, posY);
+  const monstreDiv = creerElementMonstre(image, id, posX, posY);
   setMonstrePosition(monstreState, posX, posY);
   
   const monstreActif = { state: monstreState, element: monstreDiv };
   monstresActifs.push(monstreActif);
 
   // Vérifier si le monstre est à plus de 1 case du joueur
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
   const dx = Math.abs(playerX - posX);
   const dy = Math.abs(playerY - posY);
   
@@ -78,14 +89,14 @@ function creerMonstre({ id, nom, niveau, pv, atk, def, image, baseId, posX = 0, 
     demarrerDeplacementMonstres();
   } else {
     // Si le monstre est proche, démarrer le combat directement
-    modules.demarrerCombat(monstreActif);
+    // demarrerCombat(monstreActif);
   }
   
   return monstreActif;
 }
 
 // --- Création et gestion visuelle (DOM) ---
-function createMonsterElement(image, uniqueId, posX = 0, posY = 0) {
+function creerElementMonstre(image, uniqueId, posX = 0, posY = 0) {
   const monstreDiv = document.createElement('div');
   monstreDiv.id = `combat-monstre-${uniqueId}`;
   monstreDiv.className = 'monstre';
@@ -119,8 +130,8 @@ function createMonsterElement(image, uniqueId, posX = 0, posY = 0) {
 function deplacerMonstre(monstre) {
   if (!monstre || !monstre.state || !monstre.element) return;
   
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
   const monsterPos = getMonstrePosition(monstre.state);
   
   // Calculer la direction vers le joueur
@@ -140,7 +151,7 @@ function deplacerMonstre(monstre) {
   else if (dy < 0) newY--;
   
   // Vérifier si la nouvelle position est libre
-  if (!window.isBlocked || !window.isBlocked(newX, newY)) {
+  if (!isBlocked || !isBlocked(newX, newY)) {
     console.log('[MONSTRE] Déplacement', {
       from: monsterPos,
       to: { x: newX, y: newY }
@@ -165,23 +176,23 @@ function deplacerTousMonstres() {
   
   // Si on est en combat, vérifier que le monstre est toujours adjacent
   if (window.currentMonstre) {
-    const playerX = modules.getPlayerX();
-    const playerY = modules.getPlayerY();
+    const playerX = getPlayerX();
+    const playerY = getPlayerY();
     const monsterPos = getMonstrePosition(window.currentMonstre.state);
     const dx = Math.abs(playerX - monsterPos.x);
     const dy = Math.abs(playerY - monsterPos.y);
     
     // Si le monstre n'est plus adjacent, arrêter le combat
     if (dx > 1 || dy > 1) {
-      modules.finirCombat();
+      // finirCombat();
     }
     return; // Ne pas déplacer les autres monstres pendant un combat
   }
   
   monstresActifs.forEach(monstre => {
     // Vérifier si le monstre est adjacent au joueur
-    const playerX = modules.getPlayerX();
-    const playerY = modules.getPlayerY();
+    const playerX = getPlayerX();
+    const playerY = getPlayerY();
     const monsterPos = getMonstrePosition(monstre.state);
     const dx = Math.abs(playerX - monsterPos.x);
     const dy = Math.abs(playerY - monsterPos.y);
@@ -199,7 +210,7 @@ function deplacerTousMonstres() {
       // Démarrer le combat si le monstre est adjacent
       window.currentMonstre = monstre;
       window.combatActif = true;
-      modules.demarrerCombat(monstre);
+      // demarrerCombat(monstre);
       return;
     }
     
@@ -254,8 +265,8 @@ function getMonstreParId(id) {
 }
 
 function getMonstresAdjacentsEtSurCase() {
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
   return monstresActifs.filter(monstre => {
     const { x, y } = getMonstrePosition(monstre.state);
     const dx = Math.abs(playerX - x);
@@ -340,7 +351,7 @@ function appliquerDebuffAtkMonstre(monstre, valeur = -2, duree = 3000) {
 }
 
 // Exemple : Vérifier si un monstre est sous un effet
-function estEmpoisonne(monstre) {
+function estempoisonne(monstre) {
   return aEffet(monstre.state, 'poison');
 }
 
@@ -364,18 +375,17 @@ function supprimerMonstre(monstre) {
 
 // --- Nettoyage global ---
 function stopAllMonsters() {
-  monstresActifs.forEach(m => {
-    if (m.interval) {
-      clearInterval(m.interval);
-      m.interval = null;
-    }
-  });
+  arreterDeplacementMonstres();
+  monstresActifs = [];
+  window.monstresActifs = [];
+  window.combatActif = false;
+  window.currentMonstre = null;
 }
 
 // --- Exports publics à la fin ---
 export {
   creerMonstre,
-  createMonsterElement,
+  creerElementMonstre,
   deplacerMonstre,
   deplacerTousMonstres,
   demarrerDeplacementMonstres,
@@ -391,9 +401,8 @@ export {
   appliquerPoison,
   appliquerStun,
   appliquerDebuffAtkMonstre,
-  estEmpoisonne,
+  estempoisonne,
   retirerPoison,
-  stopAllMonsters,
-  getMonstrePV,
-  supprimerMonstre
+  supprimerMonstre,
+  stopAllMonsters
 };

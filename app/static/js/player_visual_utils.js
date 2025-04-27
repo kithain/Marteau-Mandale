@@ -3,7 +3,20 @@
 // Ce module fournit tous les effets visuels, statuts, et helpers pour le joueur.
 
 // --- Imports principaux ---
-import * as modules from './modules_main_logic.js';
+import { 
+  get_player_pv,
+  get_player_mana,
+  get_player_xp
+} from './player_state_logic.js';
+
+import { get_xp_to_next_level } from './progression_main_logic.js';
+
+import { 
+  set_player_pv,
+  set_player_mana
+} from './player_main_logic.js';
+
+import { get_player_pv } from './player_state_logic.js';
 
 // --- Texte flottant générique ---
 // Affiche un texte flottant au-dessus du joueur
@@ -12,7 +25,7 @@ import * as modules from './modules_main_logic.js';
  * @param {string} text - Texte à afficher
  * @param {string} color - Couleur du texte
  */
-function createFloatingText(text, color) {
+function create_floating_text(text, color) {
   const player = document.getElementById("player");
   if (!player) return;
   const texte = document.createElement("div");
@@ -35,16 +48,16 @@ function createFloatingText(text, color) {
 // Applique un boost temporaire à une statistique du joueur
 /**
  * Applique un boost temporaire à une statistique du joueur
- * @param {string} boostType - Type de boost ('atk', 'def', ...)
+ * @param {string} boost_type - Type de boost ('atk', 'def', ...)
  * @param {number} amount - Valeur du boost
  * @param {number} duration - Durée en ms
  */
-function applyBoost(boostType, amount, duration) {
+function apply_boost(boost_type, amount, duration) {
   if (!window.PLAYER_STATS) window.PLAYER_STATS = {};
-  if (!window.PLAYER_STATS[boostType]) window.PLAYER_STATS[boostType] = 0;
-  window.PLAYER_STATS[boostType] += amount;
+  if (!window.PLAYER_STATS[boost_type]) window.PLAYER_STATS[boost_type] = 0;
+  window.PLAYER_STATS[boost_type] += amount;
   setTimeout(() => {
-    window.PLAYER_STATS[boostType] -= amount;
+    window.PLAYER_STATS[boost_type] -= amount;
   }, duration);
 }
 
@@ -55,7 +68,7 @@ function applyBoost(boostType, amount, duration) {
  * @param {number} value
  * @param {number} duration
  */
-function applyShield(value, duration) {
+function apply_shield(value, duration) {
   // Supprimé
 }
 
@@ -66,7 +79,7 @@ function applyShield(value, duration) {
  * @param {object} monstre - Objet monstre
  * @param {number} duration - Durée en ms
  */
-function applyStun(monstre, duration) {
+function apply_stun(monstre, duration) {
   if (!monstre || !monstre.data) return;
   monstre.data.stunned = true;
   setTimeout(() => {
@@ -80,7 +93,7 @@ function applyStun(monstre, duration) {
  * Applique un effet de poison au joueur
  * @param {number} duration - Durée en ms
  */
-function applyPoison(duration) {
+function apply_poison(duration) {
   if (!window.PLAYER_STATUS) window.PLAYER_STATUS = {};
   window.PLAYER_STATUS.poisoned = true;
   setTimeout(() => {
@@ -93,7 +106,7 @@ function applyPoison(duration) {
 /**
  * @param {number} valeur - Valeur des dégâts
  */
-function afficherDegats(valeur) {
+function afficher_degats(valeur) {
   const player = document.getElementById("player");
   if (!player) return;
   const texte = document.createElement("div");
@@ -118,7 +131,7 @@ function afficherDegats(valeur) {
  * Affiche un texte flottant de dégâts reçus par le joueur
  * @param {number} valeur
  */
-function afficherMobDegats(valeur) {
+function afficher_mob_degats(valeur) {
   const player = document.getElementById("player");
   if (!player) return;
   const texte = document.createElement("div");
@@ -142,16 +155,16 @@ function afficherMobDegats(valeur) {
  * Inflige des dégâts au joueur et met à jour ses PV
  * @param {number} valeur - Valeur des dégâts
  */
-function infligerDegatsAuJoueur(valeur) {
-  if (window.isGameOver) return;
-  const pvAvant = modules.getPlayerPV();
-  modules.setPlayerPV(pvAvant - valeur);
-  const pvApres = modules.getPlayerPV();
-  console.log(`[COMBAT][PV] Player PV: ${pvAvant} → ${pvApres} (dégâts: ${valeur})`);
+function infliger_degats_au_joueur(valeur) {
+  if (window.is_game_over) return;
+  const pv_avant = get_player_pv();
+  set_player_pv(pv_avant - valeur);
+  const pv_apres = get_player_pv();
+  console.log(`[COMBAT][PV] Player PV: ${pv_avant} → ${pv_apres} (dégâts: ${valeur})`);
   
   // Vérifier si le joueur est mort
-  if (pvApres <= 0) {
-    afficherGameOver();
+  if (pv_apres <= 0) {
+    afficher_game_over();
   }
 }
 
@@ -160,179 +173,179 @@ function infligerDegatsAuJoueur(valeur) {
  * Liste des intervalles de jeu actifs
  * @type {Set<number>}
  */
-const gameIntervals = new Set();
+const game_intervals = new Set();
 
 /**
  * Enregistre un intervalle de jeu pour le nettoyage
- * @param {number} intervalId - ID de l'intervalle à enregistrer
+ * @param {number} interval_id - ID de l'intervalle à enregistrer
  */
-function registerGameInterval(intervalId) {
-  if (intervalId) {
-    gameIntervals.add(intervalId);
+function register_game_interval(interval_id) {
+  if (interval_id) {
+    game_intervals.add(interval_id);
   }
 }
 
 /**
  * Nettoie un intervalle de jeu spécifique
- * @param {number} intervalId - ID de l'intervalle à nettoyer
+ * @param {number} interval_id - ID de l'intervalle à nettoyer
  */
-function clearGameInterval(intervalId) {
-  if (intervalId) {
-    clearInterval(intervalId);
-    gameIntervals.delete(intervalId);
+function clear_game_interval(interval_id) {
+  if (interval_id) {
+    clearInterval(interval_id);
+    game_intervals.delete(interval_id);
   }
 }
 
 /**
  * Nettoie tous les intervalles de jeu enregistrés
  */
-function clearAllGameIntervals() {
-  for (const intervalId of gameIntervals) {
-    clearInterval(intervalId);
+function clear_all_game_intervals() {
+  for (const interval_id of game_intervals) {
+    clearInterval(interval_id);
   }
-  gameIntervals.clear();
+  game_intervals.clear();
 }
 
 // --- Game Over ---
 /**
  * Affiche l'écran de Game Over et arrête la régénération
  */
-function afficherGameOver() {
-  if (window.isGameOver) return; // Éviter les appels multiples
+function afficher_game_over() {
+  if (window.is_game_over) return; // Éviter les appels multiples
   
-  window.isGameOver = true;
+  window.is_game_over = true;
   
   // Arrêter la régénération
-  if (window.stopRegen) window.stopRegen();
+  if (window.stop_regen) window.stop_regen();
   
   // Nettoyer tous les intervalles de jeu
-  clearAllGameIntervals();
+  clear_all_game_intervals();
   
   // Désactiver les contrôles du joueur
-  window.combatActif = false;
+  window.combat_actif = false;
   
   // Afficher l'écran de Game Over
-  const gameOverScreen = document.getElementById('game-over');
-  if (gameOverScreen) {
-    gameOverScreen.style.display = 'block';
+  const game_over_screen = document.getElementById('game-over');
+  if (game_over_screen) {
+    game_over_screen.style.display = 'block';
   }
 }
 
 // Fonction utilitaire pour arrêter tous les intervalles
-function clearAllIntervals() {
+function clear_all_intervals() {
   // Nettoyer les intervalles connus
-  if (window.monstreInterval) clearInterval(window.monstreInterval);
-  if (window.regenInterval) clearInterval(window.regenInterval);
-  if (window.intervalDeplacementMonstres) clearInterval(window.intervalDeplacementMonstres);
+  if (window.monstre_interval) clearInterval(window.monstre_interval);
+  if (window.regen_interval) clearInterval(window.regen_interval);
+  if (window.interval_deplacement_monstres) clearInterval(window.interval_deplacement_monstres);
   
   // Nettoyer tous les autres intervalles par sécurité
-  const highestId = window.setInterval(() => {}, 100000);
-  for(let i = 0; i < highestId; i++) {
+  const highest_id = window.setInterval(() => {}, 100000);
+  for(let i = 0; i < highest_id; i++) {
     window.clearInterval(i);
   }
 }
 
 // --- Régénération automatique (wrappers) ---
-let regenInterval = null;
+let regen_interval = null;
 /**
  * Démarre la régénération automatique de PV/Mana (wrapper)
  */
-function startRegen() {
+function start_regen() {
   if (typeof import('./player_state_logic.js').then === 'function') {
     import('./player_state_logic.js').then(mod => {
-      if (mod && typeof mod.startRegen === 'function') mod.startRegen();
+      if (mod && typeof mod.start_regen === 'function') mod.start_regen();
     });
     return;
   }
-  if (regenInterval) return;
-  regenInterval = setInterval(() => {
-    if (window.isGameOver || window.combatActif) return;
-    modules.setPlayerPV(Math.min(modules.getPlayerPV() + 1, modules.getMaxVie(window.PLAYER_LEVEL)));
-    modules.setPlayerMana(Math.min(modules.getPlayerMana() + 1, modules.getMaxMana(window.PLAYER_LEVEL)));
+  if (regen_interval) return;
+  regen_interval = setInterval(() => {
+    if (window.is_game_over || window.combat_actif) return;
+    set_player_pv(Math.min(get_player_pv() + 1, get_max_vie(window.PLAYER_LEVEL)));
+    set_player_mana(Math.min(get_player_mana() + 1, get_max_mana(window.PLAYER_LEVEL)));
   }, 2000);
 }
 /**
  * Arrête la régénération automatique (wrapper)
  */
-function stopRegen() {
+function stop_regen() {
   if (typeof import('./player_state_logic.js').then === 'function') {
     import('./player_state_logic.js').then(mod => {
-      if (mod && typeof mod.stopRegen === 'function') mod.stopRegen();
+      if (mod && typeof mod.stop_regen === 'function') mod.stop_regen();
     });
     return;
   }
-  if (regenInterval) clearInterval(regenInterval);
-  regenInterval = null;
+  if (regen_interval) clearInterval(regen_interval);
+  regen_interval = null;
 }
 
-// --- Helpers visuels spécialisés (wrappers autour de createFloatingText) ---
+// --- Helpers visuels spécialisés (wrappers autour de create_floating_text) ---
 /**
  * Affiche un texte flottant pour un soin reçu par le joueur
  * @param {number} valeur
  */
-function afficherSoin(valeur) {
-  createFloatingText(`+${valeur}`, 'lightgreen');
+function afficher_soin(valeur) {
+  create_floating_text(`+${valeur}`, 'lightgreen');
 }
 /**
  * Affiche un texte flottant pour un coup critique reçu ou infligé
  * @param {number} valeur
  */
-function afficherCritique(valeur) {
-  createFloatingText(`CRIT ! -${valeur}`, '#FFD700');
+function afficher_critique(valeur) {
+  create_floating_text(`CRIT ! -${valeur}`, '#FFD700');
 }
 /**
  * Affiche un texte flottant pour une esquive du joueur
  */
-function afficherEsquive() {
-  createFloatingText('Esquive !', '#87CEEB');
+function afficher_esquive() {
+  create_floating_text('Esquive !', '#87CEEB');
 }
 /**
  * Affiche un texte flottant pour une parade du joueur
  */
-function afficherParade() {
-  createFloatingText('Parade !', '#00BFFF');
+function afficher_parade() {
+  create_floating_text('Parade !', '#00BFFF');
 }
 /**
  * Affiche un texte flottant pour un buff reçu par le joueur
- * @param {string} nomBuff
+ * @param {string} nom_buff
  */
-function afficherBuff(nomBuff) {
-  createFloatingText(`+${nomBuff}`, '#66ff99');
+function afficher_buff(nom_buff) {
+  create_floating_text(`+${nom_buff}`, '#66ff99');
 }
 /**
  * Affiche un texte flottant pour un débuff reçu par le joueur
- * @param {string} nomDebuff
+ * @param {string} nom_debuff
  */
-function afficherDebuff(nomDebuff) {
-  createFloatingText(`-${nomDebuff}`, '#ff6666');
+function afficher_debuff(nom_debuff) {
+  create_floating_text(`-${nom_debuff}`, '#ff6666');
 }
 /**
  * Affiche un texte flottant pour un coup manqué
  */
-function afficherMiss() {
-  createFloatingText('Miss !', '#bbb');
+function afficher_miss() {
+  create_floating_text('Miss !', '#bbb');
 }
 
 // --- Exports publics à la fin ---
 export {
-  createFloatingText,
-  applyBoost,
-  applyShield,
-  applyStun,
-  applyPoison,
-  afficherDegats,
-  afficherMobDegats,
-  infligerDegatsAuJoueur,
-  afficherGameOver,
-  startRegen,
-  stopRegen,
-  afficherSoin,
-  afficherCritique,
-  afficherEsquive,
-  afficherParade,
-  afficherBuff,
-  afficherDebuff,
-  afficherMiss,
-  registerGameInterval,
-  clearGameInterval
+  create_floating_text,
+  apply_boost,
+  apply_shield,
+  apply_stun,
+  apply_poison,
+  afficher_degats,
+  afficher_mob_degats,
+  infliger_degats_au_joueur,
+  afficher_game_over,
+  start_regen,
+  stop_regen,
+  afficher_soin,
+  afficher_critique,
+  afficher_esquive,
+  afficher_parade,
+  afficher_buff,
+  afficher_debuff,
+  afficher_miss,
+  register_game_interval,
+  clear_game_interval
 };

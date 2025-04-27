@@ -4,110 +4,117 @@
 
 // === Variables globales et imports ===
 let cooldowns = {};
-let combatActif = false;
-let playerDef = 0; // Stat de défense calculée par niveau
-let playerXP = 0;
-let xpToNextLevel = 100;
-let regenInterval = null;
-let isGameOver = false;
+let combat_actif = false;
+let player_def = 0; // Stat de défense calculée par niveau
+let player_xp = 0;
+let xp_to_next_level = 100;
+let regen_interval = null;
+let is_game_over = false;
 
-import * as modules from './modules_main_logic.js';
-import { setPlayerPosition as setPlayerPositionState, getCentralPlayerPosition } from './player_state_logic.js';
+import { 
+  set_combat,
+  utiliser_talent_en_combat,
+  get_talents
+} from './player_talents_logic.js';
+
+import { 
+  set_player_position as set_player_position_state, 
+  get_central_player_position, 
+  getPlayerSaveData 
+} from './player_state_logic.js';
 
 // === Stats ===
-// Fonction pour initialiser les stats selon le niveau
-function initialiserStatsJoueur(level) {
-  modules.setPlayerPV(modules.getMaxVie(level));
-  modules.setPlayerMana(modules.getMaxMana(level));
-  playerDef = modules.getPlayerBaseDef(level);
+function initialiser_stats_joueur(level) {
+  set_player_pv(get_max_vie(level));
+  set_player_mana(get_max_mana(level));
+  player_def = get_player_base_def(level);
 }
 
 // === XP et niveau ===
-// Fonction pour gérer le gain d'XP et le niveau
-function gainXP(amount) {
+function gagner_xp(amount) {
   if (window.PLAYER_LEVEL >= 10) {
-    const maxXP = modules.getXpToNextLevel(10);
-    playerXP = Math.min(playerXP, maxXP);
-    window.PLAYER_XP = playerXP;
-    modules.setPlayerXP(playerXP);
-    updateXPBar();
+    const max_xp = get_xp_to_next_level(10);
+    player_xp = Math.min(player_xp, max_xp);
+    window.PLAYER_XP = player_xp;
+    set_player_xp(player_xp);
+    update_xp_bar();
     return;
   }
-  playerXP += amount;
-  modules.setPlayerXP(playerXP);
-  while (playerXP >= xpToNextLevel) {
-    levelUp();
+  player_xp += amount;
+  set_player_xp(player_xp);
+  while (player_xp >= xp_to_next_level) {
+    level_up();
     if (window.PLAYER_LEVEL >= 10) {
-      playerXP = modules.getXpToNextLevel(10);
-      modules.setPlayerXP(playerXP);
+      player_xp = get_xp_to_next_level(10);
+      set_player_xp(player_xp);
       break;
     }
   }
-  window.PLAYER_XP = playerXP;
-  modules.setPlayerXP(playerXP);
-  updateXPBar();
+  window.PLAYER_XP = player_xp;
+  set_player_xp(player_xp);
+  update_xp_bar();
 }
 
-function levelUp() {
+function level_up() {
   if (window.PLAYER_LEVEL >= 10) return;
-  window.PLAYER_XP -= xpToNextLevel;
-  modules.setPlayerXP(window.PLAYER_XP);
+  window.PLAYER_XP -= xp_to_next_level;
+  set_player_xp(window.PLAYER_XP);
   window.PLAYER_LEVEL += 1;
-  xpToNextLevel = modules.getXpToNextLevel(window.PLAYER_LEVEL);
-  initialiserStatsJoueur(window.PLAYER_LEVEL);
-  modules.createFloatingText(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
-  initialiserTalents();
+  xp_to_next_level = get_xp_to_next_level(window.PLAYER_LEVEL);
+  initialiser_stats_joueur(window.PLAYER_LEVEL);
+  create_floating_text(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
+  initialiser_talents();
 }
 
-function updateXPBar() {
-  const xpFill = document.getElementById("xp-fill");
-  if (!xpFill) return;
-  let maxXP = xpToNextLevel;
+function update_xp_bar() {
+  const xp_fill = document.getElementById("xp-fill");
+  if (!xp_fill) return;
+  let max_xp = xp_to_next_level;
   if (window.PLAYER_LEVEL >= 10) {
-    maxXP = modules.getXpToNextLevel(10);
-    playerXP = Math.min(playerXP, maxXP);
+    max_xp = get_xp_to_next_level(10);
+    player_xp = Math.min(player_xp, max_xp);
   }
-  const percent = Math.min(100, (playerXP / maxXP) * 100);
-  xpFill.style.width = percent + "%";
+  const percent = Math.min(100, (player_xp / max_xp) * 100);
+  xp_fill.style.width = percent + "%";
 }
 
 // === Position du joueur ===
 // Fonction pour définir la position du joueur
-function setPlayerPosition(x, y) {
-  setPlayerPositionState(x, y);
+function deplacer_joueur(x, y) {
+  set_player_position_state(x, y);
 }
-function getPlayerPosition() {
-  return getCentralPlayerPosition();
+function get_position_joueur() {
+  return get_central_player_position();
 }
-function getPlayerX() {
-  return getCentralPlayerPosition().x;
+function get_position_joueur_x() {
+  return get_central_player_position().x;
 }
-function getPlayerY() {
-  return getCentralPlayerPosition().y;
+function get_position_joueur_y() {
+  return get_central_player_position().y;
 }
 
 // === Vie / Mana ===
 // Fonction pour mettre à jour les barres de vie et de mana
-function updateManaBar() {
-  const manaFill = document.getElementById("mana-fill");
-  if (!manaFill) return;
-  const percent = (modules.getPlayerMana() / modules.getMaxMana(window.PLAYER_LEVEL)) * 100;
-  manaFill.style.width = percent + "%";
+function update_mana_bar() {
+  const mana_fill = document.getElementById("mana-fill");
+  if (!mana_fill) return;
+  const percent = (get_player_mana() / get_max_mana(window.PLAYER_LEVEL)) * 100;
+  mana_fill.style.width = percent + "%";
 }
 
-function updateVieBar() {
-  const vieFill = document.getElementById("vie-fill");
-  if (!vieFill) return;
-  const percent = (modules.getPlayerPV() / modules.getMaxVie(window.PLAYER_LEVEL)) * 100;
-  vieFill.style.width = percent + "%";
+function update_vie_bar() {
+  const vie_fill = document.getElementById("vie-fill");
+  if (!vie_fill) return;
+  const percent = (get_player_pv() / get_max_vie(window.PLAYER_LEVEL)) * 100;
+  vie_fill.style.width = percent + "%";
 }
 
 // === Talents ===
 // Fonction pour utiliser un talent
-function utiliserTalent(talent, index) {
+function utiliser_talent(talent, index) {
   if (cooldowns[index]) return;
-  if (modules.getPlayerMana() < talent.cost) return;
-  animerAttaque();
+  if (get_player_mana() < talent.cost) return;
+  animer_attaque();
   const player = document.getElementById("player");
   if (!player) return;
   if (talent.color && talent.duration) {
@@ -118,11 +125,11 @@ function utiliserTalent(talent, index) {
     player.style.opacity = talent.opacity;
     setTimeout(() => { player.style.opacity = 1; }, 1000);
   }
-  if (talent.effectText) {
-    modules.createFloatingText(talent.effectText, talent.color || "white");
+  if (talent.effect_text) {
+    create_floating_text(talent.effect_text, talent.color || "white");
   }
-  modules.setPlayerMana(modules.getPlayerMana() - talent.cost);
-  updateManaBar();
+  set_player_mana(get_player_mana() - talent.cost);
+  update_mana_bar();
   cooldowns[index] = true;
   const btn = document.getElementById(`talent-btn-${index}`);
   if (btn) btn.disabled = true;
@@ -130,69 +137,69 @@ function utiliserTalent(talent, index) {
     cooldowns[index] = false;
     if (btn) btn.disabled = false;
   }, talent.cooldown);
-  if (combatActif) {
+  if (combat_actif) {
     if (talent.zone === 'adjacent' || talent.zone === 'zone') {
-      modules.getMonstresAdjacentsEtSurCase().forEach(monstre => {
+      get_monstres_adjacents_et_sur_case().forEach(monstre => {
         if (talent.type === "attack") {
           let degats = talent.damage;
-          if ((talent.niveauRequis || 1) === 1) {
-            degats = modules.getPlayerBaseAtk(window.PLAYER_LEVEL);
+          if ((talent.niveau_requis || 1) === 1) {
+            degats = get_player_base_atk(window.PLAYER_LEVEL);
           }
-          modules.recevoirDegats(degats, monstre.data.uniqueId);
+          recevoir_degats(degats, monstre.data.unique_id);
         }
         if (talent.type === "poison") {
-          const dotValue = talent.dot || 1;
-          modules.applyStatusEffect(monstre.data.uniqueId, "poisoned", talent.duration, dotValue);
+          const dot_value = talent.dot || 1;
+          apply_status_effect(monstre.data.unique_id, "poisoned", talent.duration, dot_value);
         }
       });
     } else if (talent.type === "heal") {
-      modules.setPlayerPV(Math.min(modules.getPlayerPV() + (talent.heal || 1), modules.getMaxVie(window.PLAYER_LEVEL)));
-      updateVieBar();
+      set_player_pv(Math.min(get_player_pv() + (talent.heal || 1), get_max_vie(window.PLAYER_LEVEL)));
+      update_vie_bar();
     } else if (talent.type === "boost") {
-      modules.applyBoost(talent.boostType, talent.boostValue, talent.duration);
+      apply_boost(talent.boost_type, talent.boost_value, talent.duration);
     }
   }
 }
 
 // === Initialisation des talents ===
 // Fonction pour initialiser les talents
-function initialiserTalents() {
-  const talentButtons = document.getElementById('talents-buttons');
-  const talentsData = modules.getTalents();
-  const skills = Array.isArray(talentsData)
-    ? talentsData.filter(t => t && t.id && (t.niveauRequis || 1) <= window.PLAYER_LEVEL)
+function initialiser_talents() {
+  const talent_buttons = document.getElementById('talents-buttons');
+  const talents_data = get_talents();
+  const skills = Array.isArray(talents_data)
+    ? talents_data.filter(t => t && t.id && (t.niveau_requis || 1) <= window.PLAYER_LEVEL)
     : [];
-  talentButtons.innerHTML = '';
+  talent_buttons.innerHTML = '';
   skills.forEach((talent, index) => {
     if (!talent || !talent.name) return;
     const btn = document.createElement(`button`);
     btn.id = `talent-btn-${index}`;
     btn.textContent = `${index + 1}. ${talent.name}`;
     btn.onclick = () => {
-      if (window.combatActif) {
-        modules.utiliserTalentEnCombat(talent);
+      if (window.combat_actif) {
+        utiliser_talent_en_combat(talent);
       }
     };
-    talentButtons.appendChild(btn);
+    talent_buttons.appendChild(btn);
   });
 }
 
 // === Animation attaque ===
 // Fonction pour animer l'attaque
-function animerAttaque() {
+function animer_attaque() {
   const player = document.getElementById("player");
   if (!player) return;
-  const frameCount = 3;
-  const frameWidth = 64;
+  const frame_count = 3;
+  const frame_width = 64;
   let frame = 0;
-  player.style.backgroundImage = `url(/static/img/classes/${getPlayerClass().toLowerCase()}_attack.png)`;
-  player.style.backgroundSize = `${frameCount * frameWidth}px 64px`;
+  player.style.backgroundImage = `url(/static/img/classes/${get_player_class().toLowerCase()}_attack.png)`;
+  player.style.backgroundSize = `${frame_count * frame_width}px 64px`;
   const interval = setInterval(() => {
-    player.style.backgroundPosition = `-${frame * frameWidth}px 0px`;
+    player.style.backgroundPosition = `-${frame * frame_width}px 0px`;
     frame++;
-    if (frame >= frameCount) {
+    if (frame >= frame_count) {
       clearInterval(interval);
-      player.style.backgroundImage = `url(/static/img/classes/${getPlayerClass().toLowerCase()}_idle.png)`;
+      player.style.backgroundImage = `url(/static/img/classes/${get_player_class().toLowerCase()}_idle.png)`;
       player.style.backgroundSize = `64px 64px`;
       player.style.backgroundPosition = `0px 0px`;
     }
@@ -201,9 +208,9 @@ function animerAttaque() {
 
 // === Dash arrière ===
 // Fonction pour réaliser le dash arrière
-function dashBackwards() {
-  let currentX = getPlayerX();
-  let currentY = getPlayerY();
+function dash_backwards() {
+  let current_x = get_position_joueur_x();
+  let current_y = get_position_joueur_y();
 
   const directions = [
     { dx: 0, dy: -1 }, 
@@ -216,13 +223,13 @@ function dashBackwards() {
     { dx: -1, dy: -1 } 
   ];
 
-  modules.isBlocked(currentX, currentY);
+  is_blocked(current_x, current_y);
   let found = false;
   for (const dir of directions) {
-    const tryX = currentX + dir.dx;
-    const tryY = currentY + dir.dy;
-    if (!modules.isBlocked(tryX, tryY)) {
-      setPlayerPosition(tryX, tryY);
+    const try_x = current_x + dir.dx;
+    const try_y = current_y + dir.dy;
+    if (!is_blocked(try_x, try_y)) {
+      deplacer_joueur(try_x, try_y);
       found = true;
       break;
     }
@@ -236,49 +243,45 @@ function dashBackwards() {
 // ... (logique de régénération si présente)
 
 // === Sauvegarde et chargement ===
-// Fonction pour exporter les données du joueur
-function getPlayerSaveData() {
-  // ... (logique d'export des données du joueur)
-}
 // Fonction pour importer les données du joueur
-function loadPlayerData(saveData) {
+function load_player_data(save_data) {
   // ... (logique d'import des données du joueur)
 }
 
 // === Classe et combat ===
 // Fonction pour obtenir la classe du joueur
-function getPlayerClass() {
+function get_player_class() {
   return window.PLAYER_CLASS || 'Aventurier';
 }
 // Fonction pour définir le combat
-function setCombat(actif) {
-  combatActif = actif;
-  window.combatActif = actif;
+function set_combat(actif) {
+  combat_actif = actif;
+  window.combat_actif = actif;
 }
 
 // --- Exports publics à la fin ---
 export {
   cooldowns,
-  combatActif,
-  playerDef,
-  playerXP,
-  xpToNextLevel,
-  setPlayerPosition,
-  getPlayerPosition,
-  getPlayerX,
-  getPlayerY,
-  updateManaBar,
-  updateVieBar,
-  initialiserStatsJoueur,
-  gainXP,
-  levelUp,
-  updateXPBar,
-  utiliserTalent,
-  initialiserTalents,
-  animerAttaque,
-  dashBackwards,
-  getPlayerSaveData,
-  loadPlayerData,
-  getPlayerClass,
-  setCombat
+  combat_actif,
+  player_def,
+  player_xp,
+  xp_to_next_level,
+  deplacer_joueur,
+  get_position_joueur,
+  get_position_joueur_x,
+  get_position_joueur_y,
+  update_mana_bar,
+  update_vie_bar,
+  initialiser_stats_joueur,
+  gagner_xp,
+  level_up,
+  update_xp_bar,
+  utiliser_talent,
+  initialiser_talents,
+  animer_attaque,
+  dash_backwards,
+  load_player_data,
+  get_player_class,
+  set_combat,
+  getPlayerSaveData
 };

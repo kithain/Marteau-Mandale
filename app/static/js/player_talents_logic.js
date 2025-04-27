@@ -3,7 +3,8 @@
 // Ce module fournit les accès, utilitaires et actions liés aux talents.
 
 // --- Imports principaux ---
-import * as modules from './modules_main_logic.js';
+import { utiliserTalentEnCombat } from './input_handler_logic.js';
+import { getPlayerClassState, getPlayerEffectiveStats } from './player_state_logic.js';
 
 // Initialisation du système de cooldowns
 const cooldowns = {};
@@ -85,28 +86,27 @@ function utiliserTalent(talent, index) {
   }
 
   // Gestion des coûts de mana
-  const manaActuel = modules.getPlayerMana();
+  const manaActuel = getPlayerEffectiveStats().mana;
   if (talent.cost > manaActuel) {
     console.warn(`[TALENT] Pas assez de mana pour ${talent.name}`);
     return false;
   }
 
   // Réduction du mana
-  modules.setPlayerMana(manaActuel - talent.cost);
+  getPlayerClassState().mana -= talent.cost;
 
   // Mise à jour du cooldown
   cooldowns[talent.id] = maintenant + talent.cooldown;
 
   // Utilisation du talent via player_main_logic
-  modules.utiliserTalent(talent);
+  utiliserTalentEnCombat(talent);
 
   // Logique d'application du talent selon son type
   switch (talent.type) {
     case 'attack':
-      const currentMonstre = modules.getCurrentMonstre();
+      const currentMonstre = window.monstresActifs[0];
       if (currentMonstre) {
         const degats = talent.damage || 3;
-        modules.attaqueMonstre(degats);
         console.log(`[TALENT] ${talent.name} inflige ${degats} dégâts`);
       }
       break;
@@ -138,7 +138,7 @@ function utiliserTalent(talent, index) {
  * @param {number} dureeFurtivite - Durée de la furtivité en ms
  */
 function dashStealth(dureeFurtivite = 2000) {
-  modules.importPlayer().then(playerModule => {
+  import('./player_module.js').then(playerModule => {
     const getPlayerX = playerModule.getPlayerX;
     const getPlayerY = playerModule.getPlayerY;
     const setCombat = playerModule.setCombat;
@@ -147,9 +147,9 @@ function dashStealth(dureeFurtivite = 2000) {
     let currentY = getPlayerY();
     setCombat(false);
     stopAllMonsters();
-    modules.importMap().then(module => {
+    import('./map_module.js').then(module => {
       const { isBlocked, setPlayerPosition } = module;
-      modules.importMonstre().then(monstreModule => {
+      import('./monstre_module.js').then(monstreModule => {
         const monstresActifs = window.monstresActifs || [];
         // Directions (8)
         const directions = [
@@ -206,12 +206,12 @@ function dashStealth(dureeFurtivite = 2000) {
           if (typeof afficherMessage === 'function') {
             afficherMessage("Vous êtes furtif pendant " + (dureeFurtivite/1000) + "s", "success");
           }
-          modules.setPlayerMana(modules.getPlayerMana() - 10); // Utilise le setter pour modifier le mana
+          getPlayerClassState().mana -= 10; // Utilise le setter pour modifier le mana
           window.furtif = true;
           setTimeout(() => {
             window.furtif = false;
             setCombat(true);
-            modules.importCombatManager().then(cm => {
+            import('./combat_manager_module.js').then(cm => {
               if (typeof cm.verifierCombatAdjMonstre === 'function') {
                 cm.verifierCombatAdjMonstre();
               }

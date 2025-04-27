@@ -2,11 +2,36 @@
 // Centralise toute la logique de combat et de rencontres du jeu
 // Refactorisé pour clarté, maintenabilité et cohérence
 
-import * as modules from './modules_main_logic.js';
-import { calculerXPMonstre } from './progression_main_logic.js';
-import { gainXP } from './player_main_logic.js';
-import { afficherMobDegats } from './player_visual_utils.js';
-import { registerGameInterval, clearGameInterval } from './player_visual_utils.js';
+import { 
+  creer_monstre,
+  deplacer_monstre,
+  get_monstre_par_id,
+  appliquer_degats_au_monstre,
+  demarrer_deplacement_monstres,
+  arreter_deplacement_monstres,
+  get_monstres_adjacents_et_sur_case,
+  get_monstres_actifs,
+  appliquer_soin_au_monstre,
+  appliquer_buff_au_monstre,
+  appliquer_debuff_au_monstre,
+  appliquer_miss_au_monstre,
+  appliquer_poison,
+  appliquer_stun,
+  appliquer_debuff_atk_monstre,
+  estempoisonne,
+  retirer_poison,
+  stop_all_monstres,
+  get_monstre_pv,
+  supprimer_monstre
+} from './monstre_main_logic.js';
+
+import { gain_xp } from './player_main_logic.js';
+
+import { get_monster_atk } from './progression_main_logic.js';
+import { afficher_mob_degats } from './player_visual_utils.js';
+import { register_game_interval, clear_game_interval } from './player_visual_utils.js';
+
+import { getPlayerX, getPlayerY, getPlayerDef, infligerDegatsAuJoueur, getPlayerPV, isBlocked } from './modules_main_logic.js';
 
 // --- Variables globales ---
 const DEPLACEMENT_SANS_RENCONTRE_INIT = 3;
@@ -20,26 +45,26 @@ window.combatActif = false;
 window.currentMonstre = null;
 
 // --- Fonctions de gestion du déplacement sans rencontre ---
-function setDeplacementSansRencontre(val) {
+function set_deplacement_sans_rencontre(val) {
   if (typeof val === 'number' && !isNaN(val)) {
     deplacementSansRencontre = val;
     window.DEP_SANS_RENCONTRE = val;
   }
 }
 
-function getDeplacementSansRencontre() {
+function get_deplacement_sans_rencontre() {
   return deplacementSansRencontre;
 }
 
-function resetDeplacementSansRencontre() {
+function reset_deplacement_sans_rencontre() {
   deplacementSansRencontre = DEPLACEMENT_SANS_RENCONTRE_INIT;
   window.DEP_SANS_RENCONTRE = DEPLACEMENT_SANS_RENCONTRE_INIT;
 }
 
 // --- Combat principal ---
-function creerMonstreEtDemarrerCombat(monstre, pv, x, y) {
+function creer_monstre_et_demarrer_combat(monstre, pv, x, y) {
   // Création et affichage du monstre sur la carte
-  const monstreObj = modules.creerMonstre({
+  const monstreObj = creer_monstre({
     ...monstre,
     pv,
     posX: x,
@@ -47,41 +72,39 @@ function creerMonstreEtDemarrerCombat(monstre, pv, x, y) {
   });
   
   // Démarrer le combat immédiatement si le monstre est proche
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
   const dx = Math.abs(playerX - x);
   const dy = Math.abs(playerY - y);
   
   if (dx <= 1 && dy <= 1) {
-    demarrerCombat(monstreObj);
+    demarrer_combat(monstreObj);
   }
   
   return monstreObj;
 }
 
-function demarrerCombat(monstre) {
-  if (window.currentMonstre) return; // Ne pas démarrer un nouveau combat si déjà en combat
-  
-  window.currentMonstre = monstre;
+function demarrer_combat(monstre) {
+  if (window.combatActif || window.isGameOver) return;
   window.combatActif = true;
+  window.currentMonstre = monstre;
   
-  // Démarrer l'intervalle d'attaque du monstre
-  if (!window.monstreAttackInterval) {
-    window.monstreAttackInterval = setInterval(() => {
-      if (!window.currentMonstre) {
-        clearInterval(window.monstreAttackInterval);
-        window.monstreAttackInterval = null;
-        return;
-      }
-      attaqueJoueur();
-    }, 2000);
-  }
+  // Arrêter le déplacement des monstres
+  arreter_deplacement_monstres();
   
-  // Déclencher l'événement de début de combat
+  // Démarrer l'attaque automatique du monstre
+  window.monstreAttackInterval = setInterval(() => {
+    if (!window.combatActif || window.isGameOver) {
+      clearInterval(window.monstreAttackInterval);
+      return;
+    }
+    attaquer_joueur(monstre);
+  }, 2000);
+  
   document.dispatchEvent(new CustomEvent('combatStarted'));
 }
 
-function finirCombat() {
+function finir_combat() {
   window.currentMonstre = null;
   window.combatActif = false;
   
@@ -90,18 +113,17 @@ function finirCombat() {
     window.monstreAttackInterval = null;
   }
   
-  // Déclencher l'événement de fin de combat
   document.dispatchEvent(new CustomEvent('combatEnded'));
 }
 
 // --- Attaques ---
-function attaqueJoueur(monstre) {
+function attaquer_joueur(monstre) {
   if (!window.currentMonstre || window.isGameOver) return;
   
   // Vérifier si le joueur est adjacent au monstre
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
-  const monsterPos = modules.getMonstrePosition(monstre.state);
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
+  const monsterPos = get_monstre_position(monstre.state);
   const dx = Math.abs(playerX - monsterPos.x);
   const dy = Math.abs(playerY - monsterPos.y);
   
@@ -112,22 +134,22 @@ function attaqueJoueur(monstre) {
   
   // Utilise la bonne clé d'attaque (atk ou attaque)
   const atk = (monstre.state && (typeof monstre.state.atk === 'number' ? monstre.state.atk : monstre.state.attaque)) || 10;
-  const def = modules.getPlayerDef();
+  const def = getPlayerDef();
   const degats = Math.max(1, atk - def);
-  modules.infligerDegatsAuJoueur(degats);
+  infligerDegatsAuJoueur(degats);
   
-  if (modules.getPlayerPV() <= 0) {
-    finirCombat();
+  if (getPlayerPV() <= 0) {
+    finir_combat();
   }
 }
 
-function attaqueMonstre(valeur) {
+function attaquer_monstre(valeur) {
   if (!window.currentMonstre || window.isGameOver) return;
   
   // Vérifier si le joueur est adjacent au monstre
-  const playerX = modules.getPlayerX();
-  const playerY = modules.getPlayerY();
-  const monsterPos = modules.getMonstrePosition(window.currentMonstre.state);
+  const playerX = getPlayerX();
+  const playerY = getPlayerY();
+  const monsterPos = get_monstre_position(window.currentMonstre.state);
   const dx = Math.abs(playerX - monsterPos.x);
   const dy = Math.abs(playerY - monsterPos.y);
   
@@ -137,31 +159,31 @@ function attaqueMonstre(valeur) {
   }
   
   // Si currentMonstre est bien {state, element}
-  modules.appliquerDegatsAuMonstre(window.currentMonstre, valeur);
-  if (modules.getMonstrePV(window.currentMonstre.state) <= 0) {
-    finirCombat();
+  appliquer_degats_au_monstre(window.currentMonstre, valeur);
+  if (get_monstre_pv(window.currentMonstre.state) <= 0) {
+    finir_combat();
   }
 }
 
 // --- Accès à l'état du combat ---
-function getCombatActif() {
+function get_combat_actif() {
   return window.combatActif;
 }
 
-function getCurrentMonstre() {
+function get_current_monstre() {
   return window.currentMonstre;
 }
 
 // --- Gestion des rencontres aléatoires ---
-function verifierRencontre() {
-  if (getCombatActif()) return;
+function verifier_rencontre() {
+  if (get_combat_actif()) return;
   if (deplacementSansRencontre > 0) {
     deplacementSansRencontre--;
     window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
     return;
   }
 
-  fetch(`/api/rencontre?x=${modules.getPlayerX()}&y=${modules.getPlayerY()}&carte=${modules.currentMap}`)
+  fetch(`/api/rencontre?x=${getPlayerX()}&y=${getPlayerY()}&carte=${modules.currentMap}`)
     .then(res => {
       if (!res.ok) throw new Error('Erreur de réseau');
       return res.json();
@@ -178,8 +200,8 @@ function verifierRencontre() {
         }
         monstre.baseId = baseId;
         // Cherche une case libre à distance 2 max pour le monstre
-        const px = modules.getPlayerX();
-        const py = modules.getPlayerY();
+        const px = getPlayerX();
+        const py = getPlayerY();
         let found = null;
         for (let dx = -2; dx <= 2; dx++) {
           for (let dy = -2; dy <= 2; dy++) {
@@ -196,7 +218,7 @@ function verifierRencontre() {
         // Si pas de case libre, spawn sur le joueur (fallback)
         const spawnX = found ? found.x : px;
         const spawnY = found ? found.y : py;
-        const monstreObj = creerMonstreEtDemarrerCombat(monstre, pv, spawnX, spawnY);
+        const monstreObj = creer_monstre_et_demarrer_combat(monstre, pv, spawnX, spawnY);
         deplacementSansRencontre = 5;
         window.DEP_SANS_RENCONTRE = deplacementSansRencontre;
       } else {
@@ -209,27 +231,27 @@ function verifierRencontre() {
 }
 
 // --- Détection de sortie de zone ---
-function detecterSortie(exitZones) {
+function detecter_sortie(exitZones) {
   const sortie = exitZones.find(zone =>
-    modules.getPlayerX() >= zone.x &&
-    modules.getPlayerX() < zone.x + zone.width &&
-    modules.getPlayerY() >= zone.y &&
-    modules.getPlayerY() < zone.y + zone.height
+    getPlayerX() >= zone.x &&
+    getPlayerX() < zone.x + zone.width &&
+    getPlayerY() >= zone.y &&
+    getPlayerY() < zone.y + zone.height
   );
   return sortie;
 }
 
 // --- Détection de monstre adjacent et démarrage du combat ---
-function verifierCombatAdjMonstre() {
+function verifier_combat_adj_monstre() {
   // Ne détecte pas le combat si furtif
   if (window.furtif) return false;
-  const px = modules.getPlayerX();
-  const py = modules.getPlayerY();
+  const px = getPlayerX();
+  const py = getPlayerY();
   const directions = [
     [1,0], [-1,0], [0,1], [0,-1],
     [1,1], [1,-1], [-1,1], [-1,-1]
   ];
-  const monstresActifs = modules.getMonstresActifs();
+  const monstresActifs = get_monstres_actifs();
   
   console.log('[DEBUG] Vérification combat adjacent', {
     playerX: px, 
@@ -245,7 +267,7 @@ function verifierCombatAdjMonstre() {
       continue;
     }
     
-    const monsterPos = modules.getMonstrePosition(monstre.state);
+    const monsterPos = get_monstre_position(monstre.state);
     const monsterX = monsterPos.x;
     const monsterY = monsterPos.y;
     
@@ -270,7 +292,7 @@ function verifierCombatAdjMonstre() {
       }
       
       // Démarrer le combat avec ce monstre
-      demarrerCombat(monstre);
+      demarrer_combat(monstre);
       return true;
     }
   }
@@ -280,18 +302,32 @@ function verifierCombatAdjMonstre() {
 
 // --- Exports publics harmonisés ---
 export {
-  attaqueJoueur,
-  attaqueMonstre,
-  creerMonstreEtDemarrerCombat,
-  demarrerCombat,
-  finirCombat,
-  finirCombat as finCombat, // Alias pour la compatibilité
-  getCombatActif,
-  getCurrentMonstre,
-  resetDeplacementSansRencontre,
-  setDeplacementSansRencontre,
-  getDeplacementSansRencontre,
-  verifierCombatAdjMonstre,
-  verifierRencontre,
-  detecterSortie
+  reset_deplacement_sans_rencontre,
+  set_deplacement_sans_rencontre,
+  get_deplacement_sans_rencontre,
+  creer_monstre_et_demarrer_combat,
+  demarrer_combat,
+  finir_combat,
+  attaquer_joueur,
+  attaquer_monstre,
+  get_combat_actif,
+  get_current_monstre,
+  verifier_rencontre,
+  detecter_sortie,
+  verifier_combat_adj_monstre,
+  get_monstre_pv,
+  get_monstres_adjacents_et_sur_case,
+  get_monstres_actifs,
+  appliquer_degats_au_monstre,
+  appliquer_soin_au_monstre,
+  appliquer_buff_au_monstre,
+  appliquer_debuff_au_monstre,
+  appliquer_miss_au_monstre,
+  appliquer_poison,
+  appliquer_stun,
+  appliquer_debuff_atk_monstre,
+  estempoisonne,
+  retirer_poison,
+  stop_all_monstres,
+  supprimer_monstre
 };

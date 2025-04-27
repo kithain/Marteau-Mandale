@@ -4,16 +4,16 @@
 
 /**
  * Affiche un texte flottant de dégâts subis par un monstre
- * @param {HTMLElement} monstreDiv - L'élément DOM du monstre
+ * @param {HTMLElement} monstre_div - L'élément DOM du monstre
  * @param {number} valeur
  */
-function afficherDegatsMonstre(monstreDiv, valeur) {
-  if (!monstreDiv) return;
+function afficher_degats_monstre(monstre_div, valeur) {
+  if (!monstre_div) return;
   const texte = document.createElement('div');
   texte.textContent = `-${valeur}`;
   texte.style.position = 'absolute';
-  texte.style.left = monstreDiv.style.left;
-  texte.style.top = monstreDiv.style.top;
+  texte.style.left = monstre_div.style.left;
+  texte.style.top = monstre_div.style.top;
   texte.style.transform = 'translate(-50%, -100%)';
   texte.style.color = 'red';
   texte.style.fontSize = '1.5em';
@@ -27,16 +27,16 @@ function afficherDegatsMonstre(monstreDiv, valeur) {
 
 /**
  * Affiche un texte flottant de soin reçu par un monstre
- * @param {HTMLElement} monstreDiv
+ * @param {HTMLElement} monstre_div
  * @param {number} valeur
  */
-function afficherSoinMonstre(monstreDiv, valeur) {
-  if (!monstreDiv) return;
+function afficher_soin_monstre(monstre_div, valeur) {
+  if (!monstre_div) return;
   const texte = document.createElement('div');
   texte.textContent = `+${valeur}`;
   texte.style.position = 'absolute';
-  texte.style.left = monstreDiv.style.left;
-  texte.style.top = monstreDiv.style.top;
+  texte.style.left = monstre_div.style.left;
+  texte.style.top = monstre_div.style.top;
   texte.style.transform = 'translate(-50%, -100%)';
   texte.style.color = 'lightgreen';
   texte.style.fontSize = '1.5em';
@@ -50,16 +50,16 @@ function afficherSoinMonstre(monstreDiv, valeur) {
 
 /**
  * Affiche un texte flottant pour un buff appliqué au monstre
- * @param {HTMLElement} monstreDiv
- * @param {string} nomBuff
+ * @param {HTMLElement} monstre_div
+ * @param {string} nom_buff
  */
-function afficherBuffMonstre(monstreDiv, nomBuff) {
-  if (!monstreDiv) return;
+function afficher_buff_monstre(monstre_div, nom_buff) {
+  if (!monstre_div) return;
   const texte = document.createElement('div');
-  texte.textContent = `+${nomBuff}`;
+  texte.textContent = `+${nom_buff}`;
   texte.style.position = 'absolute';
-  texte.style.left = monstreDiv.style.left;
-  texte.style.top = monstreDiv.style.top;
+  texte.style.left = monstre_div.style.left;
+  texte.style.top = monstre_div.style.top;
   texte.style.transform = 'translate(-50%, -100%)';
   texte.style.color = '#66ff99';
   texte.style.fontSize = '1.3em';
@@ -73,16 +73,16 @@ function afficherBuffMonstre(monstreDiv, nomBuff) {
 
 /**
  * Affiche un texte flottant pour un débuff appliqué au monstre
- * @param {HTMLElement} monstreDiv
- * @param {string} nomDebuff
+ * @param {HTMLElement} monstre_div
+ * @param {string} nom_debuff
  */
-function afficherDebuffMonstre(monstreDiv, nomDebuff) {
-  if (!monstreDiv) return;
+function afficher_debuff_monstre(monstre_div, nom_debuff) {
+  if (!monstre_div) return;
   const texte = document.createElement('div');
-  texte.textContent = `-${nomDebuff}`;
+  texte.textContent = `-${nom_debuff}`;
   texte.style.position = 'absolute';
-  texte.style.left = monstreDiv.style.left;
-  texte.style.top = monstreDiv.style.top;
+  texte.style.left = monstre_div.style.left;
+  texte.style.top = monstre_div.style.top;
   texte.style.transform = 'translate(-50%, -100%)';
   texte.style.color = '#ff6666';
   texte.style.fontSize = '1.3em';
@@ -96,15 +96,15 @@ function afficherDebuffMonstre(monstreDiv, nomDebuff) {
 
 /**
  * Affiche un texte flottant pour un coup manqué sur le monstre
- * @param {HTMLElement} monstreDiv
+ * @param {HTMLElement} monstre_div
  */
-function afficherMissMonstre(monstreDiv) {
-  if (!monstreDiv) return;
+function afficher_miss_monstre(monstre_div) {
+  if (!monstre_div) return;
   const texte = document.createElement('div');
   texte.textContent = 'Miss !';
   texte.style.position = 'absolute';
-  texte.style.left = monstreDiv.style.left;
-  texte.style.top = monstreDiv.style.top;
+  texte.style.left = monstre_div.style.left;
+  texte.style.top = monstre_div.style.top;
   texte.style.transform = 'translate(-50%, -100%)';
   texte.style.color = '#bbb';
   texte.style.fontSize = '1.3em';
@@ -118,9 +118,9 @@ function afficherMissMonstre(monstreDiv) {
 
 // --- Exports publics à la fin ---
 export {
-  afficherDegatsMonstre,
-  afficherSoinMonstre,
-  afficherBuffMonstre,
-  afficherDebuffMonstre,
-  afficherMissMonstre
+  afficher_degats_monstre,
+  afficher_soin_monstre,
+  afficher_buff_monstre,
+  afficher_debuff_monstre,
+  afficher_miss_monstre
 };

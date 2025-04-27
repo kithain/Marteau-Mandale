@@ -3,13 +3,14 @@ import json
 import os
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
-from .player_manager import PlayerManager
+from .player_manager import PlayerManager  # Les méthodes ont été renommées mais la classe garde le même nom
 
 # === Import des fonctions utilitaires ===
 from .utils import (
     generer_rencontre,
     charger_monstres,
-    charger_talents_monstres
+    charger_talents_monstres,
+    supprimer_monstre
 )
 
 # === Création du blueprint Flask ===
@@ -21,17 +22,17 @@ SAVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'save_data')
 
 # === Fonctions utilisateurs ===
 
-def load_users():
+def charger_utilisateurs():
     if not os.path.exists(USERS_FILE):
         return {}
     with open(USERS_FILE, 'r') as f:
         return json.load(f)
 
-def save_users(users):
+def sauvegarder_utilisateurs(utilisateurs):
     with open(USERS_FILE, 'w') as f:
-        json.dump(users, f)
+        json.dump(utilisateurs, f)
 
-def load_talents(classe):
+def charger_talents(classe):
     talents_path = os.path.join(os.path.dirname(__file__), 'static', 'talents', 'talents.json')
     with open(talents_path, 'r', encoding='utf-8') as file:
         talents_data = json.load(file)
@@ -49,59 +50,50 @@ def home():
 
 @bp.route('/menu')
 def menu():
-    if 'username' not in session:
+    if 'nom_utilisateur' not in session:
         return redirect(url_for('routes.home'))
-    return render_template('menu.html', username=session['username'])
+    return render_template('menu.html', nom_utilisateur=session['nom_utilisateur'])
 
-@bp.route('/register', methods=['POST'])
-def register():
+@bp.route('/inscription', methods=['POST'])
+def inscription():
     data = request.get_json()
-    username = data.get('username', '').strip()
-    password = data.get('password', '').strip()
+    nom_utilisateur = data.get('nom_utilisateur', '').strip()
+    mot_de_passe = data.get('mot_de_passe', '').strip()
 
-    if not username or not password:
-        return jsonify({"message": "Champs vides"}), 400
+    if not nom_utilisateur or not mot_de_passe:
+        return jsonify({"erreur": "Champs vides"}), 400
 
-    if not re.match(r'^[a-zA-Z0-9_-]{3,20}$', username):
-        return jsonify({"message": "Nom d'utilisateur invalide"}), 400
+    if not re.match(r'^[a-zA-Z0-9_-]{3,20}$', nom_utilisateur):
+        return jsonify({"erreur": "Nom d'utilisateur invalide"}), 400
 
-    users = load_users()
-    if username in users:
-        return jsonify({"message": "Nom d'utilisateur déjà utilisé"}), 400
+    if PlayerManager.creer_utilisateur(nom_utilisateur, mot_de_passe):
+        return jsonify({"message": "Compte créé avec succès !"})
+    else:
+        return jsonify({"erreur": "Nom d'utilisateur déjà utilisé"}), 400
 
-    hashed_password = generate_password_hash(password)
-    users[username] = hashed_password
-    save_users(users)
-
-    return jsonify({"message": "Compte créé avec succès !"})
-
-@bp.route('/login', methods=['POST'])
-def login():
+@bp.route('/connexion', methods=['POST'])
+def connexion():
     data = request.get_json()
-    username = data.get('username', '').strip()
-    password = data.get('password', '').strip()
+    nom_utilisateur = data.get('nom_utilisateur', '').strip()
+    mot_de_passe = data.get('mot_de_passe', '').strip()
 
-    users = load_users()
-    if username not in users:
-        return jsonify({"message": "Nom d'utilisateur inconnu"}), 400
+    if not PlayerManager.verifier_utilisateur(nom_utilisateur, mot_de_passe):
+        return jsonify({"erreur": "Identifiants incorrects"}), 401
 
-    if not check_password_hash(users[username], password):
-        return jsonify({"message": "Mot de passe incorrect"}), 401
-
-    session['username'] = username
+    session['nom_utilisateur'] = nom_utilisateur
     return jsonify({"message": "Connexion réussie !", "redirect": url_for('routes.menu')})
 
-@bp.route('/logout')
-def logout():
-    session.pop('username', None)
+@bp.route('/deconnexion')
+def deconnexion():
+    session.pop('nom_utilisateur', None)
     return redirect(url_for('routes.home'))
 
 @bp.route('/nouvelle-partie', methods=['POST'])
 def nouvelle_partie():
-    if 'username' not in session:
+    if 'nom_utilisateur' not in session:
         return redirect(url_for('routes.home'))
 
-    username = session['username']
+    nom_utilisateur = session['nom_utilisateur']
     classe = request.form.get('classe')
 
     if not classe or classe not in ['Paladin', 'Mage', 'Voleur', 'Barbare']:
@@ -121,15 +113,15 @@ def nouvelle_partie():
         "statistiques": stats_par_classe[classe],
         "inventaire": [],
         # PATCH ULTRA-SIMPLIFIE : on ne sauvegarde plus les talents pour le joueur !
-        # "talents": load_talents(classe),
+        # "talents": charger_talents(classe),
         "position": {"x": 0, "y": 0},
         "carte": "P7"  # carte de depart !
     }
 
     os.makedirs(SAVE_DIR, exist_ok=True)
-    save_path = os.path.join(SAVE_DIR, f"{username}.json")
+    chemin_sauvegarde = os.path.join(SAVE_DIR, f"{nom_utilisateur}.json")
 
-    with open(save_path, 'w') as f:
+    with open(chemin_sauvegarde, 'w') as f:
         json.dump(partie_initiale, f)
 
     return redirect(url_for('routes.jeu'))
@@ -137,41 +129,41 @@ def nouvelle_partie():
 @bp.route('/charger-partie')
 def charger_partie():
     # Vérifie que l'utilisateur est connecté
-    if 'username' not in session:
+    if 'nom_utilisateur' not in session:
         return redirect(url_for('routes.home'))
     # Vérifie l'existence de la sauvegarde
-    save_path = os.path.join(SAVE_DIR, f"{session['username']}.json")
-    if not os.path.exists(save_path):
+    chemin_sauvegarde = os.path.join(SAVE_DIR, f"{session['nom_utilisateur']}.json")
+    if not os.path.exists(chemin_sauvegarde):
         return "Aucune sauvegarde trouvée", 404
     # Redirige vers le jeu avec la sauvegarde existante
     return redirect(url_for('routes.jeu'))
 
 @bp.route('/jeu')
 def jeu():
-    if 'username' not in session:
+    if 'nom_utilisateur' not in session:
         return redirect(url_for('routes.home'))
 
-    username = session['username']
-    save_path = os.path.join(SAVE_DIR, f"{username}.json")
+    nom_utilisateur = session['nom_utilisateur']
+    chemin_sauvegarde = os.path.join(SAVE_DIR, f"{nom_utilisateur}.json")
 
-    if not os.path.exists(save_path):
+    if not os.path.exists(chemin_sauvegarde):
         return "Aucune sauvegarde trouvée", 404
 
-    with open(save_path, 'r') as f:
-        save_data = json.load(f)
+    with open(chemin_sauvegarde, 'r') as f:
+        donnees_sauvegarde = json.load(f)
 
     # === PATCH ULTRA-SIMPLIFIE ===
     # On ne force plus la clé talents pour le joueur
-    # if "talents" not in save_data or not save_data["talents"]:
-    #     print(f"[INFO] Aucune donnée de talents pour {username}, rechargement...")
-    #     save_data["talents"] = load_talents(save_data["classe"])
-    save_data.setdefault("carte", "P1")
+    # if "talents" not in donnees_sauvegarde or not donnees_sauvegarde["talents"]:
+    #     print(f"[INFO] Aucune donnée de talents pour {nom_utilisateur}, rechargement...")
+    #     donnees_sauvegarde["talents"] = charger_talents(donnees_sauvegarde["classe"])
+    donnees_sauvegarde.setdefault("carte", "P1")
 
     return render_template(
         'jeu.html',
-        username=username,
-        classe=save_data["classe"],
-        save_data=save_data
+        nom_utilisateur=nom_utilisateur,
+        classe=donnees_sauvegarde["classe"],
+        donnees_sauvegarde=donnees_sauvegarde
     )
 
 @bp.route('/api/rencontre')
@@ -181,7 +173,7 @@ def api_rencontre():
             x = int(request.args.get("x", "0"))
             y = int(request.args.get("y", "0"))
         except ValueError:
-            return jsonify({"monstre": None, "error": "Coordonnées invalides"}), 400
+            return jsonify({"monstre": None, "erreur": "Coordonnées invalides"}), 400
 
         carte = request.args.get("carte", "P1")
 
@@ -235,61 +227,66 @@ def api_rencontre():
         monstre_fallback["niveau"] = 1
         return jsonify({"monstre": monstre_fallback}), 500
 
-@bp.route('/api/player/stats', methods=['GET'])
-def get_player_stats():
-    if 'username' not in session:
-        return jsonify({"error": "Non authentifié"}), 401
+@bp.route('/api/joueur/stats', methods=['GET'])
+def get_joueur_stats():
+    if 'nom_utilisateur' not in session:
+        return jsonify({"erreur": "Non authentifié"}), 401
         
-    player_data = PlayerManager.get_player_data(session['username'])
-    if not player_data:
-        return jsonify({"error": "Données du joueur non trouvées"}), 404
+    joueur_data = PlayerManager.obtenir_donnees_joueur(session['nom_utilisateur'])
+    if not joueur_data:
+        return jsonify({"erreur": "Données du joueur non trouvées"}), 404
         
-    return jsonify(player_data)
+    return jsonify(joueur_data)
 
-@bp.route('/api/player/stats', methods=['POST'])
-def update_player_stats():
-    if 'username' not in session:
-        return jsonify({"error": "Non authentifié"}), 401
+@bp.route('/api/joueur/stats', methods=['POST'])
+def mettre_a_jour_joueur_stats():
+    if 'nom_utilisateur' not in session:
+        return jsonify({"erreur": "Non authentifié"}), 401
         
     data = request.get_json()
     if not data:
-        return jsonify({"error": "Données invalides"}), 400
+        return jsonify({"erreur": "Données invalides"}), 400
         
-    if PlayerManager.update_player_stats(session['username'], data):
+    if PlayerManager.mettre_a_jour_stats_joueur(session['nom_utilisateur'], data):
         return jsonify({"message": "Statistiques mises à jour avec succès"})
     else:
-        return jsonify({"error": "Échec de la mise à jour des statistiques"}), 400
+        return jsonify({"erreur": "Échec de la mise à jour des statistiques"}), 400
 
 # --- Ajout d'expérience ---
-@bp.route('/api/player/add_xp', methods=['POST'])
-def api_add_xp():
-    if 'username' not in session:
-        return jsonify({"error": "Non authentifié"}), 401
+@bp.route('/api/joueur/ajouter_xp', methods=['POST'])
+def api_ajouter_xp():
+    if 'nom_utilisateur' not in session:
+        return jsonify({"erreur": "Non authentifié"}), 401
     data = request.get_json() or {}
+    x = data.get('x')
+    y = data.get('y')
+    carte = data.get('carte')
     xp = int(data.get('xp', 0))
+    # Supprimer le monstre actif après victoire
+    supprimer_monstre(x, y, carte)
     # Ajoute l'expérience et effectue le level up
-    if PlayerManager.add_experience(session['username'], xp):
-        pd = PlayerManager.get_player_data(session['username'])
+    if PlayerManager.ajouter_experience(session['nom_utilisateur'], xp):
+        donnees_joueur = PlayerManager.obtenir_donnees_joueur(session['nom_utilisateur'])
         return jsonify({
-            "niveau": pd.get('niveau'),
-            "experience": pd.get('experience')
+            "niveau": donnees_joueur.get('niveau'),
+            "experience": donnees_joueur.get('experience')
         })
     else:
-        return jsonify({"error": "Impossible d'ajouter l'expérience"}), 400
+        return jsonify({"erreur": "Impossible d'ajouter l'expérience"}), 400
 
-@bp.route('/api/save', methods=['POST'])
-def api_save():
-    if 'username' not in session:
-        return jsonify({'error': 'Non authentifié'}), 401
-    save_data = request.get_json()
-    if not save_data:
-        return jsonify({'error': 'Données manquantes'}), 400
-    username = session['username']
-    save_path = os.path.join(SAVE_DIR, f"{username}.json")
+@bp.route('/api/sauvegarder', methods=['POST'])
+def api_sauvegarder():
+    if 'nom_utilisateur' not in session:
+        return jsonify({'erreur': 'Non authentifié'}), 401
+    donnees_sauvegarde = request.get_json()
+    if not donnees_sauvegarde:
+        return jsonify({'erreur': 'Données manquantes'}), 400
+    nom_utilisateur = session['nom_utilisateur']
+    chemin_sauvegarde = os.path.join(SAVE_DIR, f"{nom_utilisateur}.json")
     try:
         os.makedirs(SAVE_DIR, exist_ok=True)
-        with open(save_path, 'w') as f:
-            json.dump(save_data, f, indent=2, ensure_ascii=False)
-        return jsonify({'success': True})
+        with open(chemin_sauvegarde, 'w') as f:
+            json.dump(donnees_sauvegarde, f, indent=2, ensure_ascii=False)
+        return jsonify({'succes': True})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'erreur': str(e)}), 500

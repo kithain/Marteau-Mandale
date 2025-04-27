@@ -2,7 +2,9 @@
 // Gestion de la carte, du positionnement et des déplacements du joueur
 // Refactorisé pour clarté, organisation et maintenabilité
 
-import * as modules from './modules_main_logic.js';
+import { TILE_SIZE } from './game_constants.js';
+import { getPositionJoueur } from './player_main_logic.js';
+import { genererRencontre } from './combat_manager_logic.js';
 
 // --- Constantes globales ---
 const IMAGE_BASE_URL = '/static';
@@ -40,10 +42,10 @@ function isBlocked(x, y) {
 // --- Déplacement et positionnement du joueur ---
 function setPlayerPosition(x, y) {
   if (!isBlocked(x, y)) {
-    modules.setPlayerPositionPlayer(x, y);
-    modules.movePlayer();
-    modules.verifierRencontre();
-    const sortie = modules.detecterSortie(exitZones);
+    getPositionJoueur().x = x;
+    getPositionJoueur().y = y;
+    genererRencontre();
+    const sortie = detecterSortie(exitZones);
     if (sortie) {
       chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
     }
@@ -56,10 +58,10 @@ function setPlayerPosition(x, y) {
       const tryX = x + dx;
       const tryY = y + dy;
       if (!isBlocked(tryX, tryY)) {
-        modules.setPlayerPositionPlayer(tryX, tryY);
-        modules.movePlayer();
-        modules.verifierRencontre();
-        const sortie = modules.detecterSortie(exitZones);
+        getPositionJoueur().x = tryX;
+        getPositionJoueur().y = tryY;
+        genererRencontre();
+        const sortie = detecterSortie(exitZones);
         if (sortie) {
           chargerNouvelleCarte(sortie.destination, sortie.spawnX, sortie.spawnY);
         }
@@ -88,8 +90,8 @@ function deplacementVersCarte(direction) {
     return;
   }
   const nouvelleCarte = colonnes[newCol] + newLigne;
-  let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : modules.getPlayerPositionPlayer().x;
-  let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : modules.getPlayerPositionPlayer().y;
+  let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : getPositionJoueur().x;
+  let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : getPositionJoueur().y;
   fetch(`${IMAGE_BASE_URL}/maps/${nouvelleCarte}.tmj`)
     .then(res => res.json())
     .then(mapData => {
@@ -114,11 +116,10 @@ function deplacementVersCarte(direction) {
 }
 
 function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
-  modules.setPlayerMap(nomCarte);
   // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
-  modules.stopAllMonsters();
-  window.monstresActifs = [];
-  window.combatActif = false;
+  // stopAllMonsters();
+  // window.monstresActifs = [];
+  // window.combatActif = false;
   window.PLAYER_MAP = nomCarte; // Synchronisation pour la sauvegarde
   isTransitioning = true;
   currentMap = nomCarte;
@@ -225,7 +226,7 @@ function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
           playerDiv.style.position = "absolute";
           playerDiv.style.width = "64px";
           playerDiv.style.height = "64px";
-          playerDiv.style.backgroundImage = `url(/static/img/classes/${modules.getPlayerClassPlayer().toLowerCase()}_idle.png)`;
+          playerDiv.style.backgroundImage = `url(/static/img/classes/${getPositionJoueur().classe.toLowerCase()}_idle.png)`;
           playerDiv.style.backgroundSize = "64px 64px";
           playerDiv.style.imageRendering = "pixelated";
           playerDiv.style.backgroundRepeat = "no-repeat";
@@ -234,7 +235,7 @@ function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
           playerDiv.style.zIndex = "10";
           container.appendChild(playerDiv);
 
-          modules.movePlayer();
+          // movePlayer();
 
           isTransitioning = false;
         } catch (error) {
@@ -260,17 +261,10 @@ function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
 export {
   IMAGE_BASE_URL,
   API_BASE_URL,
-  tileSize,
-  maxTileCount,
-  blockedTiles,
-  currentMap,
-  exitZones,
-  isTransitioning,
-  getVisibleTileCount,
-  extraireCoordonneesCarte,
-  getBlockedKey,
   isBlocked,
+  extraireCoordonneesCarte,
+  chargerNouvelleCarte,
   setPlayerPosition,
   deplacementVersCarte,
-  chargerNouvelleCarte
+  isBlocked
 };

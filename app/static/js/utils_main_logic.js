@@ -15,7 +15,7 @@ function initConnexion() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       console.log("Tentative de login avec :", username, password);
-      const response = await fetch('/login', {
+      const response = await fetch('/connexion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -42,7 +42,7 @@ function initConnexion() {
     registerBtn.onclick = async () => {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const response = await fetch('/register', {
+      const response = await fetch('/inscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
