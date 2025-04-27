@@ -9,26 +9,32 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 
 ## Fonctionnalités
 
-- 🗺️ **Exploration de Donjons** : Parcourez des niveaux remplis de pièges et de trésors.
-- ⚔️ **Combats Simples** : Affrontez des ennemis dans un style RPG.
-- 😂 **Personnages Hauts en Couleur** : Héros aux capacités uniques et dialogues absurdes.
-- 💾 **Sauvegardes Utilisateurs** : Connexion, inscription, et sauvegardes individuelles.
-- 🌟 **Effets Visuels** : Particules animées avec tsparticles.
+- 🗺️ **Exploration de Donjons** : Parcourez des niveaux remplis de pièges et de trésors
+- ⚔️ **Combats Simples** : Affrontez des ennemis dans un style RPG
+- 😂 **Personnages Hauts en Couleur** : Héros aux capacités uniques et dialogues absurdes
+- 🔒 **Système de Compte Sécurisé** :
+  - Hachage sécurisé BLAKE2b + PBKDF2 pour les identifiants
+  - Fichiers utilisateurs individuels cryptographiquement sécurisés
+  - Protection contre les attaques par énumération
+- 🌟 **Effets Visuels** : Particules animées avec tsparticles
 
 ## Technologies Utilisées
 
-- **Flask** : Backend Python léger.
-- **HTML, CSS, JS** : Pour l'interface utilisateur.
-- **tsparticles** : Effet d'étincelles.
-- **bcrypt** : Pour le hachage des mots de passe.
-- **Jinja2** : Moteur de templates Flask.
+- **Flask** : Backend Python léger
+- **HTML, CSS, JS** : Pour l'interface utilisateur
+- **tsparticles** : Effet d'étincelles
+- **Cryptographie** :
+  - BLAKE2b pour le hachage des noms de fichiers
+  - PBKDF2-HMAC-SHA256 pour les mots de passe (100 000 itérations)
+- **Jinja2** : Moteur de templates Flask
+- **pathlib** : Gestion sécurisée des chemins
 
 ## Comment Jouer
 
-1. Lance le serveur Flask (`python app.py` ou `flask run`)
-2. Ouvre le navigateur sur `http://localhost:5000`
-3. Crée un compte ou connecte-toi
-4. Lance une nouvelle partie ou charge ta sauvegarde
+1. Lancez le serveur Flask (`python app.py` ou `flask run`)
+2. Ouvrez le navigateur sur `http://localhost:5000`
+3. Créez un compte (les anciens comptes ont été réinitialisés)
+4. Lancez une nouvelle partie
 
 ## Arborescence du Projet
 
@@ -41,8 +47,11 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 ├── 📁 app                      # Dossier contenant les modules Flask
 │   ├── 📄 __init__.py          # Initialisation du module Flask
 │   ├── 📄 routes.py            # Routes HTTP du jeu
+│   ├── 📄 player_manager.py    # Gestion sécurisée des joueurs
 │   ├── 📄 utils.py             # Fonctions utilitaires générales
-│   ├── 📄 users.json           # Données des utilisateurs
+│   │
+│   ├── 📁 save_data            # Dossier des sauvegardes sécurisées
+│   │   └── 📄 .gitkeep         # Fichier pour conserver le dossier dans Git
 │   │
 │   ├── 📁 templates            # Templates HTML pour les pages
 │   │   ├── 📄 index.html       # Page d'accueil (connexion, inscription)
@@ -83,6 +92,14 @@ Bienvenue dans **Marteaux & Mandales**, un dungeon crawler humoristique basé su
 │
 ├── 📄 README.md                # Description et documentation du projet
 └── 📄 LICENSE                  # Licence du projet
+
+## Sécurité
+
+Ce projet implémente plusieurs bonnes pratiques de sécurité :
+- Aucun stockage en clair des identifiants
+- Sels cryptographiques uniques par utilisateur
+- Hachage sécurisé des noms de fichiers
+- Validation stricte des entrées utilisateur
 
 ## Contribution
 
