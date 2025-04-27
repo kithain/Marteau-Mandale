@@ -185,9 +185,13 @@ def api_rencontre():
 
         carte = request.args.get("carte", "P1")
 
+      # Forcer un monstre si aucun n'est généré
         monstre_id = generer_rencontre(x, y, carte)
         if not monstre_id:
-            return jsonify({"monstre": None})
+            print(f"[DEBUG] Aucun monstre généré pour x={x}, y={y}, carte={carte}")
+            # Génération forcée d'un monstre de base
+            monstre_id = "slime_lvl1"
+            print(f"[DEBUG] Monstre forcé : {monstre_id}")
 
         # --- NOUVELLE LOGIQUE ---
         # monstre_id est du type idRace_lvlX (ex: gobelin_lvl3)
@@ -208,7 +212,10 @@ def api_rencontre():
         # On cherche la race dans monstres.json
         monstre_race = next((m for m in monstres if m["id"] == race_id), None)
         if not monstre_race:
-            return jsonify({"monstre": None, "error": "Race de monstre introuvable"}), 404
+            print(f"[DEBUG] Race de monstre introuvable: {race_id}")
+            # Fallback sur un slime si la race n'est pas trouvée
+            monstre_race = next(m for m in monstres if m["id"] == "slime")
+            print(f"[DEBUG] Utilisation du fallback : {monstre_race}")
 
         # On construit l'objet monstre final avec les stats dynamiques
         monstre = dict(monstre_race)
@@ -221,7 +228,12 @@ def api_rencontre():
 
     except Exception as e:
         print(f"[ERREUR API /rencontre] {e} | x={request.args.get('x')} y={request.args.get('y')} carte={request.args.get('carte')}")
-        return jsonify({"monstre": None, "error": str(e)}), 500
+        # Dernier fallback : retourner un slime de niveau 1
+        monstres = charger_monstres()
+        monstre_fallback = next(m for m in monstres if m["id"] == "slime")
+        monstre_fallback["id"] = "slime_lvl1"
+        monstre_fallback["niveau"] = 1
+        return jsonify({"monstre": monstre_fallback}), 500
 
 @bp.route('/api/player/stats', methods=['GET'])
 def get_player_stats():

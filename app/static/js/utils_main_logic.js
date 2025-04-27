@@ -1,47 +1,66 @@
-//utils.js
-export function initConnexion() {
+// utils_main_logic.js
+// Fonctions utilitaires globales pour l'UI et l'animation (harmonisé)
+// Ce module centralise les helpers pour l'UI, l'authentification, l'animation et les effets visuels.
+
+// --- Connexion & Authentification ---
+// Initialise les listeners pour la connexion et l'inscription utilisateur
+/**
+ * Initialise les listeners pour la connexion et l'inscription utilisateur
+ */
+function initConnexion() {
   const loginBtn = document.getElementById('login-btn');
   const registerBtn = document.getElementById('register-btn');
-
   if (loginBtn && registerBtn) {
     loginBtn.onclick = async () => {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       console.log("Tentative de login avec :", username, password);
-
       const response = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
       const result = await response.json();
-      console.log("[LOGIN] Réponse reçue :", result); // ✅ log réponse serveur
+      console.log("[LOGIN] Réponse reçue :", result);
       afficherMessage(result.message, response.ok ? 'success' : 'error');
-
       if (response.ok && result.redirect) {
         setTimeout(() => {
           window.location.href = result.redirect;
-        }, 1000); // petit délai pour lire le message
+        }, 1000);
       }
     };
+
+    // Permettre la validation du login par la touche entrée
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await loginBtn.onclick();
+      });
+    }
 
     registerBtn.onclick = async () => {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-
       const response = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
       const result = await response.json();
       afficherMessage(result.message, response.ok ? 'success' : 'error');
     };
   }
 }
 
-export function afficherMessage(message, type = 'info') {
+// --- Affichage de messages utilisateur ---
+// Affiche un message de feedback à l'utilisateur (login/register)
+/**
+ * Affiche un message de feedback à l'utilisateur (login/register)
+ * @param {string} message
+ * @param {string} [type='info'] - success | error | info
+ */
+function afficherMessage(message, type = 'info') {
   let feedback = document.getElementById('feedback');
   if (!feedback) {
     feedback = document.createElement('p');
@@ -53,11 +72,15 @@ export function afficherMessage(message, type = 'info') {
   feedback.style.color = type === 'success' ? 'lightgreen' : type === 'error' ? 'salmon' : 'white';
 }
 
-export function initSmokeAnimation() {
+// --- Animation de la fumée sur l'écran d'accueil ---
+// Anime la fumée du parallax sur l'écran d'accueil
+/**
+ * Anime la fumée du parallax sur l'écran d'accueil
+ */
+function initSmokeAnimation() {
   document.addEventListener('DOMContentLoaded', () => {
     const smoke = document.getElementById('parallax-smoke');
     let t = 0;
-
     function animateSmokeOpacity() {
       if (!smoke) return;
       const min = 0.15;
@@ -69,32 +92,16 @@ export function initSmokeAnimation() {
       t += 0.01;
       requestAnimationFrame(animateSmokeOpacity);
     }
-
     animateSmokeOpacity();
   });
 }
 
-export function afficherMobDegats(valeur) {
-  const player = document.getElementById("player");
-  if (!player) return;
-
-  const texte = document.createElement("div");
-  texte.textContent = `-${valeur}`;
-  texte.style.position = "absolute";
-  texte.style.left = player.style.left;
-  texte.style.top = player.style.top;
-  texte.style.transform = "translate(-50%, -100%)";
-  texte.style.color = "red";
-  texte.style.fontSize = "1.5em";
-  texte.style.fontWeight = "bold";
-  texte.style.zIndex = 20;
-  texte.style.animation = "floatUpDelayed 2s ease-out";
-  document.getElementById("map-inner").appendChild(texte);
-
-  setTimeout(() => texte.remove(), 2000);
-}
-
-export function initParticles() {
+// --- Initialisation des particules décoratives ---
+// Initialise l'effet de particules décoratives (tsParticles)
+/**
+ * Initialise l'effet de particules décoratives (tsParticles)
+ */
+function initParticles() {
   if (typeof tsParticles === 'undefined') {
     console.log('tsParticles non chargé : les particules sont désactivées sur cette page.');
     return;
@@ -157,3 +164,11 @@ export function initParticles() {
     }
   });
 }
+
+// --- Exports publics à la fin ---
+export {
+  initConnexion,
+  afficherMessage,
+  initSmokeAnimation,
+  initParticles
+};

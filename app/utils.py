@@ -45,6 +45,7 @@ def charger_table_rencontres(nom_carte):
 
 def generer_rencontre(x, y, nom_carte="map1"):
     key = f"{x},{y},{nom_carte}"
+    print(f"[DEBUG] 🎲 Génération de rencontre : {key}")
 
     # 🔒 Anti-rencontre : délai
     if key in dernieres_rencontres and dernieres_rencontres[key] > 0:
@@ -59,6 +60,13 @@ def generer_rencontre(x, y, nom_carte="map1"):
     # --- Nouvelle logique : sélection dynamique du monstre selon la difficulté calculée ---
     ligne = nom_carte[0]  # ex: 'O' pour 'O7'
     colonne = int(nom_carte[1:])  # ex: 7 pour 'O7'
+    
+    # Probabilité de rencontre
+    import random
+    if random.random() < 0.5:  # 50% de chance de rencontre
+        print(f"[DEBUG] 🎲 Pas de rencontre cette fois")
+        return None
+
     monstre_id = choisir_monstre(ligne, colonne)
     print(f"[DEBUG] Monstre choisi dynamiquement pour {nom_carte} ({ligne}{colonne}): {monstre_id}")
     cooldown = 3  # cooldown générique, à adapter si besoin

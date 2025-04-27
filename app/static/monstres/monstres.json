@@ -1,7 +1,7 @@
 [
   {
-    "id": "slime_vert",
-    "nom": "Slime Vert",
+    "id": "slime",
+    "nom": "Slime",
     "image": "slime.png",
     "talents": ["corrosion"]
   },

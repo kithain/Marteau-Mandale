@@ -1,0 +1,12 @@
+# Fichiers d'environnement
+.env
+
+# Données utilisateurs et sauvegardes
+app/users.json
+save_data/
+
+# Fichiers de développement
+__pycache__/
+*.py[cod]
+
+# Autres exclusions standards

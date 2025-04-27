@@ -1,12 +1,17 @@
-// saveManager.js
-// Centralise la gestion de la sauvegarde et du chargement du joueur
+// save_manager_logic.js
+// Centralise et harmonise la gestion de la sauvegarde et du chargement du joueur
+// Ce module fournit les fonctions de sauvegarde et de restauration de l'état joueur.
 
-import * as modules from './modules.js';
+// --- Imports principaux ---
+import * as modules from './modules_main_logic.js';
 
+// --- Sauvegarde de l'état du joueur ---
+// Récupère les données de sauvegarde du joueur (état complet)
 /**
  * Récupère les données de sauvegarde du joueur (état complet)
+ * @returns {object} Données JSON de sauvegarde
  */
-export function getPlayerSaveData() {
+function getPlayerSaveData() {
   // Ajoute la carte courante dans la sauvegarde
   const data = modules.getCentralPlayerSaveData();
   return {
@@ -15,11 +20,14 @@ export function getPlayerSaveData() {
   };
 }
 
+// --- Chargement de l'état du joueur ---
+// Applique les données de sauvegarde au state du joueur
 /**
  * Applique les données de sauvegarde au state du joueur
  * @param {object} saveData - Les données JSON à restaurer
  */
-export function loadPlayerData(saveData) {
+function loadPlayerData(saveData) {
+  // Lecture niveau/xp (compatibilité noms)
   const level = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : (saveData && typeof saveData.level === 'number') ? saveData.level : 1;
   const xp = (saveData && typeof saveData.experience === 'number') ? saveData.experience : (saveData && typeof saveData.xp === 'number') ? saveData.xp : 0;
   // Initialise le state de base
@@ -49,6 +57,19 @@ export function loadPlayerData(saveData) {
   } else {
     modules.setPlayerMana(modules.getMaxPlayerMana());
   }
+  // Restaure inventaire, talents, etc. si présents
+  if (Array.isArray(saveData.inventaire)) {
+    modules.setPlayerInventory(saveData.inventaire);
+  }
+  if (Array.isArray(saveData.talents)) {
+    modules.setPlayerTalents(saveData.talents);
+  }
   // Correction : utilise modules.startRegenUtils (alias de player_utils.js) pour la régénération
   modules.startRegenUtils();
 }
+
+// --- Exports publics à la fin ---
+export {
+  getPlayerSaveData,
+  loadPlayerData
+};

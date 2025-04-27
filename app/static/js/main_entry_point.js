@@ -1,7 +1,15 @@
-// main.js
-import * as modules from './modules.js';
+// main_entry_point.js
+// Point d'entrée principal du jeu Marteau-Mandale (initialisation, UI, chargement, sauvegarde...)
+// Refactorisé pour clarté, organisation et maintenabilité
 
-// Fonction utilitaire pour affichage non bloquant
+import * as modules from './modules_main_logic.js';
+
+// --- Fonctions utilitaires globales ---
+/**
+ * Affiche un message de notification non bloquant.
+ * @param {string} message - Le message à afficher.
+ * @param {string} [color='#333'] - La couleur de fond du message.
+ */
 function showToast(message, color = '#333') {
   let toast = document.getElementById('notif-toast');
   if (!toast) {
@@ -32,6 +40,9 @@ function showToast(message, color = '#333') {
 }
 
 // --- Chargement dynamique des talents depuis talents.json ---
+/**
+ * Charge les talents depuis le fichier talents.json et démarre le jeu.
+ */
 function chargerTalentsEtDemarrerJeu() {
   fetch('/static/talents/talents.json')
     .then(response => response.json())
@@ -44,11 +55,14 @@ function chargerTalentsEtDemarrerJeu() {
     });
 }
 
+// --- Initialisation et synchronisation du jeu ---
+/**
+ * Initialise et synchronise le jeu.
+ */
 function demarrerJeu() {
   modules.resetDeplacementSansRencontre();
   modules.initConnexion();
   modules.initSmokeAnimation();
-  modules.initParticles();
   document.addEventListener('keydown', modules.handleKeydown);
 
   // Initialisation du jeu si on est sur la page de jeu (script JSON présent)
@@ -75,6 +89,8 @@ function demarrerJeu() {
     window.PLAYER_STATS = saveData.statistiques;
     window.PLAYER_INVENTAIRE = saveData.inventaire;
     window.PLAYER_POSITION = saveData.position;
+    // Initialiser l'état de combat à false au chargement
+    window.combatActif = false;
     // Ajout : synchronisation du compteur de déplacement sans rencontre
     window.DEP_SANS_RENCONTRE = (typeof saveData.deplacementSansRencontre === 'number') ? saveData.deplacementSansRencontre : 3;
     modules.setDeplacementSansRencontre(window.DEP_SANS_RENCONTRE);
@@ -134,17 +150,33 @@ function demarrerJeu() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', chargerTalentsEtDemarrerJeu);
+// --- Détection de la page et lancement conditionnel ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Page de sélection de classe : présence de l'élément class-image
+  const isPageSelectionClasse = !!document.getElementById('class-image');
+  // Page de jeu : présence de l'élément player-data
+  const isPageJeu = !!document.getElementById('player-data');
+  const isPageLogin = !!document.getElementById('login-btn') && !!document.getElementById('register-btn');
+  if (isPageSelectionClasse || isPageJeu) {
+    chargerTalentsEtDemarrerJeu();
+  }
+  if (isPageLogin) {
+    modules.initConnexion();
+    modules.initParticles();
+  }
+});
 
-// === Sélecteur de classe (menu) ===
+// --- Sélecteur de classe (menu principal) ---
+/**
+ * Change la classe du joueur.
+ * @param {number} direction - La direction de changement (1 pour aller à la classe suivante, -1 pour aller à la classe précédente).
+ */
 function changeClass(direction) {
   const classes = ["Paladin", "Mage", "Voleur", "Barbare"];
   const image = document.getElementById("class-image");
   const input = document.getElementById("classe");
   let currentIndex = classes.indexOf(input.value);
-
   currentIndex = (currentIndex + direction + classes.length) % classes.length;
-
   input.value = classes[currentIndex];
   image.src = `/static/img/classes/${classes[currentIndex].toLowerCase()}.png`;
 }

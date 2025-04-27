@@ -1,0 +1,175 @@
+# Documentation de la logique du jeu
+
+Ce fichier décrit l'organisation et la logique des fonctionnalités principales du projet Dungeon Crawler, en séparant le backend Python (Flask) et le frontend JavaScript. Pour chaque bloc, les fonctions principales sont listées et expliquées, afin de permettre la compréhension et la gestion des fonctionnalités.
+
+---
+
+<Python (backend)>
+### app/player_manager.py
+- `PlayerManager.get_player_data(username)` : Récupère les données du joueur depuis un fichier JSON sécurisé.
+- `PlayerManager.save_player_data(username, data)` : Sauvegarde les données du joueur dans un fichier JSON après validation.
+- `PlayerManager.add_experience(username, exp)` : Ajoute de l'expérience au joueur, gère les montées de niveau (level up) automatiques, et sauvegarde l'état.
+
+### app/routes.py
+- `@bp.route('/register', methods=['POST'])` : Inscription d'un nouvel utilisateur avec validation et hash du mot de passe.
+- `@bp.route('/login', methods=['POST'])` : Authentification de l'utilisateur, gestion de la session.
+- `@bp.route('/logout')` : Déconnexion de l'utilisateur.
+- `@bp.route('/nouvelle-partie', methods=['POST'])` : Création d'une nouvelle sauvegarde de partie selon la classe choisie (Paladin, Mage, Voleur, Barbare).
+- `@bp.route('/charger-partie')` : Chargement d'une sauvegarde existante.
+- `@bp.route('/jeu')` : Affichage de la page principale du jeu avec récupération des données du joueur.
+- `@bp.route('/api/player/stats', methods=['GET', 'POST'])` : Récupération et mise à jour des statistiques du joueur.
+- `@bp.route('/api/player/add_xp', methods=['POST'])` : Ajout d'expérience au joueur via l'API.
+- `@bp.route('/api/save', methods=['POST'])` : Sauvegarde de l'état du joueur (appelée par le frontend).
+- `@bp.route('/api/rencontre')` : Génération d'une rencontre dynamique avec un monstre selon la position et la carte.
+
+### app/utils.py
+- `generer_rencontre(x, y, nom_carte="map1")` : Génère un monstre selon la difficulté de la case, gère le cooldown de rencontre.
+- `est_tuile_bloquee(x, y, nom_carte)` : Vérifie si une tuile est bloquée sur la carte (obstacles).
+- `charger_json(path)` : Charge un fichier JSON générique.
+
+---
+
+<JavaScript (frontend)>
+### app/static/js/progression_main_logic.js
+- `getMonsterDef(level)` : Calcule la défense du monstre selon le niveau.
+- `getPlayerBaseDef(level)` : Défense de base du joueur selon le niveau.
+- `getPlayerBaseAtk(level)` : Dégâts de base du joueur selon le niveau.
+- `getMaxVie(level)` : Vie maximale du joueur selon le niveau.
+- `getMonsterXP(level)` : XP donnée par un monstre selon le niveau.
+- `getMonsterPV(level)` : PV du monstre selon le niveau.
+- `getMonsterAtk(level)` : ATK du monstre selon le niveau.
+
+### app/static/js/player_main_logic.js
+- `setPlayerPosition(x, y)` : Définit la position du joueur.
+- `setCombat(actif)` : Active/désactive le mode combat.
+- `utiliserTalent(talent, index)` : Utilise un talent du joueur (attaque, soin, boost, etc.).
+- `getPlayerClass()` : Récupère la classe du joueur.
+- `getPlayerSaveData()` : Exporte les données du joueur pour la sauvegarde.
+- `loadPlayerData(saveData)` : Importe les données du joueur lors du chargement.
+
+### app/static/js/player_state_logic.js
+- Centralise l'état du joueur (`state`) : niveau, xp, pv, mana, atk, def, classe, carte, position, inventaire, talents.
+- `setPlayerLevel(lvl)` / `getPlayerXP()` / `getPlayerPV()` / `getPlayerAtk()` / `getPlayerDef()` / `getPlayerClass()` / `getPlayerMap()` / `setPlayerMap(map)` / `setPlayerAtk(atk)` / `setPlayerXP(xp)` / `setPlayerMana(mana)` / `setPlayerPosition(x, y)` : Fonctions de gestion de l'état du joueur.
+- `getPlayerTalents()` : Retourne la liste des talents du joueur.
+
+### app/static/js/save_manager_logic.js
+- `getPlayerSaveData()` : Récupère l'état du joueur pour la sauvegarde (utilise les modules centraux).
+- `loadPlayerData(saveData)` : Applique les données de sauvegarde au state du joueur.
+
+### app/static/js/map_main_logic.js
+- Gère la carte, les déplacements et la détection des sorties.
+- `setPlayerPosition(x, y)` : Place le joueur sur la carte, gère les transitions de carte.
+- `isBlocked(x, y)` : Vérifie si une case est bloquée.
+- `chargerNouvelleCarte(nomCarte, spawnX, spawnY)` : Charge une nouvelle carte et place le joueur.
+
+### app/static/js/utils_main_logic.js
+- `initConnexion()` : Initialise la gestion de la connexion/inscription utilisateur côté frontend.
+- `afficherMessage(message, type)` : Affiche un message à l'utilisateur.
+
+### app/static/js/player_talents_logic.js
+- `getTalentsFromIds(ids)` : Retourne les objets talents débloqués à partir d'une liste d'IDs.
+- `getTalents()` : Retourne la liste des talents accessibles selon la classe et le niveau du joueur.
+
+### app/static/js/combat_manager_logic.js
+- **Rôle :** Centralise toute la logique de combat et de rencontres aléatoires du jeu. Gère l'état du combat, l'attaque des monstres et du joueur, le déclenchement et la fin des combats, ainsi que la détection de rencontres et de sorties de zone.
+- **Constantes et état global :**
+  - `DEPLACEMENT_SANS_RENCONTRE_INIT` : Nombre de déplacements possibles sans déclencher de rencontre.
+  - `deplacementSansRencontre` : Compteur courant de déplacements restants sans rencontre.
+  - `combatActif` : Booléen indiquant si un combat est en cours.
+  - `currentMonstre` : Objet contenant les infos du monstre actuellement affronté.
+  - `monstreInterval` : Intervalle pour la boucle d'attaque automatique du monstre.
+- **Fonctions principales :**
+  - `setDeplacementSansRencontre(val)` / `getDeplacementSansRencontre()` / `resetDeplacementSansRencontre()` : Gestion du compteur de déplacements sans rencontre.
+  - `demarrerCombat(monstre, pv, x, y)` : Démarre un combat contre un monstre, initialise la boucle d'attaque automatique du monstre.
+  - `finCombat(vainqueur)` : Termine le combat, gère la victoire/défaite (gain d'XP, game over, etc.).
+  - `attaqueJoueur(monstre)` : Gère l'attaque du monstre contre le joueur (appelée à intervalle régulier).
+  - `attaqueMonstre(valeur)` : Gère l'attaque du joueur contre le monstre (dégâts, effets visuels, etc.).
+  - `getCombatActif()` / `getCurrentMonstre()` : Accès à l'état courant du combat et du monstre.
+  - `verifierRencontre()` : Détecte si une rencontre aléatoire doit avoir lieu lors d'un déplacement (probabilité, compteur, etc.).
+  - `detecterSortie(exitZones)` : Détecte si le joueur atteint une sortie de zone (pour changer de carte).
+  - `verifierCombatAdjMonstre()` : Détecte si un monstre est adjacent au joueur et déclenche automatiquement le combat si besoin.
+
+**Résumé d'utilisation :**
+- À chaque déplacement, `verifierRencontre()` peut déclencher un combat si le compteur le permet.
+- Lors d'une rencontre, `demarrerCombat()` initialise le combat, qui se déroule en tour par tour (boucle d'attaque automatique du monstre).
+- Le joueur et le monstre s'attaquent via `attaqueJoueur()` et `attaqueMonstre()`.
+- `finCombat()` gère la fin du combat (gain d'expérience, game over, etc.).
+- La détection de sortie de carte et de monstre adjacent est gérée pour fluidifier la navigation et l'expérience de jeu.
+
+Ce module est le cœur de la logique de combat et d'événements aléatoires du jeu.
+
+### app/static/js/input_handler_logic.js
+- **Rôle :** Centralise et gère toutes les entrées clavier du joueur. Permet le déplacement, l'utilisation des talents, l'attaque de base, et la gestion des interactions avec les monstres.
+- **Constantes :**
+  - `TALENT_KEYS` : Tableau des touches clavier associées à chaque talent.
+  - `KEY_MAP` : Association entre une touche et l'index du talent correspondant.
+  - `DIRECTION_KEYS` : Touches directionnelles pour le déplacement du joueur.
+- **Fonctions utilitaires privées :**
+  - `detectMonsters(currentX, currentY)` : Détecte la présence de monstres sur la case ou les cases adjacentes.
+  - `triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, currentX, currentY)` : Déclenche automatiquement un combat si un monstre est détecté à proximité.
+  - `isMoveBlockedByMonster(newX, newY)` : Vérifie si le déplacement est bloqué par la présence d'un monstre.
+- **Fonction principale :**
+  - `handleKeydown(e)` :
+    - Mémorise la direction choisie.
+    - Active un talent si la touche correspond à un talent disponible.
+    - Gère l'attaque de base avec la barre d'espace.
+    - Vérifie les collisions avec les monstres et déclenche le combat si besoin.
+    - Gère le déplacement du joueur sur la carte (en évitant les obstacles et monstres).
+    - Met à jour la position du joueur et déclenche les rencontres ou transitions de carte si nécessaire.
+
+**Résumé d'utilisation :**
+- Ce module doit être branché sur l'événement `keydown` du document.
+- Il permet une gestion fluide et centralisée de toutes les commandes clavier : déplacements, combats, talents, interactions.
+- Il assure la cohérence entre l'état du joueur, la carte, et la présence des monstres.
+
+Ce module est essentiel pour l'expérience utilisateur, car il relie les actions du joueur (clavier) à la logique de jeu et à l'affichage.
+
+### app/static/js/camera_main_logic.js
+- **Rôle :** Gère le positionnement visuel du joueur sur la carte et le déplacement de la caméra pour centrer l'affichage sur le joueur.
+- **Constantes :**
+  - `TILE_SIZE` : Taille d'une case (en pixels), récupérée du module principal.
+  - `MAP_SIZE` : Nombre de tuiles par côté sur la carte (16 par défaut).
+- **Fonctions utilitaires privées :**
+  - `getPlayerElement()` : Récupère l'élément DOM du joueur (`#player`).
+  - `getMapInnerElement()` : Récupère l'élément DOM qui contient la carte (`#map-inner`).
+  - `getMapContainerElement()` : Récupère le conteneur de la carte (`#map-container`).
+- **Fonctions principales :**
+  - `movePlayer()` :
+    - Met à jour la position du joueur sur la carte en pixels selon ses coordonnées logiques (X, Y).
+    - Calcule la position de la caméra pour centrer l'affichage sur le joueur (scroll automatique).
+    - Applique une transformation CSS à la carte pour déplacer la vue.
+  - `resizeMapContainer()` : (placeholder, à compléter si besoin) Prévu pour adapter dynamiquement la taille du conteneur de carte si nécessaire.
+
+**Résumé d'utilisation :**
+À chaque déplacement, `movePlayer()` est appelée pour :
+- Repositionner le sprite du joueur sur la carte.
+- Centrer la caméra sur le joueur tout en empêchant la caméra de sortir des bords de la carte.
+
+Ce module permet une expérience de jeu fluide où le joueur reste toujours visible au centre de l'écran, même lors des transitions entre différentes zones de la carte.
+
+---
+
+# Gestion des fonctionnalités principales
+
+- **Inscription/Connexion** : Utilisateur s'inscrit/se connecte (backend + frontend). Les mots de passe sont hashés.
+- **Création/Chargement de partie** : Une nouvelle partie génère une sauvegarde JSON côté serveur. Le chargement restaure l'état du joueur.
+- **Déplacement** : Le joueur se déplace sur la carte via les touches directionnelles. Les transitions de carte sont gérées côté JS.
+- **Rencontres/Combats** : À chaque déplacement, une rencontre peut être générée côté backend (API). Les combats sont gérés côté JS (logique d'attaque, talents, PV, etc.).
+- **Progression** : L'expérience est gagnée via les combats, le backend gère le level up et sauvegarde l'état.
+- **Sauvegarde** : À chaque événement important (combat, déplacement clé), le frontend envoie l'état du joueur au backend pour sauvegarde.
+- **Talents** : Les talents sont débloqués selon la classe et le niveau, et utilisés en combat via la logique JS.
+- **UI** : Les modules JS mettent à jour dynamiquement l'UI (barres de vie, stats, etc.).
+
+---
+
+# Pour gérer/étendre les fonctionnalités
+- Ajouter une nouvelle stat ou mécanique : modifier le `state` dans `player_state_logic.js` et adapter la sauvegarde côté backend (`player_manager.py`).
+- Ajouter un nouveau talent : ajouter l'objet talent dans le JSON des talents et la logique d'utilisation dans `player_talents_logic.js` et `player_main_logic.js`.
+- Ajouter une nouvelle carte ou monstre : ajouter les fichiers correspondants dans `/static/maps` ou `/static/monstres` et adapter la logique de génération (`utils.py`).
+- Modifier la progression : ajuster les formules dans `progression_main_logic.js` (XP, PV, ATK, DEF, etc.).
+- Modifier l'UI : adapter les modules JS concernés (`player_ui_logic.js`, etc.).
+
+---
+
+# Résumé
+Ce projet sépare clairement la logique serveur (Python/Flask) et la logique client (JS). Toutes les données critiques (XP, stats, inventaire) sont sauvegardées côté serveur, tandis que la logique de jeu, d'affichage et de combat est surtout gérée côté client. Pour toute nouvelle fonctionnalité, il faut généralement modifier à la fois le backend (pour la persistance et la validation) et le frontend (pour l'affichage et l'interactivité).

@@ -4,5 +4,5 @@
   { "monstre_id": "éfrit_lvl9", "probabilite": 16.67 },
   { "monstre_id": "élémentaire_air_lvl9", "probabilite": 16.67 },
   { "monstre_id": "élémentaire_eau_lvl9", "probabilite": 16.67 },
-  { "monstre_id": "élémentaire_terre", "probabilite": 16.67 }
+  { "monstre_id": "élémentaire_terre_lvl9", "probabilite": 16.67 }
 ]

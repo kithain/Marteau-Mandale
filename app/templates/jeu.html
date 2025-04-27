@@ -57,6 +57,15 @@
         </form>
         <!-- Bouton de sauvegarde de la partie -->
         <button id="save-btn" class="save-button">Sauvegarder la partie</button>
+        
+        <!-- Écran de Game Over -->
+        <div id="game-over" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #fff;">
+                <h1 style="font-size: 48px; color: #ff0000;">GAME OVER</h1>
+                <p style="font-size: 24px; margin: 20px 0;">Vous êtes mort !</p>
+                <button onclick="window.location.reload()" style="padding: 10px 20px; font-size: 18px; cursor: pointer;">Réessayer</button>
+            </div>
+        </div>
     </div>
 
     <!-- Embedding des données de sauvegarde en JSON pour le front-end -->
@@ -66,6 +75,6 @@
     
 
     <!-- JS principaux -->
-    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main_entry_point.js') }}"></script>
 </body>
 </html>

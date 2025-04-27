@@ -1,36 +1,44 @@
-// map.js
+// map_main_logic.js
+// Gestion de la carte, du positionnement et des déplacements du joueur
+// Refactorisé pour clarté, organisation et maintenabilité
+
+import * as modules from './modules_main_logic.js';
+
+// --- Constantes globales ---
 const IMAGE_BASE_URL = '/static';
 const API_BASE_URL = '/api';
-import * as modules from './modules.js';
+const tileSize = 64;
+const maxTileCount = 16;
+const blockedTiles = new Set();
 
-export let currentMap = "A1";
-export let exitZones = [];
-export const tileSize = 64;
-export const blockedTiles = new Set();
-export const maxTileCount = 16;
-export let isTransitioning = false;
+// --- Etat global ---
+let currentMap = "A1";
+let exitZones = [];
+let isTransitioning = false;
 
-export function getVisibleTileCount() {
+// --- Fonctions utilitaires ---
+function getVisibleTileCount() {
   const minSize = Math.min(window.innerWidth, window.innerHeight);
   const rawCount = Math.floor(minSize / tileSize);
   return Math.min(maxTileCount, Math.max(5, rawCount));
 }
 
-export function extraireCoordonneesCarte(nom) {
+function extraireCoordonneesCarte(nom) {
   const colonne = nom[0];
   const ligne = parseInt(nom.slice(1));
   return { colonne, ligne };
 }
 
-export function getBlockedKey(x, y) {
+function getBlockedKey(x, y) {
   return `${x},${y}`;
 }
 
-export function isBlocked(x, y) {
+function isBlocked(x, y) {
   return blockedTiles.has(getBlockedKey(x, y));
 }
 
-export function setPlayerPosition(x, y) {
+// --- Déplacement et positionnement du joueur ---
+function setPlayerPosition(x, y) {
   if (!isBlocked(x, y)) {
     modules.setPlayerPositionPlayer(x, y);
     modules.movePlayer();
@@ -41,7 +49,7 @@ export function setPlayerPosition(x, y) {
     }
     return true;
   }
-
+  // Si la case demandée est bloquée, cherche une case libre autour
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
       if (dx === 0 && dy === 0) continue;
@@ -59,12 +67,11 @@ export function setPlayerPosition(x, y) {
       }
     }
   }
-
   console.error("Aucun spawn libre autour de la position initiale");
   return false;
 }
 
-export function deplacementVersCarte(direction) {
+function deplacementVersCarte(direction) {
   const colonnes = "ABCDEFGHIJKLMNOP";
   const { colonne, ligne } = extraireCoordonneesCarte(currentMap);
   const dir = {
@@ -73,22 +80,16 @@ export function deplacementVersCarte(direction) {
     haut: { dx: 0, dy: -1, spawnY: 15 },
     bas: { dx: 0, dy: 1, spawnY: 0 }
   };
-
   if (!(direction in dir)) return;
-
   let newCol = colonnes.indexOf(colonne) + dir[direction].dx;
   let newLigne = ligne + dir[direction].dy;
-
   if (newCol < 0 || newCol >= colonnes.length || newLigne < 1 || newLigne > 8) {
     console.log("🛑 Impossible de sortir de la carte : bord du monde.");
     return;
   }
-
   const nouvelleCarte = colonnes[newCol] + newLigne;
-
   let spawnX = dir[direction].spawnX !== undefined ? dir[direction].spawnX : modules.getPlayerPositionPlayer().x;
   let spawnY = dir[direction].spawnY !== undefined ? dir[direction].spawnY : modules.getPlayerPositionPlayer().y;
-
   fetch(`${IMAGE_BASE_URL}/maps/${nouvelleCarte}.tmj`)
     .then(res => res.json())
     .then(mapData => {
@@ -99,23 +100,20 @@ export function deplacementVersCarte(direction) {
       const rawGid = layerSol.data[spawnY * mapData.width + spawnX];
       const gid = rawGid & GID_MASK;
       const relativeGid = gid - firstGID;
-
       const GIDsLibres = new Set([0, 1, 2, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27,
         30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
         75, 76, 77, 85, 86, 87, 88, 89, 95, 96, 97, 98, 99]);
-
       if (!GIDsLibres.has(relativeGid)) {
         console.warn(`❌ Case bloquée en entrée sur ${nouvelleCarte} (${spawnX},${spawnY})`);
         return;
       }
-
       // ✅ Tout est bon → on charge la nouvelle carte
       chargerNouvelleCarte(nouvelleCarte, spawnX, spawnY);
     })
     .catch(err => console.error("Erreur de chargement de carte :", err));
 }
 
-export function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
+function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
   modules.setPlayerMap(nomCarte);
   // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
   modules.stopAllMonsters();
@@ -257,3 +255,22 @@ export function chargerNouvelleCarte(nomCarte, spawnX = null, spawnY = null) {
       isTransitioning = false;
     });
 }
+
+// --- Exports publics à la fin ---
+export {
+  IMAGE_BASE_URL,
+  API_BASE_URL,
+  tileSize,
+  maxTileCount,
+  blockedTiles,
+  currentMap,
+  exitZones,
+  isTransitioning,
+  getVisibleTileCount,
+  extraireCoordonneesCarte,
+  getBlockedKey,
+  isBlocked,
+  setPlayerPosition,
+  deplacementVersCarte,
+  chargerNouvelleCarte
+};

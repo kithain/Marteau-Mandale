@@ -1,5 +1,5 @@
 [
-  { "monstre_id": "slime_vert_lvl1", "probabilite": 33 },
+  { "monstre_id": "slime_lvl1", "probabilite": 33 },
   { "monstre_id": "gobelin_lvl1", "probabilite": 33 },
   { "monstre_id": "bandit_lvl1", "probabilite": 34 }
 ]

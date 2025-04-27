@@ -1,46 +1,45 @@
  <!-- index -->
- <!DOCTYPE html>
- <html lang="fr">
- <head>
-   <meta charset="UTF-8">
-   <title>Marteaux & Mandales</title>
-   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
-   <link rel="icon" href="/static/img/favicon.ico">
- </head>
- <body>
-   <!-- Fond de particules et fumée -->
-   <div id="particles-js"></div>
-   <div id="parallax-smoke"></div>
-  
-   <!-- Logo centré en haut -->
-   <header class="logo-container">
-     <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
-   </header>
-  
-   <!-- Conteneur principal centré pour le formulaire -->
-   <main class="menu-wrapper">
-     <div id="menu-container">
-       <h1 class="runic">Marteaux & Mandales</h1>
-       <p class="subtitle">Les Légendes Oubliées (et pas sans raison)</p>
-  
-       <form id="login-form">
-         <label for="username">Nom d'utilisateur :</label>
-         <input type="text" id="username" name="username" required />
-  
-         <label for="password">Mot de passe :</label>
-         <input type="password" id="password" name="password" required />
-  
-         <button type="button" id="login-btn">Se connecter</button>
-         <button type="button" id="register-btn">Création de compte</button>
-       </form>
-       <p id="feedback" class="subtitle"></p>
-     </div>
-   </main>
-  
-   <!-- Chargement des scripts -->
-   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-   <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
- </body>
- </html>
- 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Marteaux & Mandales</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+  <link rel="icon" href="/static/img/favicon.ico">
+</head>
+<body>
+  <!-- Fond de particules et fumée -->
+  <div id="particles-js"></div>
+  <div id="parallax-smoke"></div>
+
+  <!-- Logo centré en haut -->
+  <header class="logo-container">
+    <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
+  </header>
+
+  <!-- Conteneur principal centré pour le formulaire -->
+  <main class="menu-wrapper">
+    <div id="menu-container">
+      <h1 class="runic">Marteaux & Mandales</h1>
+      <p class="subtitle">Les Légendes Oubliées (et pas sans raison)</p>
+
+      <form id="login-form">
+        <label for="username">Nom d'utilisateur :</label>
+        <input type="text" id="username" name="username" required />
+
+        <label for="password">Mot de passe :</label>
+        <input type="password" id="password" name="password" required />
+
+        <button type="submit" id="login-btn">Se connecter</button>
+        <button type="button" id="register-btn">Création de compte</button>
+      </form>
+      <p id="feedback" class="subtitle"></p>
+    </div>
+  </main>
+
+  <!-- Chargement des scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+  <script type="module" src="{{ url_for('static', filename='js/main_entry_point.js') }}"></script>
+</body>
+</html>
