@@ -9,7 +9,7 @@ import {
   appliquer_degats_au_monstre,
   demarrer_deplacement_monstres,
   arreter_deplacement_monstres,
-  get_monstres_adjacents_et_sur_case,
+  get_monstres_adjacents_et_case,
   get_monstres_actifs,
   appliquer_soin_au_monstre,
   appliquer_buff_au_monstre,
@@ -31,7 +31,9 @@ import { get_monster_atk } from './progression_main_logic.js';
 import { afficher_mob_degats } from './player_visual_utils.js';
 import { register_game_interval, clear_game_interval } from './player_visual_utils.js';
 
-import { getPlayerX, getPlayerY, getPlayerDef, infligerDegatsAuJoueur, getPlayerPV, isBlocked } from './modules_main_logic.js';
+import { getPlayerX, getPlayerY, getPlayerPV } from './player_main_logic.js';
+import { getPlayerDef, infligerDegatsAuJoueur } from './player_state_logic.js';
+import { isBlocked } from './map_main_logic.js';
 
 // --- Variables globales ---
 const DEPLACEMENT_SANS_RENCONTRE_INIT = 3;
@@ -316,7 +318,7 @@ export {
   detecter_sortie,
   verifier_combat_adj_monstre,
   get_monstre_pv,
-  get_monstres_adjacents_et_sur_case,
+  get_monstres_adjacents_et_case,
   get_monstres_actifs,
   appliquer_degats_au_monstre,
   appliquer_soin_au_monstre,
