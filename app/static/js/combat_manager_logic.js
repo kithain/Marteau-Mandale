@@ -233,7 +233,7 @@ function verifier_rencontre() {
     });
 }
 
-export function generer_rencontre() {
+function generer_rencontre() {
   // Implémentation de la logique de génération de rencontre
   return verifier_rencontre();
 }
@@ -306,6 +306,12 @@ function verifier_combat_adj_monstre() {
   }
   
   return false;
+}
+
+// Fonction pour définir le combat
+function set_combat(actif) {
+  combat_actif = actif;
+  window.combat_actif = actif;
 }
 
 // --- Exports publics harmonises ---

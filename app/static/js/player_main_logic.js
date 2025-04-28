@@ -14,7 +14,7 @@ let is_game_over = false;
 import { 
   get_talents,
   set_combat
-} from './player_talents_logic.js';
+} from './combat_manager_logic.js';
 
 import { 
   get_position_joueur,
@@ -248,15 +248,9 @@ function load_player_data(save_data) {
 function get_player_class() {
   return window.PLAYER_CLASS || 'Aventurier';
 }
-// Fonction pour définir le combat
-function set_combat(actif) {
-  combat_actif = actif;
-  window.combat_actif = actif;
-}
 
 // === Exports publics à la fin ---
 export {
   deplacer_joueur,
-  get_player_class,
-  set_combat
+  get_player_class
 };

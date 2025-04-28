@@ -74,13 +74,18 @@ def inscription():
 @bp.route('/connexion', methods=['POST'])
 def connexion():
     data = request.get_json()
-    nom_utilisateur = data.get('nom_utilisateur', '').strip()
-    mot_de_passe = data.get('mot_de_passe', '').strip()
+    print(f"[LOG] Données reçues: {data}")  # Log des données reçues
+    
+    nom_utilisateur = data.get('username', '').strip()
+    mot_de_passe = data.get('password', '').strip()
+    print(f"[LOG] Tentative de connexion pour: {nom_utilisateur}")
 
     if not PlayerManager.verifier_utilisateur(nom_utilisateur, mot_de_passe):
+        print(f"[LOG] Échec de connexion pour: {nom_utilisateur}")
         return jsonify({"erreur": "Identifiants incorrects"}), 401
 
     session['nom_utilisateur'] = nom_utilisateur
+    print(f"[LOG] Connexion réussie pour: {nom_utilisateur}")
     return jsonify({"message": "Connexion réussie !", "redirect": url_for('routes.menu')})
 
 @bp.route('/deconnexion')

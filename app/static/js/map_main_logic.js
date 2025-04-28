@@ -88,7 +88,7 @@ function deplacementVersCarte(direction) {
     .catch(err => console.error("Erreur de chargement de carte :", err));
 }
 
-export function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
+function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
   // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
   // stopAllMonsters();
   // window.monstresActifs = [];
