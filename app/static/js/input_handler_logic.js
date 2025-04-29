@@ -1,166 +1,103 @@
 // input_handler_logic.js
-// Gestion centralisée des entrées clavier du joueur
-// Refactorisé pour plus de clarté et de maintenabilité
+// Gestion des entrées clavier du joueur (déplacement, talents, détection combat)
 
-import { deplacer_joueur } from './player_main_logic.js';
+// --- Imports ---
+import { get_position_joueur, set_position_joueur } from './player_state_logic.js';
+import { obtenir_monstres_actifs } from './monstre_main_logic.js';
 import { demarrer_combat } from './combat_manager_logic.js';
-import { get_position_joueur } from './player_main_logic.js';
-import { utiliser_talent, get_talents } from './player_talents_logic.js';
+import { utiliserTalent, get_talents } from './player_talents_logic.js';
 
-// --- Constantes globales ---
-const TALENT_KEYS = ["&", "é", '"', "'", "(", "-", "è", "_", "ç", "à"];
-const KEY_MAP = {
-  "&": 0, "é": 1, '"': 2, "'": 3,
-  "(": 4, "-": 5, "è": 6, "_": 7,
-  "ç": 8, "à": 9
-};
-const DIRECTION_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+// --- Constantes ---
+const TOUCHES_DEPLACEMENT = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+const TOUCHES_TALENTS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+const TAILLE_CARTE = 16;
 
-// --- Fonctions utilitaires privées ---
-function detectMonsters(currentX, currentY) {
-  const monsterElements = document.querySelectorAll("[id^='combat-monstre-']");
-  let monstreSurCase = false;
-  let monstreAdj = false;
-  for (const monsterDiv of monsterElements) {
-    const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
-    const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
-    if (currentX === monstreX && currentY === monstreY) monstreSurCase = true;
-    if (Math.abs(currentX - monstreX) <= 1 && Math.abs(currentY - monstreY) <= 1) monstreAdj = true;
-  }
-  return { monstreSurCase, monstreAdj, monsterElements };
-}
+// --- Détection d'un monstre sur ou adjacent ---
+function detecter_monstre_proche(x, y) {
+  const monstres = obtenir_monstres_actifs();
+  let monstre_sur_case = null;
+  let monstre_adjacent = null;
 
-function triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, currentX, currentY) {
-  if ((monstreSurCase || monstreAdj) && !window.combatActif) {
-    for (const monsterDiv of monsterElements) {
-      const monstreX = Math.round(parseFloat(monsterDiv.style.left) / 64);
-      const monstreY = Math.round(parseFloat(monsterDiv.style.top) / 64);
-      if (Math.abs(currentX - monstreX) <= 1 && Math.abs(currentY - monstreY) <= 1) {
-        const monstre = modules.getMonstreParId(monsterDiv.id.replace('combat-monstre-', ''));
-        if (monstre && monstre.state) {
-          // On s'assure d'avoir toutes les propriétés nécessaires
-          const monstreData = {
-            id: monstre.state.id,
-            nom: monstre.state.nom,
-            niveau: monstre.state.niveau,
-            pv: monstre.state.pv,
-            atk: monstre.state.atk,
-            def: monstre.state.def,
-            image: monsterDiv.style.backgroundImage.replace(/^url\(['"](.+)['"]\)$/, '$1'),
-            baseId: monstre.state.baseId
-          };
-          demarrer_combat(monstreData, monstreData.pv, monstreX, monstreY);
-        }
-      }
+  for (const monstre of monstres) {
+    const pos = monstre.state.position;
+    if (pos.x === x && pos.y === y) {
+      monstre_sur_case = monstre;
     }
-    window.combatActif = true;
-    console.log('Combat automatiquement déclenché car un monstre est présent sur la case ou en case adjacente.');
+    if (Math.abs(pos.x - x) <= 1 && Math.abs(pos.y - y) <= 1) {
+      monstre_adjacent = monstre;
+    }
   }
+  return { monstre_sur_case, monstre_adjacent };
 }
 
-function isMoveBlockedByMonster(newX, newY) {
-  const monstres = window.monstresActifs || [];
-  return monstres.find(m => {
-    const mx = parseInt(m.element.style.left) / 64;
-    const my = parseInt(m.element.style.top) / 64;
-    return mx === newX && my === newY;
-  });
+// --- Gestion des déplacements --- 
+function gerer_deplacement(touche) {
+  const joueur = get_position_joueur();
+  let cible_x = joueur.x;
+  let cible_y = joueur.y;
+
+  if (touche === 'ArrowUp') cible_y--;
+  if (touche === 'ArrowDown') cible_y++;
+  if (touche === 'ArrowLeft') cible_x--;
+  if (touche === 'ArrowRight') cible_x++;
+
+  if (cible_x < 0 || cible_x >= TAILLE_CARTE || cible_y < 0 || cible_y >= TAILLE_CARTE) {
+    console.log("[Déplacement] Hors des limites de la carte.");
+    return;
+  }
+
+  const { monstre_sur_case, monstre_adjacent } = detecter_monstre_proche(cible_x, cible_y);
+
+  if (monstre_sur_case && !window.furtif) {
+    console.log("[Déplacement] Case bloquée par un monstre.");
+    return;
+  }
+
+  if (monstre_adjacent && !window.combat_actif) {
+    console.log("[Combat] Monstre proche détecté, démarrage du combat.");
+    demarrer_combat(monstre_adjacent);
+    return;
+  }
+
+  set_position_joueur(cible_x, cible_y);
 }
 
-// --- Gestion des talents ---
-function utiliser_talent_en_combat(talent) {
-  if (!window.combatActif) {
-    console.warn('[TALENT] Impossible d\'utiliser un talent hors combat');
-    return false;
-  }
-  
-  const talents = get_talents();
-  const talentIndex = talents.findIndex(t => t.id === talent.id);
-  if (talentIndex === -1) return;
-  
-  utiliser_talent(talent, talentIndex);
-  
-  // Mettre à jour l'UI
-  const btn = document.getElementById(`talent-btn-${talentIndex}`);
-  if (btn) {
-    btn.disabled = true;
-    setTimeout(() => {
-      btn.disabled = false;
-    }, talent.cooldown);
+// --- Gestion des talents --- 
+function gerer_talent(touche) {
+  const index = TOUCHES_TALENTS.indexOf(touche);
+  if (index === -1) return;
+
+  if (window.combat_actif) {
+    const talents = get_talents();
+    if (talents[index]) {
+      utiliserTalent(talents[index]);
+    }
   }
 }
 
 // --- Gestionnaire principal ---
-function handleKeydown(e) {
-  // 1. Mémorise la direction
-  if (DIRECTION_KEYS.includes(e.key)) {
-    window.lastMoveDirection = e.key;
-  }
+function gerer_touche(evenement) {
+  const touche = evenement.key;
 
-  // 2. Activation d'un talent
-  const talentIndex = KEY_MAP[e.key];
-  const talentsData = get_talents();
-  
-  if (window.combatActif && talentIndex !== undefined) {
-    const skills = Array.isArray(talentsData) ? talentsData : talentsData.talents;
-    if (skills && skills[talentIndex]) {
-      const talent = skills[talentIndex];
-      utiliser_talent_en_combat(talent);
-      return; // Empêche tout autre comportement pendant le combat
-    }
-  }
-
-  // 3. Vérification de la présence de monstres
-  const { x, y } = get_position_joueur();
-  const { monstreSurCase, monstreAdj, monsterElements } = detectMonsters(x, y);
-  if (monstreSurCase || monstreAdj) {
-    triggerCombatIfNeeded(monstreSurCase, monstreAdj, monsterElements, x, y);
-    if (!window.furtif) {
-      e.preventDefault();
-      console.log('Déplacement bloqué : vous ne pouvez pas quitter la case tant qu\'un monstre est présent ou adjacent.');
-      return;
-    }
-  }
-
-  // 4. Calcul de la nouvelle position
-  let newX = x;
-  let newY = y;
-  if (e.key === 'ArrowUp') newY--;
-  if (e.key === 'ArrowDown') newY++;
-  if (e.key === 'ArrowLeft') newX--;
-  if (e.key === 'ArrowRight') newX++;
-
-  // 5. Gestion des déplacements entre cartes
-  if (newX < 0) return deplacer_joueur('gauche');
-  if (newX >= 16) return deplacer_joueur('droite');
-  if (newY < 0) return deplacer_joueur('haut');
-  if (newY >= 16) return deplacer_joueur('bas');
-
-  // 6. Vérification si la case est bloquée
-  if (modules.isBlocked(newX, newY)) {
-    console.log("Déplacement bloqué : case non accessible");
+  if (TOUCHES_DEPLACEMENT.includes(touche)) {
+    evenement.preventDefault();
+    gerer_deplacement(touche);
     return;
   }
 
-  // 7. Vérification si la case cible contient un monstre
-  const monstreSurCaseDeplacement = isMoveBlockedByMonster(newX, newY);
-  if (monstreSurCaseDeplacement && !window.furtif) {
-    console.log("Déplacement bloqué : case occupée par un monstre");
+  if (TOUCHES_TALENTS.includes(touche)) {
+    evenement.preventDefault();
+    gerer_talent(touche);
     return;
-  }
-
-  // 8. Mise à jour de la position du joueur
-  if (newX !== x || newY !== y) {
-    deplacer_joueur(newX, newY);
-    modules.verifierRencontre();
-    modules.verifierCombatAdjMonstre();
-    modules.detecterSortie(modules.exitZones);
   }
 }
 
-// --- Exports publics à la fin ---
+// --- Initialisation ---
+function initialiser_gestionnaire_entrees() {
+  document.addEventListener('keydown', gerer_touche);
+}
+
+// --- Exports publics ---
 export {
-  handleKeydown,
-  utiliser_talent_en_combat,
-  detectMonsters
+  initialiser_gestionnaire_entrees
 };

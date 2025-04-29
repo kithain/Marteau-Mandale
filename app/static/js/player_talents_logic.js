@@ -1,18 +1,13 @@
 // player_talents_logic.js
 // Gestion centralisée et harmonisée des talents du joueur
-// Ce module fournit les accès, utilitaires et actions liés aux talents.
 
 // --- Imports principaux ---
-import { utiliser_talent_en_combat } from './input_handler_logic.js';
-import { get_player_class, get_player_effective_stats } from './player_state_logic.js';
+import { get_player_class, get_mana_joueur, set_mana_joueur } from './player_state_logic.js';
 
 // Initialisation du système de cooldowns
 const cooldowns = {};
 
-// --- Accès à la liste de tous les talents connus (toutes classes) ---
-/**
- * Retourne la liste de tous les talents disponibles (toutes classes).
- */
+// --- Accès à la liste de tous les talents connus ---
 function getAllTalentsList() {
   if (window.talentsDisponibles) {
     return Object.values(window.talentsDisponibles).flat();
@@ -21,29 +16,19 @@ function getAllTalentsList() {
 }
 
 // --- Conversion d'une liste d'IDs en objets talents ---
-/**
- * Retourne les objets talents débloqués à partir d'une liste d'IDs.
- * @param {Array} ids - Liste d'identifiants de talents
- * @returns {Array} Objets talents correspondants
- */
 function getTalentsFromIds(ids) {
   const allTalents = getAllTalentsList();
   return ids.map(id => allTalents.find(t => t.id === id)).filter(Boolean);
 }
 
-// --- Talents accessibles selon classe et niveau du joueur ---
-/**
- * Retourne les talents accessibles pour la classe et le niveau du joueur.
- */
+// --- Talents accessibles selon classe et niveau ---
 function get_talents() {
   const classe = window.PLAYER_CLASS;
-  const niveau = (typeof window.PLAYER_LEVEL === 'number') ? window.PLAYER_LEVEL : 1;
+  const niveau = typeof window.PLAYER_LEVEL === 'number' ? window.PLAYER_LEVEL : 1;
   if (!classe || !window.talentsDisponibles || !window.talentsDisponibles[classe]) return [];
-  
-  // Filtrer les talents par niveau et classe
+
   const talentsAccessibles = window.talentsDisponibles[classe].filter(t => (t.niveauRequis || 1) <= niveau);
-  
-  // Ajouter des informations de cooldown et de disponibilité
+
   return talentsAccessibles.map(talent => ({
     ...talent,
     estDisponible: () => {
@@ -59,71 +44,58 @@ function get_talents() {
 }
 
 // --- Utilisation d'un talent ---
-/**
- * Utilise un talent spécifique.
- * @param {Object} talent - Le talent à utiliser
- * @param {number} index - L'index du talent
- */
-function utiliserTalent(talent, index) {
-  // Vérification des conditions d'utilisation
+function utiliser_talent(talent, index) {
   if (!talent) {
     console.warn('[TALENT] Talent non valide');
     return false;
   }
 
-  // Vérification du combat
-  if (!window.combatActif) {
+  if (!window.combat_actif) {
     console.warn('[TALENT] Les talents ne peuvent être utilisés qu\'en combat');
     return false;
   }
 
-  // Vérification des cooldowns
   const maintenant = Date.now();
   if (cooldowns[talent.id] && maintenant < cooldowns[talent.id]) {
     const tempsRestant = Math.ceil((cooldowns[talent.id] - maintenant) / 1000);
-    console.warn(`[TALENT] Cooldown actif pour ${talent.name}. Temps restant : ${tempsRestant}s`);
+    console.warn(`[TALENT] Cooldown actif pour ${talent.nom}. Temps restant : ${tempsRestant}s`);
     return false;
   }
 
-  // Gestion des coûts de mana
-  const manaActuel = get_player_effective_stats().mana;
-  if (talent.cost > manaActuel) {
-    console.warn(`[TALENT] Pas assez de mana pour ${talent.name}`);
+  const mana_actuel = get_mana_joueur();
+  if (mana_actuel < (talent.cost || 0)) {
+    console.warn(`[TALENT] Pas assez de mana pour ${talent.nom}`);
     return false;
   }
 
   // Réduction du mana
-  get_player_class().mana -= talent.cost;
+  set_mana_joueur(mana_actuel - (talent.cost || 0));
 
-  // Mise à jour du cooldown
-  cooldowns[talent.id] = maintenant + talent.cooldown;
+  // Mise en cooldown
+  cooldowns[talent.id] = maintenant + (talent.cooldown || 3000);
 
-  // Utilisation du talent via player_main_logic
+  // Activation du talent
   utiliser_talent_en_combat(talent);
 
-  // Logique d'application du talent selon son type
+  // Gestion des types de talents
   switch (talent.type) {
     case 'attack':
-      const currentMonstre = window.monstresActifs[0];
+      const currentMonstre = window.monstresActifs?.[0];
       if (currentMonstre) {
         const degats = talent.damage || 3;
-        console.log(`[TALENT] ${talent.name} inflige ${degats} dégâts`);
+        console.log(`[TALENT] ${talent.nom} inflige ${degats} dégâts`);
       }
       break;
     
     case 'utility':
-      switch (talent.boostType) {
-        case 'stun':
-          console.log(`[TALENT] ${talent.name} applique un étourdissement`);
-          break;
+      if (talent.boostType === 'stun') {
+        console.log(`[TALENT] ${talent.nom} applique un étourdissement`);
       }
       break;
     
     case 'defense':
-      switch (talent.defenseType) {
-        case 'dot':
-          console.log(`[TALENT] ${talent.name} applique des dégâts sur la durée`);
-          break;
+      if (talent.defenseType === 'dot') {
+        console.log(`[TALENT] ${talent.nom} applique des dégâts sur la durée`);
       }
       break;
   }
@@ -131,53 +103,49 @@ function utiliserTalent(talent, index) {
   return true;
 }
 
-// --- Talent actif : dash furtif ---
-/**
- * Dash furtif intelligent : dash de 3 cases dans la direction qui maximise la distance au monstre le plus proche.
- * Utilise la map et la liste des monstres actifs pour déterminer la meilleure direction.
- * @param {number} dureeFurtivite - Durée de la furtivité en ms
- */
+// --- Dash furtif spécial ---
 function dashStealth(dureeFurtivite = 2000) {
   import('./player_module.js').then(playerModule => {
     const getPlayerX = playerModule.getPlayerX;
     const getPlayerY = playerModule.getPlayerY;
     const setCombat = playerModule.setCombat;
-    const stopAllMonsters = playerModule.stopAllMonsters || (()=>{});
+    const stopAllMonsters = playerModule.stopAllMonsters || (() => {});
+
     let currentX = getPlayerX();
     let currentY = getPlayerY();
+
     setCombat(false);
     stopAllMonsters();
-    import('./map_module.js').then(module => {
-      const { isBlocked, setPlayerPosition } = module;
+
+    import('./map_module.js').then(mapModule => {
+      const { isBlocked, setPlayerPosition } = mapModule;
+
       import('./monstre_module.js').then(monstreModule => {
         const monstresActifs = window.monstresActifs || [];
-        // Directions (8)
+
         const directions = [
-          { dx: 0, dy: -1 }, // haut
-          { dx: 1, dy: -1 }, // haut-droite
-          { dx: 1, dy: 0 },  // droite
-          { dx: 1, dy: 1 },  // bas-droite
-          { dx: 0, dy: 1 },  // bas
-          { dx: -1, dy: 1 }, // bas-gauche
-          { dx: -1, dy: 0 }, // gauche
-          { dx: -1, dy: -1 } // haut-gauche
+          { dx: 0, dy: -1 }, { dx: 1, dy: -1 }, { dx: 1, dy: 0 }, { dx: 1, dy: 1 },
+          { dx: 0, dy: 1 }, { dx: -1, dy: 1 }, { dx: -1, dy: 0 }, { dx: -1, dy: -1 }
         ];
+
         let bestPath = null;
         let bestDist = -1;
-        // Pour chaque direction, construit le chemin maximal (jusqu'à 3 cases)
+
         for (const dir of directions) {
           let path = [{ x: currentX, y: currentY }];
           let posX = currentX;
           let posY = currentY;
+
           for (let i = 1; i <= 3; i++) {
             const tryX = currentX + dir.dx * i;
             const tryY = currentY + dir.dy * i;
-            // Vérifie blocage décor + monstre
+
             const monstreSurCase = monstresActifs.some(m => {
               const mx = parseInt(m.element.style.left) / 64;
               const my = parseInt(m.element.style.top) / 64;
               return mx === tryX && my === tryY;
             });
+
             if (!isBlocked(tryX, tryY) && !monstreSurCase) {
               posX = tryX;
               posY = tryY;
@@ -186,7 +154,7 @@ function dashStealth(dureeFurtivite = 2000) {
               break;
             }
           }
-          // Calcule la distance minimale à un monstre depuis la case finale du chemin
+
           let minDist = Infinity;
           for (const m of monstresActifs) {
             const mx = parseInt(m.element.style.left) / 64;
@@ -194,20 +162,18 @@ function dashStealth(dureeFurtivite = 2000) {
             const dist = Math.abs(posX - mx) + Math.abs(posY - my);
             if (dist < minDist) minDist = dist;
           }
+
           if (path.length > 1 && minDist > bestDist) {
             bestDist = minDist;
             bestPath = path;
           }
         }
-        // Déplacement : effectue le dash sur tout le chemin (jusqu'à 3 cases)
+
         if (bestPath && bestPath.length > 1) {
           const last = bestPath[bestPath.length - 1];
           setPlayerPosition(last.x, last.y);
-          if (typeof afficherMessage === 'function') {
-            afficherMessage("Vous êtes furtif pendant " + (dureeFurtivite/1000) + "s", "success");
-          }
-          get_player_class().mana -= 10; // Utilise le setter pour modifier le mana
           window.furtif = true;
+
           setTimeout(() => {
             window.furtif = false;
             setCombat(true);
@@ -216,26 +182,21 @@ function dashStealth(dureeFurtivite = 2000) {
                 cm.verifierCombatAdjMonstre();
               }
             });
-            if (typeof afficherMessage === 'function') {
-              afficherMessage("La furtivité est terminée !", "error");
-            }
           }, dureeFurtivite);
         } else {
-          if (typeof afficherMessage === 'function') {
-            afficherMessage("Dash furtif impossible : aucune case libre pour s'éloigner !", "error");
-          }
+          console.warn('[DASH] Aucun chemin libre trouvé pour dash furtif.');
         }
       });
     });
   });
 }
 
-// Exports pour utilisation dans d'autres modules
-export { 
-  getAllTalentsList, 
-  getTalentsFromIds, 
-  get_talents, 
-  utiliserTalent,
+// --- Exports publics ---
+export {
+  getAllTalentsList,
+  getTalentsFromIds,
+  get_talents,
+  utiliser_talent,
   dashStealth,
   cooldowns
 };

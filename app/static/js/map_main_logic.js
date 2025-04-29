@@ -35,13 +35,25 @@ function extraireCoordonneesCarte(nom) {
   return { colonne, ligne };
 }
 
-function getBlockedKey(x, y) {
-  return `${x},${y}`;
+class TileManager {
+  static GIDsLibres = new Set([
+    0, 1, 2, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27,
+    30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+    42, 43, 44, 45, 46, 47, 48, 49,
+    75, 76, 77, 85, 86, 87, 88, 89, 95, 96, 97, 98, 99
+  ]);
+
+  static isTileBlocked(x, y, gid, firstgid) {
+    const relativeGid = gid - firstgid;
+    return !this.GIDsLibres.has(relativeGid);
+  }
+
+  static getBlockedKey(x, y) {
+    return `${x},${y}`;
+  }
 }
 
-function isBlocked(x, y) {
-  return blockedTiles.has(getBlockedKey(x, y));
-}
+const isBlocked = (x, y) => blockedTiles.has(TileManager.getBlockedKey(x, y));
 
 // --- Déplacement et positionnement du joueur ---
 function deplacementVersCarte(direction) {
@@ -73,12 +85,7 @@ function deplacementVersCarte(direction) {
       const rawGid = layerSol.data[spawnY * mapData.width + spawnX];
       const gid = rawGid & GID_MASK;
       const relativeGid = gid - firstGID;
-      const GIDsLibres = new Set([0, 1, 2, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27,
-        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
-        42, 43, 44, 45, 46, 47, 48, 49,
-        75, 76, 77, 85, 86, 87, 88, 89, 95, 96, 97, 98, 99
-      ]);
-      if (!GIDsLibres.has(relativeGid)) {
+      if (TileManager.isTileBlocked(spawnX, spawnY, gid, firstGID)) {
         console.warn(`❌ Case bloquée en entrée sur ${nouvelleCarte} (${spawnX},${spawnY})`);
         return;
       }
@@ -131,14 +138,6 @@ function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
       const layerSol = mapData.layers.find(l => l.name === "Calque 1" && l.type === "tilelayer");
       const tilesetImage = new Image();
 
-      // Liste blanche des GIDs marchables
-      const GIDsLibres = new Set([
-        0, 1, 2, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27,
-        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
-        42, 43, 44, 45, 46, 47, 48, 49,
-        75, 76, 77, 85, 86, 87, 88, 89, 95, 96, 97, 98, 99
-      ]);
-
       blockedTiles.clear();
       const GID_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
@@ -165,9 +164,8 @@ function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
               container.appendChild(tile);
 
               // Marquer comme bloqué si pas dans la whitelist
-              const relativeGid = gid - tileset.firstgid;
-              if (!GIDsLibres.has(relativeGid)) {
-                blockedTiles.add(getBlockedKey(x, y));
+              if (TileManager.isTileBlocked(x, y, gid, tileset.firstgid)) {
+                blockedTiles.add(TileManager.getBlockedKey(x, y));
               }
             }
           }
@@ -239,7 +237,27 @@ export function charger_carte_initiale() {
 export const generer_rencontre = genererRencontre; // Alias snake_case
 
 export function est_bloquee(x, y) { // Renommage français + snake_case
-  return blockedTiles.has(getBlockedKey(x, y));
+  return isBlocked(x, y);
+}
+
+/**
+ * Calcule la difficulté d'une carte donnée (ex: "A1", "P8")
+ */
+function get_difficulty_carte(nom_carte) {
+  if (typeof nom_carte !== 'string' || nom_carte.length < 2) return 1;
+
+  const ligne = nom_carte[0].toUpperCase(); // Ex: 'A'
+  const colonne = parseInt(nom_carte.slice(1), 10); // Ex: 1
+  
+  const ligne_index = ligne.charCodeAt(0) - 'A'.charCodeAt(0) + 1; // 'A'->1
+  const colonne_index = colonne; // 1 à 8
+  
+  const max_distance = (16 - 1) + (8 - 1); // 22
+  const distance = (ligne_index - 1) + (colonne_index - 1);
+
+  let difficulty = 10 - (distance / max_distance) * 9;
+  difficulty = Math.round(difficulty);
+  return Math.min(Math.max(difficulty, 1), 10);
 }
 
 // --- Exports publics à la fin ---
@@ -254,8 +272,8 @@ export {
   isTransitioning,
   getVisibleTileCount,
   extraireCoordonneesCarte,
-  getBlockedKey,
-  isBlocked,
+  TileManager,
   deplacementVersCarte,
-  charger_nouvelle_carte
+  charger_nouvelle_carte,
+  get_difficulty_carte
 };

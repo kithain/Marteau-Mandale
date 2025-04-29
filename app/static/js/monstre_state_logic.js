@@ -1,73 +1,60 @@
 // monstre_state_logic.js
-// Centralise la gestion d'état et des statuts des monstres
-// Refactorisé pour clarté, cohérence et maintenabilité
+// Gestion interne de l'état des monstres (PV, Position, Effets)
 
-import { get_monster_atk } from './progression_main_logic.js';
-
-/**
- * Crée un objet état pour un monstre
- * @param {object} params - Attributs du monstre (id, nom, niveau, pv, atk, def, etc.)
- * @returns {object} état du monstre
- */
-function creer_etat_monstre({ id, nom, niveau, pv, atk, def, ...autres }) {
+// --- Création d'un état de monstre ---
+function creer_etat_monstre({ id, nom, niveau = 1, difficulte_carte = 1 }) {
   return {
     id,
     nom,
-    niveau: niveau || 1,
-    pv: pv || 10,
-    pv_max: pv || 10,
-    atk: (typeof atk === 'number') ? atk : get_monster_atk(niveau || 1),
-    def: def || 0,
-    position: { x: 0, y: 0 }, // Position par défaut
-    statuts: [], // [{type: 'poison', duree: 2000, valeur: 2}, ...]
-    effets: {}, // Pour les effets temporaires (clé: nom effet, valeur: {timer, ...})
-    ...autres
+    niveau,
+    difficulte_carte,
+    pv: calculer_pv_monstre(difficulte_carte),
+    pv_max: calculer_pv_monstre(difficulte_carte),
+    atk: calculer_atk_monstre(difficulte_carte),
+    def: calculer_def_monstre(difficulte_carte),
+    position: { x: 0, y: 0 },
+    effets: {},
+    statuts: []
   };
 }
 
-// --- Getters/Setters de base ---
-function set_monstre_pv(monstre, pv) { monstre.pv = pv; }
+// --- Helpers de calcul ---
+function calculer_pv_monstre(difficulte) {
+  return Math.round(10 + (difficulte - 1) * 3.8);
+}
+
+function calculer_atk_monstre(difficulte) {
+  return Math.round(14 + (difficulte - 1) * 5.2);
+}
+
+function calculer_def_monstre(difficulte) {
+  return Math.round(2 + (difficulte - 1) * 1.1);
+}
+
+// --- Getters et Setters de base ---
 function get_monstre_pv(monstre) { return monstre.pv; }
-function set_monstre_position(monstre, x, y) { monstre.position = { x, y }; }
-function get_monstre_position(monstre) { return { ...monstre.position }; }
-function set_monstre_statut(monstre, statut) { monstre.statuts.push(statut); }
-function clear_monstre_statuts(monstre) { monstre.statuts = []; }
+function definir_pv_monstre(monstre, valeur) { monstre.pv = Math.max(0, Math.min(valeur, monstre.pv_max)); }
 
-// --- Reset/init ---
-function reset_monstre(monstre, params = {}) {
-  monstre.pv = params.pv || monstre.pv_max;
-  monstre.atk = params.atk || monstre.atk;
-  monstre.def = params.def || monstre.def;
-  monstre.position = params.position || { x: 0, y: 0 };
-  monstre.statuts = [];
-  monstre.effets = {};
-}
+function get_position_monstre(monstre) { return { ...monstre.position }; }
+function definir_position_monstre(monstre, x, y) { monstre.position = { x, y }; }
 
-// --- Sérialisation (sauvegarde/chargement) ---
-function get_monstre_save_data(monstre) {
-  return { ...monstre };
-}
-function load_monstre_data(monstre, data) {
-  Object.assign(monstre, data);
-}
+function ajouter_statut_monstre(monstre, statut) { monstre.statuts.push(statut); }
+function effacer_statuts_monstre(monstre) { monstre.statuts = []; }
 
-// --- Gestion avancée des effets/statuts ---
-/**
- * Applique un effet temporaire/statut au monstre (stun, poison, burning, debuff, etc.)
- * Gère la durée, la suppression automatique, et les callbacks optionnels
- */
+// --- Gestion d'effets temporaires ---
 function appliquer_effet(monstre, effet, { duree = 2000, valeur = 1, on_tick, on_end } = {}) {
   if (monstre.effets[effet]) {
     clearTimeout(monstre.effets[effet].timer);
     if (monstre.effets[effet].interval) clearInterval(monstre.effets[effet].interval);
   }
   monstre.effets[effet] = { actif: true };
-  if (effet === 'poison' || effet === 'burning') {
-    // Tick chaque seconde
+
+  if (effet === 'poison' || effet === 'brulure') {
     monstre.effets[effet].interval = setInterval(() => {
       if (on_tick) on_tick();
     }, 1000);
   }
+
   monstre.effets[effet].timer = setTimeout(() => {
     monstre.effets[effet].actif = false;
     if (monstre.effets[effet].interval) clearInterval(monstre.effets[effet].interval);
@@ -75,7 +62,7 @@ function appliquer_effet(monstre, effet, { duree = 2000, valeur = 1, on_tick, on
   }, duree);
 }
 
-function a_effet(monstre, effet) {
+function effet_actif(monstre, effet) {
   return !!(monstre.effets[effet] && monstre.effets[effet].actif);
 }
 
@@ -87,32 +74,19 @@ function retirer_effet(monstre, effet) {
   }
 }
 
-/**
- * Applique un debuff temporaire sur l'attaque du monstre
- */
-function appliquer_debuff_atk(monstre, valeur, duree) {
-  const original_atk = monstre.atk;
-  monstre.atk += valeur; // valeur négative pour debuff
-  appliquer_effet(monstre, 'debuff_atk', {
-    duree,
-    on_end: () => { monstre.atk = original_atk; }
-  });
-}
-
-// --- Exports publics à la fin ---
+// --- Exports publics ---
 export {
   creer_etat_monstre,
-  set_monstre_pv,
+  calculer_pv_monstre,
+  calculer_atk_monstre,
+  calculer_def_monstre,
   get_monstre_pv,
-  set_monstre_position,
-  get_monstre_position,
-  set_monstre_statut,
-  clear_monstre_statuts,
-  reset_monstre,
-  get_monstre_save_data,
-  load_monstre_data,
+  definir_pv_monstre,
+  get_position_monstre,
+  definir_position_monstre,
+  ajouter_statut_monstre,
+  effacer_statuts_monstre,
   appliquer_effet,
-  a_effet,
-  retirer_effet,
-  appliquer_debuff_atk
+  effet_actif,
+  retirer_effet
 };

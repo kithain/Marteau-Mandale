@@ -11,7 +11,7 @@ import {
 import { 
   charger_carte_initiale, 
   chargerNouvelleCarte as charger_nouvelle_carte 
-} from './map_main_logic.js';
+} from '/static/js/map_main_logic.js';
 
 import { init_connexion, init_smoke_animation, init_particles } from './utils_main_logic.js';
 import { handle_keydown } from './input_handler_logic.js';
@@ -84,12 +84,9 @@ function demarrerJeu() {
   // Initialisation du jeu si on est sur la page de jeu (script JSON présent)
   const dataElem = document.getElementById('player-data');
   if (dataElem) {
-    // Débogage: vérifier la présence de l'élément JSON
-    console.log("[DEBUG] player-data element trouvé:", dataElem);
     let saveData;
     try {
       saveData = JSON.parse(dataElem.textContent);
-      console.log("[DEBUG] saveData parsé:", saveData);
     } catch (err) {
       console.error("[ERROR] Impossible de parser player-data:", err);
       return;
@@ -118,7 +115,6 @@ function demarrerJeu() {
     }
     // Charger la carte et position de départ
     try {
-      console.log("[DEBUG] Chargement de la carte:", saveData.carte, saveData.position);
       if (usePlayerStart) {
         charger_carte_initiale(saveData.carte, null, null);
       } else {
@@ -129,7 +125,6 @@ function demarrerJeu() {
     }
     // Initialiser les talents du joueur
     try {
-      console.log("[DEBUG] Initialisation des talents");
       initialiser_talents();
     } catch (err) {
       console.error("[ERROR] Initialisation talents échouée:", err);
@@ -142,9 +137,7 @@ function demarrerJeu() {
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
-      // Ajout debug PV/mana avant sauvegarde
       const saveData = get_player_save_data();
-      console.log('[DEBUG] PV/Mana au moment de la sauvegarde :', saveData.vie, saveData.mana);
       if (typeof saveData.vie !== 'number' || typeof saveData.mana !== 'number') {
         console.warn('[ALERTE] PV ou Mana non valides au moment de la sauvegarde !');
       }

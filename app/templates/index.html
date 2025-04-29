@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <meta name="lastpass-ignore" />
   <meta charset="UTF-8">
   <title>Marteaux & Mandales</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -26,10 +27,10 @@
 
       <form id="login-form">
         <label for="username">Nom d'utilisateur :</label>
-        <input type="text" id="username" name="username" required />
+        <input type="text" id="username" name="username" data-lpignore="true" required />
 
         <label for="password">Mot de passe :</label>
-        <input type="password" id="password" name="password" required />
+        <input type="password" id="password" name="password" data-lpignore="true" required />
 
         <button type="submit" id="login-btn">Se connecter</button>
         <button type="button" id="register-btn">Création de compte</button>

@@ -1,47 +1,46 @@
 // progression_main_logic.js
 // Centralise et harmonise toute la logique de progression du joueur et des monstres
-// Ce module fournit les calculs d'XP, de stats, et la gestion de la montée de niveau.
+// Ce module fournit les calculs d'XP, de stats, et la gestion de la montee de niveau.
+
+// --- Imports ---
+import { get_difficulty_carte } from '/js/map_main_logic.js';
 
 // --- XP et progression de niveau ---
-// Calcule l'XP nécessaire pour passer au niveau suivant
+// Calcule l'XP necessaire pour passer au niveau suivant
 /**
- * Calcule l'XP nécessaire pour passer au niveau suivant
- * @param {number} level
+ * Calcule l'XP necessaire pour passer au niveau suivant
+ * @param {number} niveau
  * @returns {number}
  */
-function getXpToNextLevel(level) {
-    // Progression exponentielle simple, à ajuster selon l'équilibrage
-    return Math.floor(10 * Math.pow(1.5, level - 1));
+function get_xp_to_next_level(niveau) {
+    // Progression exponentielle simple, a ajuster selon l'equilibrage
+    return Math.floor(10 * Math.pow(1.5, niveau - 1));
 }
 
-function get_xp_to_next_level(level) {
-    return getXpToNextLevel(level);
-}
-
-// --- Talents et montée de niveau ---
+// --- Talents et montee de niveau ---
 // Filtre les talents accessibles selon le niveau du joueur
 /**
  * Filtre les talents accessibles selon le niveau du joueur
- * @param {Array} allTalents
- * @param {number} playerLevel
+ * @param {Array} tous_les_talents
+ * @param {number} niveau_joueur
  * @returns {Array}
  */
-function filterTalentsByLevel(allTalents, playerLevel) {
-    return allTalents.filter(talent => (talent.niveauRequis || 1) <= playerLevel);
+function filtrer_talents_par_niveau(tous_les_talents, niveau_joueur) {
+    return tous_les_talents.filter(talent => (talent.niveau_requis || 1) <= niveau_joueur);
 }
 
-// Fonction à appeler quand le joueur monte de niveau
+// Fonction a appeler quand le joueur monte de niveau
 /**
- * Fonction à appeler quand le joueur monte de niveau
- * @param {number} playerLevel
- * @param {Array} allTalents
- * @param {function} callbackNewTalent
+ * Fonction a appeler quand le joueur monte de niveau
+ * @param {number} niveau_joueur
+ * @param {Array} tous_les_talents
+ * @param {function} callback_nouveau_talent
  */
-function onLevelUp(playerLevel, allTalents, callbackNewTalent) {
-    // Récupère les talents débloqués à ce niveau
-    const newTalents = allTalents.filter(t => t.niveauRequis === playerLevel);
-    // Appelle un callback pour chaque talent débloqué (affichage, notification, etc.)
-    newTalents.forEach(callbackNewTalent);
+function niveau_suivant(niveau_joueur, tous_les_talents, callback_nouveau_talent) {
+    // Recupere les talents debloques a ce niveau
+    const nouveaux_talents = tous_les_talents.filter(t => t.niveau_requis === niveau_joueur);
+    // Appelle un callback pour chaque talent debloque (affichage, notification, etc.)
+    nouveaux_talents.forEach(callback_nouveau_talent);
 }
 
 // --- Progression des stats joueur ---
@@ -49,80 +48,79 @@ function onLevelUp(playerLevel, allTalents, callbackNewTalent) {
 /**
  * Vie max : 120 de base, +40 par niveau
  */
-function getMaxVie(level) {
-    return Math.round(120 + (level - 1) * 40);
+function get_vie_max(niveau) {
+    return Math.round(120 + (niveau - 1) * 40);
 }
 // Mana max : 15 de base, +5 par niveau
 /**
  * Mana max : 15 de base, +5 par niveau
  */
-function getMaxMana(level) {
-    return Math.round(15 + (level - 1) * 5);
+function get_mana_max(niveau) {
+    return Math.round(15 + (niveau - 1) * 5);
 }
-// Dégâts de base du joueur (attaque niveau 1), progression boostée
-const BASE_PLAYER_ATK = 3;
+// Degats de base du joueur (attaque niveau 1), progression boostee
+const degats_base_joueur = 3;
 /**
- * Dégâts de base du joueur
+ * Degats de base du joueur
  */
-function getPlayerBaseAtk(level) {
-    return Math.round(BASE_PLAYER_ATK + (level - 1) * 1.6);
+function get_degats_base_joueur(niveau) {
+    return Math.round(degats_base_joueur + (niveau - 1) * 1.6);
 }
-// Défense de base du joueur : 2, progression boostée
-const BASE_PLAYER_DEF = 2;
+// Defense de base du joueur : 2, progression boostee
+const defense_base_joueur = 2;
 /**
- * Défense de base du joueur
+ * Defense de base du joueur
  */
-function getPlayerBaseDef(level) {
-    return Math.round(BASE_PLAYER_DEF + (level - 1) * 1.22);
+function get_defense_base_joueur(niveau) {
+    return Math.round(defense_base_joueur + (niveau - 1) * 1.22);
 }
 
 // --- Progression des stats des monstres ---
-// PV du monstre selon niveau
+// PV du monstre selon difficulté de la carte
 /**
- * PV du monstre selon niveau
+ * PV du monstre selon difficulté de la carte
  */
-function getMonsterPV(level) {
-    return Math.round(10 + (level - 1) * 3.8);
+function get_pv_monstre(difficulte_carte) {
+    return Math.round(10 + (difficulte_carte - 1) * 3.8);
 }
 /**
- * ATK du monstre selon niveau
+ * ATK du monstre selon difficulté de la carte
  */
-function getMonsterAtk(level) {
-    return Math.round(14 + (level - 1) * 5.2);
+function get_atk_monstre(difficulte_carte) {
+    return Math.round(14 + (difficulte_carte - 1) * 5.2);
 }
 /**
- * DEF du monstre selon niveau
+ * DEF du monstre selon difficulté de la carte
  */
-function getMonsterDef(level) {
-    return Math.round(2 + (level - 1) * 1.1);
+function get_def_monstre(difficulte_carte) {
+    return Math.round(2 + (difficulte_carte - 1) * 1.1);
 }
 /**
- * XP donnée par un monstre selon niveau
+ * XP donnée par un monstre selon difficulté de la carte
  */
-function getMonsterXP(level) {
-    return Math.round(10 + (level - 1) * 4.7);
+function get_xp_monstre(difficulte_carte) {
+    return Math.round(10 + (difficulte_carte - 1) * 4.7);
 }
 /**
- * Calcule l'XP à attribuer pour un monstre donné (utilise niveau ou difficulte)
+ * Calcule l'XP à attribuer pour un monstre sur une carte donnée
  */
-function calculerXPMonstre(monstre) {
-    const lvl = monstre.niveau || monstre.difficulte || 1;
-    return getMonsterXP(lvl);
+function calculer_xp_monstre(nom_carte) {
+    const difficulte = get_difficulty_carte(nom_carte) || 1;
+    return get_xp_monstre(difficulte);
 }
 
-// --- Exports publics à la fin ---
+// --- Exports publics ---
 export {
-  getXpToNextLevel,
   get_xp_to_next_level,
-  filterTalentsByLevel,
-  onLevelUp,
-  getMaxVie,
-  getMaxMana,
-  getPlayerBaseAtk,
-  getPlayerBaseDef,
-  getMonsterPV,
-  getMonsterAtk,
-  getMonsterDef,
-  getMonsterXP,
-  calculerXPMonstre
+  filtrer_talents_par_niveau,
+  niveau_suivant,
+  get_vie_max,
+  get_mana_max,
+  get_degats_base_joueur,
+  get_defense_base_joueur,
+  get_pv_monstre,
+  get_atk_monstre,
+  get_def_monstre,
+  get_xp_monstre,
+  calculer_xp_monstre
 };

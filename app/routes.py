@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for, send_from_directory
 import json
 import os
 import re
@@ -295,3 +295,7 @@ def api_sauvegarder():
         return jsonify({'succes': True})
     except Exception as e:
         return jsonify({'erreur': str(e)}), 500
+
+@bp.route('/js/<path:filename>')
+def serve_js(filename):
+    return send_from_directory(os.path.join(bp.root_path, 'static', 'js'), filename)
