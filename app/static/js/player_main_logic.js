@@ -20,7 +20,7 @@ import {
 
 import { get_max_vie, get_max_mana, get_player_base_def } from './progression_main_logic.js';
 import { get_talents } from './player_talents_logic.js';
-import { create_floating_text } from './player_visual_utils.js';
+import { afficher_texte_flottant } from './player_visual_utils.js';
 
 // === Stats du joueur ===
 function initialiser_stats_joueur(niveau) {
@@ -44,7 +44,7 @@ function level_up() {
   window.PLAYER_LEVEL = (window.PLAYER_LEVEL || 1) + 1;
   xp_to_next_level = get_xp_to_next_level(window.PLAYER_LEVEL);
   initialiser_stats_joueur(window.PLAYER_LEVEL);
-  create_floating_text(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
+  afficher_texte_flottant(`Niveau ${window.PLAYER_LEVEL} !`, '#FFD700');
   initialiser_talents();
 }
 

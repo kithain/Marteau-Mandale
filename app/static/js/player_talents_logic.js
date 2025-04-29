@@ -3,6 +3,8 @@
 
 // --- Imports principaux ---
 import { get_player_class, get_mana_joueur, set_mana_joueur } from './player_state_logic.js';
+import { attaquer_monstre_par_talent, stun_monstre_par_talent, empoisonner_monstre_par_talent, soigner_joueur_par_talent } from './combat_manager_logic.js';
+
 
 // Initialisation du système de cooldowns
 const cooldowns = {};
@@ -102,6 +104,18 @@ function utiliser_talent(talent, index) {
 
   return true;
 }
+// --- Application directe de l'effet du talent ---
+function appliquer_effet_talent(talent) {
+  if (talent.type === 'attack') {
+    attaquer_monstre_par_talent(talent.damage || 5);
+  } else if (talent.type === 'utility' && talent.boostType === 'stun') {
+    stun_monstre_par_talent(talent.duration || 2000);
+  } else if (talent.type === 'defense' && talent.defenseType === 'dot') {
+    empoisonner_monstre_par_talent(talent.dot || 2, talent.duration || 4000);
+  } else if (talent.type === 'heal') {
+    soigner_joueur_par_talent(talent.heal || 10);
+  }
+}
 
 // --- Dash furtif spécial ---
 function dashStealth(dureeFurtivite = 2000) {
@@ -191,12 +205,14 @@ function dashStealth(dureeFurtivite = 2000) {
   });
 }
 
+
 // --- Exports publics ---
 export {
   getAllTalentsList,
   getTalentsFromIds,
   get_talents,
   utiliser_talent,
+  appliquer_effet_talent,
   dashStealth,
   cooldowns
 };

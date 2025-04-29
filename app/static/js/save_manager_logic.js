@@ -9,10 +9,6 @@ import {
   set_player_talents,
   init_player_state,
   set_player_xp,
-  set_player_level,
-  set_player_atk,
-  set_player_def,
-  set_player_class,
   set_player_map,
   get_player_save_data // Utilisation de la fonction centrale
 } from './player_state_logic.js';

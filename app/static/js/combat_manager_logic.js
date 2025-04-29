@@ -5,7 +5,7 @@
 import { infliger_degats_au_joueur } from './player_visual_utils.js';
 import { infliger_degats_au_monstre, creer_monstre, supprimer_monstre, appliquer_poison, appliquer_stun, appliquer_soin_au_monstre } from './monstre_main_logic.js';
 import { get_position_monstre , get_monstre_pv } from './monstre_state_logic.js';
-import { get_player_pv, get_position_joueur, set_player_pv, get_player_pv, get_max_vie } from './player_state_logic.js';
+import { get_player_pv, get_position_joueur, set_player_pv, get_max_vie } from './player_state_logic.js';
 import { DEPLACEMENT_SANS_RENCONTRE_INIT } from './map_constants_logic.js';
 
 // --- Etats internes ---
