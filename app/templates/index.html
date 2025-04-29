@@ -26,11 +26,11 @@
       <p class="subtitle">Les Légendes Oubliées (et pas sans raison)</p>
 
       <form id="login-form">
-        <label for="username">Nom d'utilisateur :</label>
-        <input type="text" id="username" name="username" data-lpignore="true" required />
+        <label for="nom_utilisateur">Nom d'utilisateur :</label>
+        <input type="text" id="nom_utilisateur" name="nom_utilisateur" data-lpignore="true" required />
 
-        <label for="password">Mot de passe :</label>
-        <input type="password" id="password" name="password" data-lpignore="true" required />
+        <label for="mot_de_passe">Mot de passe :</label>
+        <input type="mot_de_passe" id="mot_de_passe" name="mot_de_passe" data-lpignore="true" required />
 
         <button type="submit" id="login-btn">Se connecter</button>
         <button type="button" id="register-btn">Création de compte</button>
@@ -41,6 +41,6 @@
 
   <!-- Chargement des scripts -->
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-  <script type="module" src="{{ url_for('static', filename='js/main_entry_point.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/html_java_main.js') }}"></script>
 </body>
 </html>

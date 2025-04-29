@@ -1,0 +1,246 @@
+Structure du dossier pour le volume Nouveau nom
+Le num�ro de s�rie du volume est B430-9310
+D:.
+|   .env
+|   .gitignore
+|   app.py
+|   LICENSE
+|   README.md
+|   requirements.txt
+|   
+\---app
+    |   player_manager.py
+    |   routes.py
+    |   utils.py
+    |   utils_liste_difficultes.py
+    |   utils_rencontres.py
+    |   __init__.py
+    |   
+    +---save_data
+    +---static
+    |   +---css
+    |   |       style.css
+    |   |       
+    |   +---img
+    |   |   |   background.jpg
+    |   |   |   favicon.ico
+    |   |   |   fumee.png
+    |   |   |   logo.jpg
+    |   |   |   spark1.png
+    |   |   |   spark2.png
+    |   |   |   
+    |   |   +---classes
+    |   |   |       barbare.png
+    |   |   |       barbare_attack.png
+    |   |   |       barbare_idle.png
+    |   |   |       mage.png
+    |   |   |       mage_attack.png
+    |   |   |       mage_idle.png
+    |   |   |       paladin.png
+    |   |   |       paladin_attack.png
+    |   |   |       paladin_idle.png
+    |   |   |       voleur.png
+    |   |   |       voleur_attack.png
+    |   |   |       voleur_idle.png
+    |   |   |       
+    |   |   \---monstres
+    |   |           bandit.png
+    |   |           geunaude.png
+    |   |           ghost.png
+    |   |           ghost_miner.png
+    |   |           gobelin.png
+    |   |           golem.png
+    |   |           homme_arbre.png
+    |   |           homme_lezard.png
+    |   |           orc.png
+    |   |           skull.png
+    |   |           slime.png
+    |   |           éfrit.png
+    |   |           élmentaire_air.png
+    |   |           elementaire_eau.png
+    |   |           �l�mentaire_feu.png
+    |   |           �l�mentaire_terre.png
+    |   |           
+    |   +---js
+    |   |       camera_main_logic.js
+    |   |       combat_manager_logic.js
+    |   |       input_handler_logic.js
+    |   |       main_entry_point.js
+    |   |       map_constants_logic.js
+    |   |       map_main_logic.js
+    |   |       monstre_main_logic.js
+    |   |       monstre_state_logic.js
+    |   |       monstre_talents_logic.js
+    |   |       monstre_visual_utils.js
+    |   |       player_main_logic.js
+    |   |       player_state_logic.js
+    |   |       player_talents_logic.js
+    |   |       player_ui_logic.js
+    |   |       player_visual_utils.js
+    |   |       progression_main_logic.js
+    |   |       save_manager_logic.js
+    |   |       utils_main_logic.js
+    |   |       
+    |   +---maps
+    |   |       A1.tmj
+    |   |       A2.tmj
+    |   |       A3.tmj
+    |   |       A4.tmj
+    |   |       A5.tmj
+    |   |       A6.tmj
+    |   |       A7.tmj
+    |   |       A8.tmj
+    |   |       B1.tmj
+    |   |       B2.tmj
+    |   |       B3.tmj
+    |   |       B4.tmj
+    |   |       B5.tmj
+    |   |       B6.tmj
+    |   |       B7.tmj
+    |   |       B8.tmj
+    |   |       C1.tmj
+    |   |       C2.tmj
+    |   |       C3.tmj
+    |   |       C4.tmj
+    |   |       C5.tmj
+    |   |       C6.tmj
+    |   |       C7.tmj
+    |   |       C8.tmj
+    |   |       D1.tmj
+    |   |       D2.tmj
+    |   |       D3.tmj
+    |   |       D4.tmj
+    |   |       D5.tmj
+    |   |       D6.tmj
+    |   |       D7.tmj
+    |   |       D8.tmj
+    |   |       E1.tmj
+    |   |       E2.tmj
+    |   |       E3.tmj
+    |   |       E4.tmj
+    |   |       E5.tmj
+    |   |       E6.tmj
+    |   |       E7.tmj
+    |   |       E8.tmj
+    |   |       F1.tmj
+    |   |       F2.tmj
+    |   |       F3.tmj
+    |   |       F4.tmj
+    |   |       F5.tmj
+    |   |       F6.tmj
+    |   |       F7.tmj
+    |   |       F8.tmj
+    |   |       G1.tmj
+    |   |       G2.tmj
+    |   |       G3.tmj
+    |   |       G4.tmj
+    |   |       G5.tmj
+    |   |       G6.tmj
+    |   |       G7.tmj
+    |   |       G8.tmj
+    |   |       H1.tmj
+    |   |       H2.tmj
+    |   |       H3.tmj
+    |   |       H4.tmj
+    |   |       H5.tmj
+    |   |       H6.tmj
+    |   |       H7.tmj
+    |   |       H8.tmj
+    |   |       I1.tmj
+    |   |       I2.tmj
+    |   |       I3.tmj
+    |   |       I4.tmj
+    |   |       I5.tmj
+    |   |       I6.tmj
+    |   |       I7.tmj
+    |   |       I8.tmj
+    |   |       J1.tmj
+    |   |       J2.tmj
+    |   |       J3.tmj
+    |   |       J4.tmj
+    |   |       J5.tmj
+    |   |       J6.tmj
+    |   |       J7.tmj
+    |   |       J8.tmj
+    |   |       K1.tmj
+    |   |       K2.tmj
+    |   |       K3.tmj
+    |   |       K4.tmj
+    |   |       K5.tmj
+    |   |       K6.tmj
+    |   |       K7.tmj
+    |   |       K8.tmj
+    |   |       L1.tmj
+    |   |       L2.tmj
+    |   |       L3.tmj
+    |   |       L4.tmj
+    |   |       L5.tmj
+    |   |       L6.tmj
+    |   |       L7.tmj
+    |   |       L8.tmj
+    |   |       M1.tmj
+    |   |       M2.tmj
+    |   |       M3.tmj
+    |   |       M4.tmj
+    |   |       M5.tmj
+    |   |       M6.tmj
+    |   |       M7.tmj
+    |   |       M8.tmj
+    |   |       N1.tmj
+    |   |       N2.tmj
+    |   |       N3.tmj
+    |   |       N4.tmj
+    |   |       N5.tmj
+    |   |       N6.tmj
+    |   |       N7.tmj
+    |   |       N8.tmj
+    |   |       O1.tmj
+    |   |       O2.tmj
+    |   |       O3.tmj
+    |   |       O4.tmj
+    |   |       O5.tmj
+    |   |       O6.tmj
+    |   |       O7.tmj
+    |   |       O8.tmj
+    |   |       P1.tmj
+    |   |       P2.tmj
+    |   |       P3.tmj
+    |   |       P4.tmj
+    |   |       P5.tmj
+    |   |       P6.tmj
+    |   |       P7.tmj
+    |   |       P8.tmj
+    |   |       Sprite-foret.png
+    |   |       Sprite-foret.tsx
+    |   |       
+    |   +---monstres
+    |   |       monstres.json
+    |   |       talents_monstres.json
+    |   |       
+    |   +---rencontres
+    |   |       difficulte_1.json
+    |   |       difficulte_10.json
+    |   |       difficulte_2.json
+    |   |       difficulte_3.json
+    |   |       difficulte_4.json
+    |   |       difficulte_5.json
+    |   |       difficulte_6.json
+    |   |       difficulte_7.json
+    |   |       difficulte_8.json
+    |   |       difficulte_9.json
+    |   |       
+    |   \---talents
+    |           talents.json
+    |           
+    +---templates
+    |       index.html
+    |       jeu.html
+    |       menu.html
+    |       
+    \---__pycache__
+            player_manager.cpython-313.pyc
+            routes.cpython-313.pyc
+            utils.cpython-313.pyc
+            utils_rencontres.cpython-313.pyc
+            __init__.cpython-313.pyc
+            

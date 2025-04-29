@@ -76,8 +76,8 @@ def connexion():
     data = request.get_json()
     print(f"[LOG] Données reçues: {data}")  # Log des données reçues
     
-    nom_utilisateur = data.get('username', '').strip()
-    mot_de_passe = data.get('password', '').strip()
+    nom_utilisateur = data.get('nom_utilisateur', '').strip()
+    mot_de_passe = data.get('mot_de_passe', '').strip()
     print(f"[LOG] Tentative de connexion pour: {nom_utilisateur}")
 
     if not PlayerManager.verifier_utilisateur(nom_utilisateur, mot_de_passe):
