@@ -2,7 +2,7 @@
 // Gestion des effets visuels pour le joueur (PV, Mana, Buffs, Dégâts)
 
 // --- Imports ---
-import { get_player_pv, get_pv_max_joueur, get_mana_joueur, get_mana_max_joueur, set_pv_joueur } from './player_state_logic.js';
+import { get_pv_joueur, get_pv_max_joueur, get_mana_joueur, get_mana_max_joueur, set_pv_joueur } from './player_state_logic.js';
 
 // --- Affichage de textes flottants ---
 function afficher_texte_flottant(contenu, couleur = 'white') {
@@ -31,7 +31,7 @@ function afficher_texte_flottant(contenu, couleur = 'white') {
 function mettre_a_jour_barre_vie() {
   const barre_vie = document.getElementById('vie-fill');
   if (!barre_vie) return;
-  const pourcentage = (get_player_pv() / get_pv_max_joueur()) * 100;
+  const pourcentage = (get_pv_joueur() / get_pv_max_joueur()) * 100;
   barre_vie.style.width = `${pourcentage}%`;
 }
 
@@ -44,7 +44,7 @@ function mettre_a_jour_barre_mana() {
 
 // --- Application de dégâts au joueur ---
 function infliger_degats_au_joueur(valeur) {
-  const pv_avant = get_player_pv();
+  const pv_avant = get_pv_joueur();
   set_pv_joueur(pv_avant - valeur);
 
   afficher_texte_flottant(`-${valeur}`, 'red');

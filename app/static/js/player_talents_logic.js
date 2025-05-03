@@ -2,7 +2,7 @@
 // Gestion centralisée et harmonisée des talents du joueur
 
 // --- Imports principaux ---
-import { get_player_class, get_mana_joueur, set_mana_joueur } from './player_state_logic.js';
+import { get_classe_joueur, get_mana_joueur, set_mana_joueur } from './player_state_logic.js';
 import { attaquer_monstre_par_talent, stun_monstre_par_talent, empoisonner_monstre_par_talent, soigner_joueur_par_talent } from './combat_manager_logic.js';
 
 

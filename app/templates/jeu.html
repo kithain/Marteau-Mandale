@@ -52,7 +52,7 @@
         </div>
 
         <!-- Bouton retour -->
-        <form action="{{ url_for('routes.deconnexion') }}" method="GET">
+        <form action="{{ url_for('auth.deconnexion') }}" method="GET">
             <button type="submit">Retour au menu</button>
         </form>
         <!-- Bouton de sauvegarde de la partie -->
@@ -70,7 +70,7 @@
 
     <!-- Embedding des données de sauvegarde en JSON pour le front-end -->
     <script id="player-data" type="application/json">
-        {{ save_data | tojson }}
+        {{ donnees_sauvegarde | tojson }}
     </script>
     
 
@@ -78,6 +78,6 @@
     <script type="module" src="{{ url_for('static', filename='js/progression_main_logic.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/monstre_main_logic.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/player_visual_utils.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/main_entry_point.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/html_java_jeu.js') }}"></script>
 </body>
 </html>

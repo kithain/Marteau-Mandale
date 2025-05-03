@@ -3,72 +3,67 @@
 // Ce module fournit les fonctions de sauvegarde et de restauration de l'état joueur.
 
 // --- Imports principaux ---
-import { 
-  set_player_position,
-  set_player_inventory,
-  set_player_talents,
-  init_player_state,
-  set_player_xp,
-  set_player_map,
-  get_player_save_data // Utilisation de la fonction centrale
-} from './player_state_logic.js';
+import * as PlayerState from './player_state_logic.js';
+const { start_regen } = PlayerState;
 
 // --- Sauvegarde de l'état du joueur ---
-function save_player_state() {
-  const saveData = get_player_save_data(); // Utilisation de la fonction importée
-  localStorage.setItem('playerSave', JSON.stringify(saveData));
+function sauvegarder_etat_joueur() {
+  const donneesSauvegarde = PlayerState.get_donnees_sauvegarde(); // Utilisation de la fonction importée
+  localStorage.setItem('sauvegardeJoueur', JSON.stringify(donneesSauvegarde));
 }
 
 // --- Chargement de l'état du joueur ---
 // Applique les données de sauvegarde au state du joueur
 /**
  * Applique les données de sauvegarde au state du joueur
- * @param {object} saveData - Les données JSON à restaurer
+ * @param {object} donneesSauvegarde - Les données JSON à restaurer
  */
-function load_player_data(saveData) {
+function charger_donnees_joueur(donneesSauvegarde) {
   // Lecture niveau/xp (compatibilité noms)
-  const level = (saveData && typeof saveData.niveau === 'number') ? saveData.niveau : (saveData && typeof saveData.level === 'number') ? saveData.level : 1;
-  const xp = (saveData && typeof saveData.experience === 'number') ? saveData.experience : (saveData && typeof saveData.xp === 'number') ? saveData.xp : 0;
+  const niveau = (donneesSauvegarde && typeof donneesSauvegarde.niveau === 'number') ? donneesSauvegarde.niveau : (donneesSauvegarde && typeof donneesSauvegarde.level === 'number') ? donneesSauvegarde.level : 1;
+  const experience = (donneesSauvegarde && typeof donneesSauvegarde.experience === 'number') ? donneesSauvegarde.experience : (donneesSauvegarde && typeof donneesSauvegarde.xp === 'number') ? donneesSauvegarde.xp : 0;
+
   // Initialise le state de base
-  init_player_state({
-    level,
-    xp
-  });
-  set_player_xp(xp);
+  PlayerState.set_experience_joueur(experience);
+
   // Carte courante
-  if (saveData && (saveData.carte || saveData.map)) {
-    set_player_map(saveData.carte || saveData.map);
+  if (donneesSauvegarde && (donneesSauvegarde.carte || donneesSauvegarde.map)) {
+    PlayerState.set_carte_joueur(donneesSauvegarde.carte || donneesSauvegarde.map);
   }
+
   // Position : toujours restaurer si présente
-  if (saveData.position && typeof saveData.position.x === 'number' && typeof saveData.position.y === 'number') {
-    set_player_position(saveData.position.x, saveData.position.y);
+  if (donneesSauvegarde.position && typeof donneesSauvegarde.position.x === 'number' && typeof donneesSauvegarde.position.y === 'number') {
+    PlayerState.set_position_joueur(donneesSauvegarde.position.x, donneesSauvegarde.position.y);
   }
+
   // Restaure PV/mana ou valeurs max si null/absent
-  if (typeof saveData.vie === 'number' && saveData.vie !== null) {
-    set_player_pv(saveData.vie);
-  } else if (typeof saveData.pv === 'number' && saveData.pv !== null) {
-    set_player_pv(saveData.pv);
+  if (typeof donneesSauvegarde.pv === 'number' && donneesSauvegarde.pv !== null) {
+    PlayerState.set_pv_joueur(donneesSauvegarde.pv);
   } else {
-    set_player_pv(get_max_player_pv());
+    PlayerState.set_pv_joueur(PlayerState.get_pv_max_joueur());
   }
-  if (typeof saveData.mana === 'number' && saveData.mana !== null) {
-    set_player_mana(saveData.mana);
+
+  if (typeof donneesSauvegarde.mana === 'number' && donneesSauvegarde.mana !== null) {
+    PlayerState.set_mana_joueur(donneesSauvegarde.mana);
   } else {
-    set_player_mana(get_max_player_mana());
+    PlayerState.set_mana_joueur(PlayerState.get_mana_max_joueur());
   }
+
   // Restaure inventaire, talents, etc. si présents
-  if (Array.isArray(saveData.inventaire)) {
-    set_player_inventory(saveData.inventaire);
+  if (Array.isArray(donneesSauvegarde.inventaire)) {
+    PlayerState.set_inventaire_joueur(donneesSauvegarde.inventaire);
   }
-  if (Array.isArray(saveData.talents)) {
-    set_player_talents(saveData.talents);
+
+  if (Array.isArray(donneesSauvegarde.talents)) {
+    PlayerState.set_talents_joueur(donneesSauvegarde.talents);
   }
-  // Correction : utilise modules.startRegenUtils (alias de player_utils.js) pour la régénération
+
+  // Démarre la régénération
   start_regen();
 }
 
 // --- Exports publics à la fin ---
 export {
-  save_player_state,
-  load_player_data
+  sauvegarder_etat_joueur,
+  charger_donnees_joueur
 };

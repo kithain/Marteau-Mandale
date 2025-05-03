@@ -1,7 +1,7 @@
 // Constantes globales du jeu
 export const TILE_SIZE = 64;
-export const MAP_WIDTH = 20;
-export const MAP_HEIGHT = 15;
+export const MAP_WIDTH = 16;
+export const MAP_HEIGHT = 16;
 
 export const PLAYER_SPEED = 5;
 export const MONSTER_SPEED = 3;

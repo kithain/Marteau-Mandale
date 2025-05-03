@@ -1,49 +1,25 @@
 from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for, send_from_directory
-import json
 import os
-import re
-from werkzeug.security import generate_password_hash, check_password_hash
-from .player_manager import PlayerManager  # Les méthodes ont été renommées mais la classe garde le même nom
-
-# === Import des fonctions utilitaires ===
+import json
+from .auth import bp as auth_bp
+from .player_manager import PlayerManager
 from .utils import (
-    generer_rencontre,
     charger_monstres,
-    charger_talents_monstres,
+    charger_talents_monstres
+)
+from .encounters import (
+    generer_rencontre,
     supprimer_monstre
 )
 
-# === Création du blueprint Flask ===
+# === Initialisation ===
 bp = Blueprint('routes', __name__)
+bp.register_blueprint(auth_bp, url_prefix='/auth')  # Préfixe pour les routes d'auth
 
-# === Chemins de fichiers ===
-USERS_FILE = os.path.join(os.path.dirname(__file__), 'users.json')
+# === Chemins ===
 SAVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'save_data')
 
-# === Fonctions utilisateurs ===
-
-def charger_utilisateurs():
-    if not os.path.exists(USERS_FILE):
-        return {}
-    with open(USERS_FILE, 'r') as f:
-        return json.load(f)
-
-def sauvegarder_utilisateurs(utilisateurs):
-    with open(USERS_FILE, 'w') as f:
-        json.dump(utilisateurs, f)
-
-def charger_talents(classe):
-    talents_path = os.path.join(os.path.dirname(__file__), 'static', 'talents', 'talents.json')
-    with open(talents_path, 'r', encoding='utf-8') as file:
-        talents_data = json.load(file)
-    # Recherche des talents correspondant à la classe (insensible à la casse)
-    for item in talents_data.get("classes", []):
-        if item.get("class", "").lower() == classe.lower():
-            return item.get("talents", [])
-    return []
-
-# === Routes ===
-
+# === Routes principales ===
 @bp.route('/')
 def home():
     return render_template('index.html')
@@ -53,95 +29,6 @@ def menu():
     if 'nom_utilisateur' not in session:
         return redirect(url_for('routes.home'))
     return render_template('menu.html', nom_utilisateur=session['nom_utilisateur'])
-
-@bp.route('/inscription', methods=['POST'])
-def inscription():
-    data = request.get_json()
-    nom_utilisateur = data.get('nom_utilisateur', '').strip()
-    mot_de_passe = data.get('mot_de_passe', '').strip()
-
-    if not nom_utilisateur or not mot_de_passe:
-        return jsonify({"erreur": "Champs vides"}), 400
-
-    if not re.match(r'^[a-zA-Z0-9_-]{3,20}$', nom_utilisateur):
-        return jsonify({"erreur": "Nom d'utilisateur invalide"}), 400
-
-    if PlayerManager.creer_utilisateur(nom_utilisateur, mot_de_passe):
-        return jsonify({"message": "Compte créé avec succès !"})
-    else:
-        return jsonify({"erreur": "Nom d'utilisateur déjà utilisé"}), 400
-
-@bp.route('/connexion', methods=['POST'])
-def connexion():
-    data = request.get_json()
-    print(f"[LOG] Données reçues: {data}")  # Log des données reçues
-    
-    nom_utilisateur = data.get('nom_utilisateur', '').strip()
-    mot_de_passe = data.get('mot_de_passe', '').strip()
-    print(f"[LOG] Tentative de connexion pour: {nom_utilisateur}")
-
-    if not PlayerManager.verifier_utilisateur(nom_utilisateur, mot_de_passe):
-        print(f"[LOG] Échec de connexion pour: {nom_utilisateur}")
-        return jsonify({"erreur": "Identifiants incorrects"}), 401
-
-    session['nom_utilisateur'] = nom_utilisateur
-    print(f"[LOG] Connexion réussie pour: {nom_utilisateur}")
-    return jsonify({"message": "Connexion réussie !", "redirect": url_for('routes.menu')})
-
-@bp.route('/deconnexion')
-def deconnexion():
-    session.pop('nom_utilisateur', None)
-    return redirect(url_for('routes.home'))
-
-@bp.route('/nouvelle-partie', methods=['POST'])
-def nouvelle_partie():
-    if 'nom_utilisateur' not in session:
-        return redirect(url_for('routes.home'))
-
-    nom_utilisateur = session['nom_utilisateur']
-    classe = request.form.get('classe')
-
-    if not classe or classe not in ['Paladin', 'Mage', 'Voleur', 'Barbare']:
-        return "Classe invalide", 400
-
-    stats_par_classe = {
-        "Paladin": {"force": 8, "intelligence": 4, "agilite": 3, "vie": 120},
-        "Mage": {"force": 2, "intelligence": 10, "agilite": 4, "vie": 80},
-        "Voleur": {"force": 4, "intelligence": 5, "agilite": 9, "vie": 100},
-        "Barbare": {"force": 10, "intelligence": 2, "agilite": 4, "vie": 140}
-    }
-
-    partie_initiale = {
-        "niveau": 1,
-        "experience": 0,
-        "classe": classe,
-        "statistiques": stats_par_classe[classe],
-        "inventaire": [],
-        # PATCH ULTRA-SIMPLIFIE : on ne sauvegarde plus les talents pour le joueur !
-        # "talents": charger_talents(classe),
-        "position": {"x": 0, "y": 0},
-        "carte": "P7"  # carte de depart !
-    }
-
-    os.makedirs(SAVE_DIR, exist_ok=True)
-    chemin_sauvegarde = os.path.join(SAVE_DIR, f"{nom_utilisateur}.json")
-
-    with open(chemin_sauvegarde, 'w') as f:
-        json.dump(partie_initiale, f)
-
-    return redirect(url_for('routes.jeu'))
-
-@bp.route('/charger-partie')
-def charger_partie():
-    # Vérifie que l'utilisateur est connecté
-    if 'nom_utilisateur' not in session:
-        return redirect(url_for('routes.home'))
-    # Vérifie l'existence de la sauvegarde
-    chemin_sauvegarde = os.path.join(SAVE_DIR, f"{session['nom_utilisateur']}.json")
-    if not os.path.exists(chemin_sauvegarde):
-        return "Aucune sauvegarde trouvée", 404
-    # Redirige vers le jeu avec la sauvegarde existante
-    return redirect(url_for('routes.jeu'))
 
 @bp.route('/jeu')
 def jeu():
@@ -157,11 +44,6 @@ def jeu():
     with open(chemin_sauvegarde, 'r') as f:
         donnees_sauvegarde = json.load(f)
 
-    # === PATCH ULTRA-SIMPLIFIE ===
-    # On ne force plus la clé talents pour le joueur
-    # if "talents" not in donnees_sauvegarde or not donnees_sauvegarde["talents"]:
-    #     print(f"[INFO] Aucune donnée de talents pour {nom_utilisateur}, rechargement...")
-    #     donnees_sauvegarde["talents"] = charger_talents(donnees_sauvegarde["classe"])
     donnees_sauvegarde.setdefault("carte", "P1")
 
     return render_template(
@@ -171,6 +53,7 @@ def jeu():
         donnees_sauvegarde=donnees_sauvegarde
     )
 
+# === API ===
 @bp.route('/api/rencontre')
 def api_rencontre():
     try:

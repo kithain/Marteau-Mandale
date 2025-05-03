@@ -6,12 +6,12 @@ import {
   TILE_SIZE, 
   IMAGE_BASE_URL, 
   API_BASE_URL,
-  MAX_TILE_COUNT,
-  set_player_position
+  MAX_TILE_COUNT
 } from './map_constants_logic.js';
 
-import { get_position_joueur } from './player_main_logic.js';
-import { genererRencontre } from './combat_manager_logic.js';
+import { get_position_joueur, set_position_joueur, get_classe_joueur } from './player_state_logic.js';
+import { movePlayer } from './camera_main_logic.js';
+import { generer_rencontre } from './combat_manager_logic.js';
 
 // --- Variables d'état ---
 const tileSize = TILE_SIZE;
@@ -33,6 +33,25 @@ function extraireCoordonneesCarte(nom) {
   const colonne = nom[0];
   const ligne = parseInt(nom.slice(1));
   return { colonne, ligne };
+}
+
+function getPlayerStartPosition(mapData) {
+  const playerStartLayer = mapData.layers.find(l => l.name === "player_start");
+  if (!playerStartLayer) {
+    console.error("Calque player_start introuvable");
+    return null;
+  }
+  
+  const startObject = playerStartLayer.objects.find(obj => obj.name === "position_initiale");
+  if (!startObject) {
+    console.error("Objet position_initiale introuvable dans le calque player_start");
+    return null;
+  }
+  
+  return {
+    x: startObject.x,
+    y: startObject.y
+  };
 }
 
 class TileManager {
@@ -69,7 +88,6 @@ function deplacementVersCarte(direction) {
   let newCol = colonnes.indexOf(colonne) + dir[direction].dx;
   let newLigne = ligne + dir[direction].dy;
   if (newCol < 0 || newCol >= colonnes.length || newLigne < 1 || newLigne > 8) {
-    console.log("🛑 Impossible de sortir de la carte : bord du monde.");
     return;
   }
   const nouvelleCarte = colonnes[newCol] + newLigne;
@@ -85,22 +103,64 @@ function deplacementVersCarte(direction) {
       const rawGid = layerSol.data[spawnY * mapData.width + spawnX];
       const gid = rawGid & GID_MASK;
       const relativeGid = gid - firstGID;
+      console.log(`[DEBUG] Carte:${nouvelleCarte} spawnX:${spawnX} spawnY:${spawnY} rawGid:${rawGid} gid:${gid} firstGID:${firstGID} relativeGid:${relativeGid} isLibre:${TileManager.GIDsLibres.has(relativeGid)}`);
       if (TileManager.isTileBlocked(spawnX, spawnY, gid, firstGID)) {
-        console.warn(`❌ Case bloquée en entrée sur ${nouvelleCarte} (${spawnX},${spawnY})`);
+        console.warn("[Carte] La case d'arrivée est bloquée !");
+        // Affichage d'un message utilisateur (console ou UI selon besoin)
         return;
       }
       // ✅ Tout est bon → on charge la nouvelle carte
-      charger_nouvelle_carte(nouvelleCarte, spawnX, spawnY);
+      charger_nouvelle_carte_full(nouvelleCarte, spawnX, spawnY);
     })
     .catch(err => console.error("Erreur de chargement de carte :", err));
 }
 
-function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
+async function charger_nouvelle_carte(direction) {
+  const currentName = currentMap;
+  const { colonne, ligne } = extraireCoordonneesCarte(currentName);
+  
+  // Calcul nouvelle position
+  let newCol = colonne;
+  let newRow = ligne;
+  let spawnPos = { x: 0, y: 0 };
+  
+  switch(direction) {
+    case 'nord': newRow--; spawnPos = { x: get_position_joueur().x, y: 15 }; break;
+    case 'sud': newRow++; spawnPos = { x: get_position_joueur().x, y: 0 }; break;
+    case 'ouest': newCol--; spawnPos = { x: 15, y: get_position_joueur().y }; break;
+    case 'est': newCol++; spawnPos = { x: 0, y: get_position_joueur().y }; break;
+  }
+
+  const newMapName = `${newCol}${newRow}`;
+  
+  try {
+    const mapData = await fetch(`${IMAGE_BASE_URL}/maps/${newMapName}.tmj`)
+      .then(res => res.json());
+    
+    // Vérifier que la position d'arrivée n'est pas bloquée
+    // SUPPRESSION DE LA VERIFICATION DE BLOCAGE ICI (déjà faite dans deplacementVersCarte)
+    // const layerSol = mapData.layers.find(l => l.name === "Calque 1" && l.type === "tilelayer");
+    // const tileset = mapData.tilesets[0];
+    // const firstGID = tileset.firstgid;
+    // const GID_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
+    // const rawGid = layerSol.data[spawnPos.y * mapData.width + spawnPos.x];
+    // const gid = rawGid & GID_MASK;
+    // const relativeGid = gid - firstGID;
+    // if (TileManager.isTileBlocked(spawnPos.x, spawnPos.y, gid, firstGID)) {
+    //   console.warn(`Position d'arrivée bloquée sur ${newMapName}`);
+    //   return null;
+    // }
+    
+    charger_nouvelle_carte_full(newMapName, spawnPos.x, spawnPos.y);
+  } catch (err) {
+    console.error('Erreur chargement carte:', err);
+    return null;
+  }
+}
+
+function charger_nouvelle_carte_full(nomCarte, spawnX = null, spawnY = null, forceNewPosition = false) {
   // Arrête le combat et nettoie les monstres avant de charger la nouvelle carte
-  // stopAllMonsters();
-  // window.monstresActifs = [];
-  // window.combatActif = false;
-  window.PLAYER_MAP = nomCarte; // Synchronisation pour la sauvegarde
+  window.PLAYER_MAP = nomCarte;
   isTransitioning = true;
   currentMap = nomCarte;
 
@@ -132,7 +192,7 @@ function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
       }
 
       const originalTileSize = mapData.tilewidth;
-      const scale = 4;
+      const scale = 4; // Déplacé ici
       const displayTileSize = originalTileSize * scale;
       const width = mapData.width;
       const layerSol = mapData.layers.find(l => l.name === "Calque 1" && l.type === "tilelayer");
@@ -170,43 +230,46 @@ function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
             }
           }
 
-          const spawn = mapData.layers.find(l => l.name === "player_start")?.objects?.[0];
-          if (!spawn && spawnX === null && spawnY === null) {
-            throw new Error("Pas de point de départ trouvé");
+          let playerPos;
+          if (spawnX !== null && spawnY !== null) {
+            playerPos = { x: spawnX, y: spawnY };
+          } else {
+            const startPos = getPlayerStartPosition(mapData);
+            if (!startPos) {
+              console.error("Position initiale du joueur introuvable");
+              playerPos = { x: 0, y: 0 };
+            } else {
+              playerPos = {
+                x: Math.floor(startPos.x / mapData.tilewidth),
+                y: Math.floor(startPos.y / mapData.tileheight)
+              };
+            }
           }
 
-          const targetX = (spawnX !== null && spawnX !== undefined) ?
-            Math.max(0, Math.min(spawnX, mapData.width - 1)) :
-            Math.floor(spawn.x / mapData.tilewidth);
+          set_position_joueur(playerPos.x, playerPos.y);
+          // movePlayer(); // SUPPRIMÉ : on veut que le DOM du joueur existe avant d'appeler movePlayer
 
-          const targetY = (spawnY !== null && spawnY !== undefined) ?
-            Math.max(0, Math.min(spawnY, mapData.height - 1)) :
-            Math.floor(spawn.y / mapData.tileheight);
-
-          if (!set_player_position(targetX, targetY, true)) {
-            throw new Error("Impossible de placer le joueur");
-          }
-
-          // Supprime le joueur précédent
-          const oldPlayer = document.getElementById("player");
-          if (oldPlayer) {
-            oldPlayer.remove();
-          }
           const playerDiv = document.createElement("div");
           playerDiv.id = "player";
+          
+          const playerClass = get_classe_joueur() || 'Paladin';
+          const imagePath = `/static/img/classes/${playerClass.toLowerCase()}_idle.png`;
+          
+          playerDiv.style.backgroundImage = `url(${imagePath})`;
           playerDiv.style.position = "absolute";
           playerDiv.style.width = "64px";
           playerDiv.style.height = "64px";
-          playerDiv.style.backgroundImage = `url(/static/img/classes/${get_position_joueur().classe.toLowerCase()}_idle.png)`;
           playerDiv.style.backgroundSize = "64px 64px";
           playerDiv.style.imageRendering = "pixelated";
           playerDiv.style.backgroundRepeat = "no-repeat";
-          playerDiv.style.position = "absolute";
-          playerDiv.style.zIndex = "10";
           playerDiv.style.zIndex = "10";
           container.appendChild(playerDiv);
 
-          // movePlayer();
+          playerDiv.style.left = `${playerPos.x * mapData.tilewidth * scale}px`;
+          playerDiv.style.top = `${playerPos.y * mapData.tileheight * scale}px`;
+
+          // Centrage caméra APRÈS que le joueur soit dans le DOM
+          movePlayer(mapData);
 
           isTransitioning = false;
         } catch (error) {
@@ -229,15 +292,12 @@ function charger_nouvelle_carte(nomCarte, spawnX = null, spawnY = null) {
 }
 
 // --- Chargement initial ---
-export function charger_carte_initiale() {
-  return charger_nouvelle_carte("A1"); // Laisser chargerNouvelleCarte gérer le player_start
+function charger_carte_initiale() {
+  charger_nouvelle_carte_full('P7', null, null, true);
 }
 
-// Renommage pour cohérence :
-export const generer_rencontre = genererRencontre; // Alias snake_case
-
-export function est_bloquee(x, y) { // Renommage français + snake_case
-  return isBlocked(x, y);
+function est_bloquee(x, y) {
+  return blockedTiles.has(TileManager.getBlockedKey(x, y));
 }
 
 /**
@@ -260,20 +320,19 @@ function get_difficulty_carte(nom_carte) {
   return Math.min(Math.max(difficulty, 1), 10);
 }
 
+// --- Expose explicitement sur window pour accès global et compatibilité ---
+window.get_difficulty_carte = get_difficulty_carte;
+
 // --- Exports publics à la fin ---
 export {
   IMAGE_BASE_URL,
   API_BASE_URL,
-  tileSize,
+  TILE_SIZE,
   MAX_TILE_COUNT,
-  blockedTiles,
-  currentMap,
-  exitZones,
-  isTransitioning,
-  getVisibleTileCount,
-  extraireCoordonneesCarte,
-  TileManager,
   deplacementVersCarte,
   charger_nouvelle_carte,
-  get_difficulty_carte
+  charger_carte_initiale,
+  est_bloquee,
+  get_difficulty_carte,
+  isBlocked
 };

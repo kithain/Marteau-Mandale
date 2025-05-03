@@ -2,7 +2,7 @@
 // Gestion du positionnement du joueur et de la caméra sur la carte
 // Refactorisé pour plus de clarté et de maintenabilité
 
-import { get_position_joueur } from './player_main_logic.js';
+import { get_position_joueur } from './player_state_logic.js';
 import { TILE_SIZE, MAP_WIDTH, MAP_HEIGHT } from './map_constants_logic.js';
 
 // --- Constantes globales ---
@@ -22,7 +22,7 @@ export function getMapContainerElement() {
 }
 
 // --- Déplacement du joueur et ajustement caméra ---
-export function movePlayer() {
+export function movePlayer(mapData = null) {
   const player = getPlayerElement();
   if (!player) return;
 
@@ -37,11 +37,21 @@ export function movePlayer() {
   const containerWidth = mapContainer.clientWidth;
   const containerHeight = mapContainer.clientHeight;
 
+  // --- Centrage dynamique selon la taille réelle de la carte ---
+  let mapWidthPx, mapHeightPx;
+  if (mapData && mapData.width && mapData.height) {
+    mapWidthPx = mapData.width * TILE_SIZE;
+    mapHeightPx = mapData.height * TILE_SIZE;
+  } else {
+    mapWidthPx = MAP_WIDTH * TILE_SIZE;
+    mapHeightPx = MAP_HEIGHT * TILE_SIZE;
+  }
+
   let cameraX = playerX * TILE_SIZE - (containerWidth / 2 - TILE_SIZE / 2);
   let cameraY = playerY * TILE_SIZE - (containerHeight / 2 - TILE_SIZE / 2);
 
-  cameraX = Math.max(0, Math.min(cameraX, MAP_WIDTH - containerWidth));
-  cameraY = Math.max(0, Math.min(cameraY, MAP_HEIGHT - containerHeight));
+  cameraX = Math.max(0, Math.min(cameraX, mapWidthPx - containerWidth));
+  cameraY = Math.max(0, Math.min(cameraY, mapHeightPx - containerHeight));
 
   mapInner.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
 }

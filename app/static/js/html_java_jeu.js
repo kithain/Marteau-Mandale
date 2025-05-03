@@ -4,11 +4,11 @@
 
 // --- Imports globaux de tous les modules utiles ---
 import { charger_carte_initiale } from './map_main_logic.js';
-import { initialiser_stats_joueur, initialiser_talents } from './player_main_logic.js';
+import { initialiser_talents } from './player_ui_logic.js';
 import { initialiser_gestionnaire_entrees } from './input_handler_logic.js';
 import { initialiser_mise_a_jour_talents } from './player_ui_logic.js';
-import { load_player_data } from './save_manager_logic.js';
-import { get_player_class, get_niveau_joueur } from './player_state_logic.js';
+import { charger_donnees_joueur } from './save_manager_logic.js';
+import { get_position_joueur, get_classe_joueur, get_niveau_joueur, initialiser_joueur, set_classe_joueur } from './player_state_logic.js';
 import { movePlayer } from './camera_main_logic.js';
 
 // --- Initialisation du jeu ---
@@ -22,16 +22,23 @@ function initialiserJeu() {
 
   // 1. Chargement des données sauvegardées du joueur (depuis backend)
   fetch('/api/joueur/stats')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Erreur HTTP ${res.status}`);
+      }
+      return res.json();
+    })
     .then(data => {
       if (data.erreur) throw new Error(data.erreur);
 
       // 2. Appliquer les données de sauvegarde au state joueur
-      load_player_data(data);
+      charger_donnees_joueur(data);
 
       // 3. Initialiser les stats et talents selon le niveau/classe
       const niveau = get_niveau_joueur();
-      initialiser_stats_joueur(niveau);
+      const classe = data.classe || 'Paladin';
+      initialiser_joueur(niveau);
+      set_classe_joueur(classe); // Force la mise à jour de la classe
       initialiser_talents();
 
       // 4. Charger la carte et placer le joueur
@@ -50,8 +57,8 @@ function initialiserJeu() {
       console.log('[JEU] Initialisation terminée');
     })
     .catch(err => {
-      console.error('[ERREUR INIT]', err);
-      alert("Erreur lors du chargement de la partie.");
+      console.error('[ERREUR INIT] Détails:', err.message, err.stack);
+      alert("Erreur lors du chargement de la partie : " + err.message);
     });
 }
 
