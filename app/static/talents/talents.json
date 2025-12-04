@@ -49,7 +49,7 @@
         {
           "id": "mage_givre",
           "name": "Rayon de Givre",
-          "cooldown": 2,
+          "cooldown": 3,
           "color": "#00BFFF",
           "effectText": "❄️ GIVRE !",
           "type": "attack",

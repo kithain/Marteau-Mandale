@@ -108,7 +108,6 @@ def jeu():
     save_data.setdefault("carte", "P1")
     save_data.setdefault("niveau", 1)
     save_data.setdefault("experience", 0)
-    # or supprimé
     save_data.setdefault("potions", 0)
     save_data.setdefault("pv", save_data.get("statistiques", {}).get("vie", 100))
     save_data.setdefault("pvMax", save_data.get("statistiques", {}).get("vie", 100))
@@ -151,8 +150,6 @@ def save_stats():
         nouv_xp = data.get('xp')
         if nouv_xp is not None and (not isinstance(nouv_xp, int) or nouv_xp < 0):
             return jsonify({"error": "XP invalide"}), 400
-
-        # Validation Or supprimée
         
         # Validation Potions (positif, max 50)
         nouv_potions = data.get('potions')

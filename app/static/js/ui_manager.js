@@ -1,5 +1,5 @@
 // ui_manager.js
-import { COLORS, DELAYS } from './constants.js';
+import { COLORS, DELAYS, GAME_BALANCE } from './constants.js';
 
 export function updateHealthBar(currentPv, maxPv) {
     const healthFill = document.getElementById("health-fill");
@@ -157,12 +157,65 @@ export function initTalentButtons(talents, callbackUtiliserTalent) {
 
     const skills = Array.isArray(talents) ? talents : talents.talents;
     skills.forEach((talent, index) => {
+      // Conteneur carte
+      const card = document.createElement('div');
+      card.className = "talent-card";
+
+      // Bouton
       const btn = document.createElement('button');
       btn.id = `talent-btn-${index}`;
       btn.textContent = `${index + 1}. ${talent.name}`;
       btn.onclick = () => callbackUtiliserTalent(talent, index);
-      talentButtons.appendChild(btn);
+      
+      // Description
+      const desc = document.createElement('div');
+      desc.className = "talent-desc";
+      desc.innerHTML = genererDescriptionTalent(talent);
+
+      card.appendChild(btn);
+      card.appendChild(desc);
+      talentButtons.appendChild(card);
     });
+}
+
+function genererDescriptionTalent(talent) {
+    let desc = "";
+    
+    switch(talent.type) {
+        case "attack":
+            desc = `Inflige <span style="color:#ff4444">${talent.damage || "?"}</span> dégâts`;
+            if (talent.critChance) desc += ` <br><span style="color:#ffd700">Crit: ${Math.floor(talent.critChance*100)}% (x${talent.critMultiplier||2})</span>`;
+            if (talent.effect === "poison") desc += ` <br>+ Poison ${talent.poisonDamage}/t (${talent.poisonTurns}t)`;
+            if (talent.effect === "slow") desc += ` <br>+ Ralentissement (${talent.slowDuration}t)`;
+            break;
+        case "heal":
+            desc = `Soigne <span style="color:#44ff44">${talent.healAmount || "?"}</span> PV`;
+            break;
+        case "shield":
+            desc = `Bouclier <span style="color:#aaaaff">${talent.shieldValue || "?"}</span> PV <br>(${talent.shieldDuration || 2} tours)`;
+            break;
+        case "buff":
+            if (talent.boostType === "damage") {
+                desc = `Boost Dégâts x${talent.boostValue || 1.5} <br>(${talent.boostDuration || 2} tours)`;
+            } else {
+                desc = `Buff inconnu`;
+            }
+            break;
+        case "stun":
+            desc = `Etourdit l'ennemi <br>(${talent.stunDuration || 1} tours)`;
+            break;
+        case "evade":
+            desc = `Esquive les attaques <br>(${talent.evadeTurns || 1} tours)`;
+            break;
+        default:
+            desc = talent.effectText || "Action spéciale";
+    }
+
+    if (talent.cooldown > 0) {
+        desc += `<br><span style="color:#888; font-size:0.9em">(Cooldown: ${talent.cooldown} trs)</span>`;
+    }
+
+    return desc;
 }
 
 export function updateXpBar(playerXp, playerXpToNext) {
@@ -171,20 +224,24 @@ export function updateXpBar(playerXp, playerXpToNext) {
       const percent = (playerXp / playerXpToNext) * 100;
       xpFill.style.width = `${percent}%`;
     }
-    const xpText = document.getElementById("xp-text");
+    const xpText = document.getElementById("xp-text-val"); // ID mis à jour
     if (xpText) {
       xpText.textContent = `${playerXp}/${playerXpToNext}`;
     }
 }
 
-export function updateStatsDisplay(playerLevel, playerPotions, playerPv, playerMaxPv) {
+export function updateStatsDisplay(playerLevel, playerPotions, playerPv, playerMaxPv, playerDamage) {
     const levelDisplay = document.getElementById("player-level");
     if (levelDisplay) levelDisplay.textContent = playerLevel;
     
-    // Or supprimé
+    const hpText = document.getElementById("hp-text");
+    if (hpText) hpText.textContent = `${playerPv}/${playerMaxPv}`;
+
+    const damageDisplay = document.getElementById("stat-damage");
+    if (damageDisplay) damageDisplay.textContent = playerDamage;
     
     const potionDisplay = document.getElementById("player-potions");
-    if (potionDisplay) potionDisplay.textContent = playerPotions;
+    if (potionDisplay) potionDisplay.textContent = `${playerPotions} / ${GAME_BALANCE.MAX_POTIONS}`;
     
     const potionBtn = document.getElementById("potion-btn");
     if (potionBtn) {
@@ -199,19 +256,19 @@ export function afficherRecompenses(xp, pv, leveledUp, potionDropped, playerLeve
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       background: rgba(0, 0, 0, 0.9); border: 2px solid ${leveledUp ? COLORS.LEVEL_UP_BORDER : COLORS.REWARD_BORDER}; border-radius: 10px;
       padding: 20px 30px; color: white; text-align: center; z-index: 1000;
-      font-family: Arial, sans-serif;
+      font-family: 'MedievalSharp', cursive;
     `;
     
     let potionHtml = '';
     if (potionDropped) {
-      potionHtml = `<p style="margin: 5px 0; color: ${COLORS.POTION_TEXT};">🧪 +1 Potion de vie !</p>`;
+      potionHtml = `<p style="margin: 5px 0; color: ${COLORS.POTION_TEXT};">🧪 +1 Potion</p>`;
     }
     
     let levelUpHtml = '';
     if (leveledUp) {
       levelUpHtml = `
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
-          <h3 style="color: #00ff00; margin: 0;">🎉 LEVEL UP !</h3>
+          <h3 style="color: #00ff00; margin: 0;">🎉 NIVEAU SUPÉRIEUR !</h3>
           <p style="color: #00ff00; margin: 5px 0;">Niveau ${playerLevel}</p>
           <p style="color: #88ffff; margin: 5px 0; font-size: 12px;">+10 PV max | +2 Dégâts</p>
         </div>
@@ -220,10 +277,8 @@ export function afficherRecompenses(xp, pv, leveledUp, potionDropped, playerLeve
     
     let pvHtml = '';
     if (pv > 0) {
-      pvHtml = `<p style="margin: 5px 0; color: #ff8888;">+${pv} PV récupérés</p>`;
+      pvHtml = `<p style="margin: 5px 0; color: #ff8888;">+${pv} PV</p>`;
     }
-
-    // Or supprimé
 
     rewardDiv.innerHTML = `
       <h3 style="color: gold; margin: 0 0 15px 0;">🏆 Victoire !</h3>
@@ -240,6 +295,32 @@ export function afficherRecompenses(xp, pv, leveledUp, potionDropped, playerLeve
       rewardDiv.style.transition = "opacity 0.5s";
       setTimeout(() => rewardDiv.remove(), 500);
     }, duration);
+}
+
+export function afficherDebutCombat() {
+    const popup = document.createElement('div');
+    popup.id = "combat-popup";
+    popup.style.cssText = `
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(50, 0, 0, 0.9); border: 3px solid #ff4444; border-radius: 10px;
+      padding: 30px 50px; color: white; text-align: center; z-index: 1000;
+      font-family: 'MedievalSharp', cursive; box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+      animation: pulseCombat 2s infinite;
+    `;
+    
+    popup.innerHTML = `
+      <h1 style="color: #ff4444; margin: 0; font-size: 3em; text-shadow: 3px 3px 0 #000;">⚔️ COMBAT !</h1>
+      <p style="color: #ffaaaa; margin: 10px 0 0 0; font-size: 1.2em;">Préparez-vous...</p>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Disparition après 2s
+    setTimeout(() => {
+      popup.style.opacity = "0";
+      popup.style.transition = "opacity 0.5s";
+      setTimeout(() => popup.remove(), 1500);
+    },100);
 }
 
 export function afficherGameOver() {

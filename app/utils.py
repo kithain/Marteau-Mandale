@@ -51,6 +51,7 @@ def creer_partie_initiale(username, classe):
         "classe": classe,
         "statistiques": STATS_PAR_CLASSE[classe],
         "inventaire": [],
+        "potions": 1, # Commence avec 1 potion
         "talents": load_talents(classe),
         "position": None,
         "carte": "P7"  # carte de depart

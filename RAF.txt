@@ -43,10 +43,19 @@
 [✓] Equilibrage : XP exponentielle (base 150, exp 2.2)
 [✓] Equilibrage : PV monstres augmentés (pvBase dans JSON)
 [✓] Frontend : Corriger sauvegarde position/carte dans player.js
+[✓] REFONTE UI - Panneau de feuille de personnage (Layout 2 colonnes + Panneau complet)
+[✓] SUPPRESSION TOTALE DE L'OR (HTML, CSS, JS, Backend)
+[✓] Limite de 5 potions max + Affichage (X/5) + Message inventaire plein
+[✓] Correction import GAME_BALANCE dans ui_manager.js
+[✓] Nouvelle partie commence avec 1 potion (au lieu de 0)
+[✓] UI : Détail des effets des talents (Description sous boutons)
+[✓] Popup '⚔️ COMBAT !' au début d'une rencontre
 
 🔧 A FAIRE
 ───────────────────────────────────────────────────────────────
+[ ] Tests finaux et polissage UI (Responsive mobile, animations)
+[✓] Correction chemin image portrait (img/classes/)
 
 ═══════════════════════════════════════════════════════════════
-                    Derniere MAJ: 04/12/2024 21:35
+                    Derniere MAJ: 05/12/2024 00:10
 ═══════════════════════════════════════════════════════════════

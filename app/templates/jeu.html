@@ -12,56 +12,86 @@
     <div id="particles-js"></div>
     <div id="parallax-smoke"></div>
 
-    <div id="auth-container" class="game-container">
-        <div class="game-header">
-            <h1 class="runic">{{ username }}</h1>
-            <span class="player-class">{{ classe }}</span>
-        </div>
-
-        <!-- Stats du joueur -->
-        <div id="player-stats-bar">
-            <span class="stat-item">⚔️ Niv. <span id="player-level">1</span></span>
-            <span class="stat-item">💰 <span id="player-gold">0</span></span>
-            <span class="stat-item potion-item">
-                🧪 <span id="player-potions">0</span>
-                <button id="potion-btn" class="potion-btn" disabled>Utiliser</button>
-            </span>
-        </div>
-
-        <!-- Barres de vie, mana et XP -->
-        <div id="bars-container">
-            <div id="health-bar">
-                <div id="health-fill"></div>
-                <span class="bar-label">PV</span>
+    <div id="game-layout">
+        <!-- Colonne Gauche : Carte -->
+        <section id="map-section">
+            <div id="map-container">
+                <div id="map-inner"></div>
             </div>
-            <div id="xp-bar">
-                <div id="xp-fill"></div>
-                <span class="bar-label">XP <span id="xp-text">0/100</span></span>
+            
+            <!-- Combat UI Overlay (sur la carte ou en dessous) -->
+            <div id="combat-ui" style="display: none;">
+                <div id="turn-indicator">⚔️ Votre tour</div>
+                <div id="buff-icons"></div>
+                <button id="flee-btn" class="btn-flee">🏃 Fuir</button>
             </div>
-        </div>
+        </section>
 
-        <!-- Zone de carte -->
-        <div id="map-container">
-            <div id="map-inner"></div>
-        </div>
+        <!-- Colonne Droite : Feuille de Personnage -->
+        <aside id="character-sheet">
+            <!-- En-tête Personnage -->
+            <div class="char-header">
+                <div class="char-portrait">
+                    <!-- Image de classe chargée dynamiquement ou par CSS -->
+                    <img src="{{ url_for('static', filename='img/classes/' ~ classe|lower ~ '.png') }}" alt="{{ classe }}" onerror="this.style.display='none'">
+                </div>
+                <div class="char-info">
+                    <h1 class="runic">{{ username }}</h1>
+                    <span class="player-class">{{ classe }}</span>
+                    <div class="level-badge">Niveau <span id="player-level">1</span></div>
+                </div>
+            </div>
 
-        <!-- Combat UI -->
-        <div id="combat-ui" style="display: none;">
-            <div id="turn-indicator">⚔️ Votre tour</div>
-            <div id="buff-icons"></div>
-            <button id="flee-btn" class="btn-flee">🏃 Fuir</button>
-        </div>
+            <!-- Barres de Vie et XP -->
+            <div class="char-bars">
+                <div class="bar-container health">
+                    <div class="bar-label-row">
+                        <span>PV</span>
+                        <span id="hp-text">100/100</span>
+                    </div>
+                    <div id="health-bar">
+                        <div id="health-fill"></div>
+                    </div>
+                </div>
 
-        <!-- Talents -->
-        <div id="talents-container">
-            <h2 class="runic">Talents disponibles</h2>
-            <div id="talents-buttons"></div>
-        </div>
+                <div class="bar-container xp">
+                    <div class="bar-label-row">
+                        <span>XP</span>
+                        <span id="xp-text-val">0/100</span>
+                    </div>
+                    <div id="xp-bar">
+                        <div id="xp-fill"></div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Bouton retour -->
-        <form action="{{ url_for('routes.menu') }}" method="GET">
-            <button type="submit" class="btn-secondary">🏠 Retour au menu</button>
-        </form>
+            <!-- Statistiques & Inventaire -->
+            <div class="char-stats-grid">
+                <div class="stat-box">
+                    <span class="stat-icon">⚔️</span>
+                    <span class="stat-value" id="stat-damage">--</span>
+                    <span class="stat-label">Dégâts</span>
+                </div>
+                <div class="stat-box potion-box">
+                    <span class="stat-icon">🧪</span>
+                    <span class="stat-value" id="player-potions">0</span>
+                    <button id="potion-btn" class="potion-btn-mini" disabled>Utiliser</button>
+                </div>
+            </div>
+
+            <!-- Talents -->
+            <div id="talents-container">
+                <h3 class="runic section-title">Talents</h3>
+                <div id="talents-buttons" class="talents-grid"></div>
+            </div>
+
+            <!-- Actions Système -->
+            <div class="system-actions">
+                <form action="{{ url_for('routes.menu') }}" method="GET">
+                    <button type="submit" class="btn-secondary btn-small">🏠 Menu Principal</button>
+                </form>
+            </div>
+        </aside>
     </div>
 
     <!-- Chargement de tsParticles -->

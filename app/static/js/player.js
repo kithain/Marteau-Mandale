@@ -79,8 +79,7 @@ export function initPlayerStats(stats) {
   if (stats) {
     playerLevel = stats.level || 1;
     playerXp = stats.xp || 0;
-    // gold supprimé
-    playerPotions = stats.potions || 0;
+    playerPotions = Math.min(stats.potions || 0, GAME_BALANCE.MAX_POTIONS); // Cap à l'init
     baseDamageBonus = stats.damageBonus || (playerLevel - 1) * GAME_BALANCE.LEVEL_DMG_BONUS;
     playerMaxPv = stats.maxPv || (100 + (playerLevel - 1) * GAME_BALANCE.LEVEL_PV_BONUS);
     playerPv = stats.pv || playerMaxPv;
@@ -98,8 +97,12 @@ export function initialiserTalents() {
 }
 
 function updateAllUI() {
+  // Calcul des dégâts affichés (approximation pour l'UI : dégâts de base + bonus)
+  // On pourrait affiner en prenant la moyenne des attaques disponibles
+  const displayedDamage = 10 + baseDamageBonus; 
+
   UI.updateXpBar(playerXp, playerXpToNext);
-  UI.updateStatsDisplay(playerLevel, playerPotions, playerPv, playerMaxPv);
+  UI.updateStatsDisplay(playerLevel, playerPotions, playerPv, playerMaxPv, displayedDamage);
   UI.updateHealthBar(playerPv, playerMaxPv);
 }
 
@@ -166,6 +169,7 @@ export function setCombat(actif, monstre = null, pv = 0) {
     UI.updateTurnIndicator(true);
     UI.updateBuffIcons(damageBoostTurns, damageBoost, shieldTurns, shieldValue, evadeTurns, poisonOnMonster);
     console.log(`⚔️ Nouveau combat !`);
+    UI.afficherDebutCombat();
   }
 }
 

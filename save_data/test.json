@@ -1,52 +1,52 @@
 {
-  "niveau": 1,
-  "experience": 46,
-  "classe": "Paladin",
+  "niveau": 2,
+  "experience": 90,
+  "classe": "Barbare",
   "statistiques": {
-    "force": 8,
-    "intelligence": 4,
-    "agilite": 3,
-    "vie": 120
+    "force": 10,
+    "intelligence": 2,
+    "agilite": 4,
+    "vie": 140
   },
   "inventaire": [],
+  "potions": 3,
   "talents": [
     {
-      "id": "paladin_atk",
-      "name": "Frappe Sacrée",
+      "id": "barbare_atk",
+      "name": "Charge Brutale",
       "cooldown": 0,
-      "color": "#FFD700",
-      "effectText": "✨ SACRÉ !",
+      "color": "#ff0000",
+      "effectText": "⚔ CHARGE !",
       "type": "attack",
-      "damage": 20
+      "damage": 25
     },
     {
-      "id": "paladin_heal",
-      "name": "Lumière Divine",
+      "id": "barbare_rage",
+      "name": "Rage",
       "cooldown": 3,
-      "color": "#00FF00",
-      "effectText": "💚 SOIN !",
-      "type": "heal",
-      "healAmount": 40
+      "color": "#B22222",
+      "effectText": "🔥 RAGE !",
+      "type": "buff",
+      "boostType": "damage",
+      "boostValue": 2.0,
+      "boostDuration": 3
     },
     {
-      "id": "paladin_shield",
-      "name": "Aura Protectrice",
+      "id": "barbare_def",
+      "name": "Cri de Guerre",
       "cooldown": 4,
       "color": "#FFD700",
-      "effectText": "🛡 AURA !",
-      "type": "shield",
-      "shieldValue": 40,
-      "shieldDuration": 3
+      "effectText": "📢 CRI !",
+      "type": "stun",
+      "stunDuration": 2
     }
   ],
   "position": {
-    "x": 9,
-    "y": 10
+    "x": 12,
+    "y": 12
   },
-  "carte": "N7",
-  "or": 0,
-  "potions": 0,
-  "pv": 79,
-  "pvMax": 120,
-  "bonusDegats": 0
+  "carte": "L4",
+  "pv": 124,
+  "pvMax": 145,
+  "bonusDegats": 1
 }
