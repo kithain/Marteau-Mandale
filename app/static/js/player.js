@@ -41,7 +41,7 @@ const playerPosition = { x: 0, y: 0 };
 export function getPlayerLevel() { return playerLevel; }
 export function getPlayerXp() { return playerXp; }
 export function getPlayerXpToNext() { return playerXpToNext; }
-export function getPlayerGold() { return playerGold; }
+// getPlayerGold supprimé
 export function getBaseDamageBonus() { return baseDamageBonus; }
 export function getPlayerPotions() { return playerPotions; }
 export function isCombatActif() { return combatActif; }
@@ -79,7 +79,7 @@ export function initPlayerStats(stats) {
   if (stats) {
     playerLevel = stats.level || 1;
     playerXp = stats.xp || 0;
-    playerGold = stats.gold || 0;
+    // gold supprimé
     playerPotions = stats.potions || 0;
     baseDamageBonus = stats.damageBonus || (playerLevel - 1) * GAME_BALANCE.LEVEL_DMG_BONUS;
     playerMaxPv = stats.maxPv || (100 + (playerLevel - 1) * GAME_BALANCE.LEVEL_PV_BONUS);
@@ -99,7 +99,7 @@ export function initialiserTalents() {
 
 function updateAllUI() {
   UI.updateXpBar(playerXp, playerXpToNext);
-  UI.updateStatsDisplay(playerLevel, playerGold, playerPotions, playerPv, playerMaxPv);
+  UI.updateStatsDisplay(playerLevel, playerPotions, playerPv, playerMaxPv);
   UI.updateHealthBar(playerPv, playerMaxPv);
 }
 
@@ -487,12 +487,12 @@ function finCombatVictoire() {
     
     if (rewards.potion) playerPotions++;
     
-    playerGold += rewards.or;
+    // Or supprimé
     playerPv = Math.min(playerPv + rewards.pv, playerMaxPv);
     
     const leveledUp = gagnerXp(rewards.xp);
     
-    UI.afficherRecompenses(rewards.xp, rewards.or, rewards.pv, playerGold, leveledUp, rewards.potion, playerLevel);
+    UI.afficherRecompenses(rewards.xp, rewards.pv, leveledUp, rewards.potion, playerLevel);
     updateAllUI();
     
     resetCombatState();
@@ -531,7 +531,7 @@ export async function sauvegarderStats() {
     const stats = {
         niveau: playerLevel,
         xp: playerXp,
-        or: playerGold,
+        // or supprimé
         potions: playerPotions,
         pv: playerPv,
         pvMax: playerMaxPv,
