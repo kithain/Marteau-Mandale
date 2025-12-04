@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marteaux & Mandales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body>
+    <!-- Fond de particules -->
+    <div id="particles-js"></div>
+    <!-- Fumée avec parallax -->
+    <div id="parallax-smoke"></div>
+    <!-- En-tête avec logo -->
+    <header class="logo-container">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
+    </header>
+
+    <!-- Contenu d'authentification -->
+    <div id="auth-container">
+        <h1 class="runic">Marteaux & Mandales</h1>
+        <p class="subtitle">Les Légendes Oubliées (et pas sans raison)</p>
+
+        <form id="login-form">
+            <label for="username">Nom d'utilisateur :</label>
+            <input type="text" id="username" name="username" required />
+
+            <label for="password">Mot de passe :</label>
+            <input type="password" id="password" name="password" required />
+
+            <button type="button" id="login-btn">Se connecter</button>
+            <button type="button" id="register-btn">Création de compte</button>
+        </form>
+        <p id="feedback" class="subtitle"></p>
+    </div>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

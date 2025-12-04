@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu - Marteaux & Mandales</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div id="parallax-smoke"></div>
+
+    <div id="auth-container" class="game-container">
+        <div class="game-header">
+            <h1 class="runic">{{ username }}</h1>
+            <span class="player-class">{{ classe }}</span>
+        </div>
+
+        <!-- Stats du joueur -->
+        <div id="player-stats-bar">
+            <span class="stat-item">⚔️ Niv. <span id="player-level">1</span></span>
+            <span class="stat-item">💰 <span id="player-gold">0</span></span>
+            <span class="stat-item potion-item">
+                🧪 <span id="player-potions">0</span>
+                <button id="potion-btn" class="potion-btn" disabled>Utiliser</button>
+            </span>
+        </div>
+
+        <!-- Barres de vie, mana et XP -->
+        <div id="bars-container">
+            <div id="health-bar">
+                <div id="health-fill"></div>
+                <span class="bar-label">PV</span>
+            </div>
+            <div id="xp-bar">
+                <div id="xp-fill"></div>
+                <span class="bar-label">XP <span id="xp-text">0/100</span></span>
+            </div>
+        </div>
+
+        <!-- Zone de carte -->
+        <div id="map-container">
+            <div id="map-inner"></div>
+        </div>
+
+        <!-- Combat UI -->
+        <div id="combat-ui" style="display: none;">
+            <div id="turn-indicator">⚔️ Votre tour</div>
+            <div id="buff-icons"></div>
+            <button id="flee-btn" class="btn-flee">🏃 Fuir</button>
+        </div>
+
+        <!-- Talents -->
+        <div id="talents-container">
+            <h2 class="runic">Talents disponibles</h2>
+            <div id="talents-buttons"></div>
+        </div>
+
+        <!-- Bouton retour -->
+        <form action="{{ url_for('routes.menu') }}" method="GET">
+            <button type="submit" class="btn-secondary">🏠 Retour au menu</button>
+        </form>
+    </div>
+
+    <!-- Chargement de tsParticles -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+
+    <!-- Variables globales transmises à JS -->
+    <script>
+        window.PLAYER_CLASS = "{{ classe }}";
+        window.PLAYER_TALENTS = {{ save_data.talents | default([]) | tojson }};
+        window.PLAYER_MAP = "{{ save_data.get('carte', 'P1') | safe }}";
+        window.PLAYER_STATS = {
+            niveau: {{ save_data.niveau | default(1) }},
+            xp: {{ save_data.experience | default(0) }},
+            potions: {{ save_data.potions | default(0) }},
+            pv: {{ save_data.pv | default(100) }},
+            pvMax: {{ save_data.pvMax | default(100) }},
+            bonusDegats: {{ save_data.bonusDegats | default(0) }},
+            vie: {{ save_data.statistiques.vie | default(100) }},
+            position: {{ save_data.position | default(None) | tojson }}
+        };
+    </script>
+
+    <!-- JS principaux -->
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

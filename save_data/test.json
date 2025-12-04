@@ -1,0 +1,52 @@
+{
+  "niveau": 1,
+  "experience": 46,
+  "classe": "Paladin",
+  "statistiques": {
+    "force": 8,
+    "intelligence": 4,
+    "agilite": 3,
+    "vie": 120
+  },
+  "inventaire": [],
+  "talents": [
+    {
+      "id": "paladin_atk",
+      "name": "Frappe Sacrée",
+      "cooldown": 0,
+      "color": "#FFD700",
+      "effectText": "✨ SACRÉ !",
+      "type": "attack",
+      "damage": 20
+    },
+    {
+      "id": "paladin_heal",
+      "name": "Lumière Divine",
+      "cooldown": 3,
+      "color": "#00FF00",
+      "effectText": "💚 SOIN !",
+      "type": "heal",
+      "healAmount": 40
+    },
+    {
+      "id": "paladin_shield",
+      "name": "Aura Protectrice",
+      "cooldown": 4,
+      "color": "#FFD700",
+      "effectText": "🛡 AURA !",
+      "type": "shield",
+      "shieldValue": 40,
+      "shieldDuration": 3
+    }
+  ],
+  "position": {
+    "x": 9,
+    "y": 10
+  },
+  "carte": "N7",
+  "or": 0,
+  "potions": 0,
+  "pv": 79,
+  "pvMax": 120,
+  "bonusDegats": 0
+}

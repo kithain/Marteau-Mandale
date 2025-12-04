@@ -1,0 +1,146 @@
+[
+  {
+    "id": "slime",
+    "nom": "Slime",
+    "image": "slime.png",
+    "pvBase": 40,
+    "attaque": 6,
+    "talentChance": 0.20,
+    "talents": ["corrosion"]
+  },
+  {
+    "id": "gobelin",
+    "nom": "Gobelin",
+    "image": "gobelin.png",
+    "pvBase": 50,
+    "attaque": 9,
+    "talentChance": 0.30,
+    "talents": ["coup_vif"]
+  },
+  {
+    "id": "orc",
+    "nom": "Orc",
+    "image": "orc.png",
+    "pvBase": 90,
+    "attaque": 14,
+    "talentChance": 0.35,
+    "talents": ["rage", "peau_dure"]
+  },
+  {
+    "id": "bandit",
+    "nom": "Bandit",
+    "image": "bandit.png",
+    "pvBase": 60,
+    "attaque": 10,
+    "talentChance": 0.30,
+    "talents": ["coup_vif"]
+  },
+  {
+    "id": "golem",
+    "nom": "Golem",
+    "image": "golem.png",
+    "pvBase": 150,
+    "attaque": 18,
+    "talentChance": 0.40,
+    "talents": ["peau_dure", "rage", "regeneration"]
+  },
+  {
+    "id": "homme_arbre",
+    "nom": "Homme-Arbre",
+    "image": "homme_arbre.png",
+    "pvBase": 110,
+    "attaque": 12,
+    "talentChance": 0.40,
+    "talents": ["regeneration", "peau_dure"]
+  },
+  {
+    "id": "homme_lezard",
+    "nom": "Homme-Lézard",
+    "image": "homme_lezard.png",
+    "pvBase": 70,
+    "attaque": 11,
+    "talentChance": 0.30,
+    "talents": ["coup_vif"]
+  },
+  {
+    "id": "skull",
+    "nom": "Crâne Maudit",
+    "image": "skull.png",
+    "pvBase": 45,
+    "attaque": 8,
+    "talentChance": 0.35,
+    "talents": ["malédiction"]
+  },
+  {
+    "id": "ghost",
+    "nom": "Fantôme",
+    "image": "ghost.png",
+    "pvBase": 50,
+    "attaque": 7,
+    "talentChance": 0.40,
+    "talents": ["intangible"]
+  },
+  {
+    "id": "ghost_miner",
+    "nom": "Fantôme Mineur",
+    "image": "ghost_miner.png",
+    "pvBase": 55,
+    "attaque": 9,
+    "talentChance": 0.35,
+    "talents": ["intangible"]
+  },
+  {
+    "id": "geunaude",
+    "nom": "Geunaude",
+    "image": "geunaude.png",
+    "pvBase": 80,
+    "attaque": 10,
+    "talentChance": 0.45,
+    "talents": ["soin", "malédiction"]
+  },
+  {
+    "id": "éfrit",
+    "nom": "Éfrit",
+    "image": "éfrit.png",
+    "pvBase": 100,
+    "attaque": 15,
+    "talentChance": 0.45,
+    "talents": ["brûlure", "rage", "intangible"]
+  },
+  {
+    "id": "élémentaire_feu",
+    "nom": "Élémentaire de Feu",
+    "image": "élémentaire_feu.png",
+    "pvBase": 90,
+    "attaque": 13,
+    "talentChance": 0.45,
+    "talents": ["brûlure", "rage"]
+  },
+  {
+    "id": "élémentaire_eau",
+    "nom": "Élémentaire d'Eau",
+    "image": "élémentaire_eau.png",
+    "pvBase": 100,
+    "attaque": 9,
+    "talentChance": 0.45,
+    "talents": ["soin", "regeneration"]
+  },
+  {
+    "id": "élémentaire_terre",
+    "nom": "Élémentaire de Terre",
+    "image": "élémentaire_terre.png",
+    "pvBase": 130,
+    "attaque": 16,
+    "talentChance": 0.45,
+    "talents": ["peau_dure", "rage", "regeneration"]
+  },
+  {
+    "id": "élémentaire_air",
+    "nom": "Élémentaire d'Air",
+    "image": "élémentaire_air.png",
+    "pvBase": 60,
+    "attaque": 8,
+    "talentChance": 0.45,
+    "talents": ["esquive", "intangible"]
+  }
+]

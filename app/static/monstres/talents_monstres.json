@@ -1,0 +1,112 @@
+{
+  "corrosion": {
+    "nom": "Corrosion",
+    "description": "Réduit l'armure de la cible.",
+    "type": "debuff",
+    "damage": 3,
+    "effect": "armor_reduce",
+    "effectValue": 2,
+    "duration": 3,
+    "cooldown": 5,
+    "color": "#4CAF50",
+    "effectText": "⚠ Corrosion"
+  },
+  "coup_vif": {
+    "nom": "Coup Vif",
+    "description": "Attaque rapide, chance de critique.",
+    "type": "attack",
+    "damage": 8,
+    "critChance": 0.3,
+    "critMultiplier": 2,
+    "cooldown": 4,
+    "color": "#FF4500",
+    "effectText": "💢 Critique"
+  },
+  "esquive": {
+    "nom": "Esquive",
+    "description": "Évite la prochaine attaque.",
+    "type": "defense",
+    "damage": 0,
+    "effect": "dodge_next",
+    "cooldown": 6,
+    "color": "#CCCCCC",
+    "effectText": "💨 Esquive"
+  },
+  "rage": {
+    "nom": "Rage",
+    "description": "Augmente l'attaque et frappe fort.",
+    "type": "attack",
+    "damage": 12,
+    "effect": "self_buff",
+    "cooldown": 7,
+    "color": "#B22222",
+    "effectText": "🔥 Rage"
+  },
+  "peau_dure": {
+    "nom": "Peau Dure",
+    "description": "Réduit les dégâts physiques reçus.",
+    "type": "defense",
+    "damage": 0,
+    "effect": "damage_reduce",
+    "effectValue": 0.5,
+    "duration": 2,
+    "cooldown": 5,
+    "color": "#8B4513",
+    "effectText": "🛡 Peau dure"
+  },
+  "regeneration": {
+    "nom": "Régénération",
+    "description": "Régénère des PV.",
+    "type": "heal",
+    "damage": 0,
+    "healAmount": 10,
+    "cooldown": 4,
+    "color": "#228B22",
+    "effectText": "💚 Régénération"
+  },
+  "malediction": {
+    "nom": "Malédiction",
+    "description": "Inflige des dégâts sombres.",
+    "type": "attack",
+    "damage": 10,
+    "effect": "curse",
+    "duration": 2,
+    "cooldown": 5,
+    "color": "#800080",
+    "effectText": "☠ Malédiction"
+  },
+  "intangible": {
+    "nom": "Intangible",
+    "description": "Devient intangible, réduit les dégâts.",
+    "type": "defense",
+    "damage": 0,
+    "effect": "intangible",
+    "effectValue": 0.2,
+    "duration": 2,
+    "cooldown": 6,
+    "color": "#A9A9A9",
+    "effectText": "👻 Intangible"
+  },
+  "soin": {
+    "nom": "Soin",
+    "description": "Restaure des PV au monstre.",
+    "type": "heal",
+    "damage": 0,
+    "healAmount": 15,
+    "cooldown": 4,
+    "color": "#00BFFF",
+    "effectText": "💧 Soin"
+  },
+  "brulure": {
+    "nom": "Brûlure",
+    "description": "Inflige des dégâts de feu.",
+    "type": "attack",
+    "damage": 6,
+    "effect": "burn",
+    "burnDamage": 3,
+    "burnTicks": 3,
+    "cooldown": 4,
+    "color": "#FF8C00",
+    "effectText": "🔥 Brûlure"
+  }
+}

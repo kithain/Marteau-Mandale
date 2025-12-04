@@ -1,0 +1,143 @@
+{
+  "classes": [
+    {
+      "class": "Barbare",
+      "talents": [
+        {
+          "id": "barbare_atk",
+          "name": "Charge Brutale",
+          "cooldown": 0,
+          "color": "#ff0000",
+          "effectText": "⚔ CHARGE !",
+          "type": "attack",
+          "damage": 25
+        },
+        {
+          "id": "barbare_rage",
+          "name": "Rage",
+          "cooldown": 3,
+          "color": "#B22222",
+          "effectText": "🔥 RAGE !",
+          "type": "buff",
+          "boostType": "damage",
+          "boostValue": 2.0,
+          "boostDuration": 3
+        },
+        {
+          "id": "barbare_def",
+          "name": "Cri de Guerre",
+          "cooldown": 4,
+          "color": "#FFD700",
+          "effectText": "📢 CRI !",
+          "type": "stun",
+          "stunDuration": 2
+        }
+      ]
+    },
+    {
+      "class": "Mage",
+      "talents": [
+        {
+          "id": "mage_atk",
+          "name": "Boule de Feu",
+          "cooldown": 0,
+          "color": "#ff4500",
+          "effectText": "🔥 FEU !",
+          "type": "attack",
+          "damage": 28
+        },
+        {
+          "id": "mage_givre",
+          "name": "Rayon de Givre",
+          "cooldown": 2,
+          "color": "#00BFFF",
+          "effectText": "❄️ GIVRE !",
+          "type": "attack",
+          "damage": 18,
+          "effect": "slow",
+          "slowDuration": 1
+        },
+        {
+          "id": "mage_shield",
+          "name": "Bouclier Arcanique",
+          "cooldown": 3,
+          "color": "#9400D3",
+          "effectText": "🛡 BOUCLIER !",
+          "type": "shield",
+          "shieldValue": 30,
+          "shieldDuration": 3
+        }
+      ]
+    },
+    {
+      "class": "Paladin",
+      "talents": [
+        {
+          "id": "paladin_atk",
+          "name": "Frappe Sacrée",
+          "cooldown": 0,
+          "color": "#FFD700",
+          "effectText": "✨ SACRÉ !",
+          "type": "attack",
+          "damage": 20
+        },
+        {
+          "id": "paladin_heal",
+          "name": "Lumière Divine",
+          "cooldown": 3,
+          "color": "#00FF00",
+          "effectText": "💚 SOIN !",
+          "type": "heal",
+          "healAmount": 40
+        },
+        {
+          "id": "paladin_shield",
+          "name": "Aura Protectrice",
+          "cooldown": 4,
+          "color": "#FFD700",
+          "effectText": "🛡 AURA !",
+          "type": "shield",
+          "shieldValue": 40,
+          "shieldDuration": 3
+        }
+      ]
+    },
+    {
+      "class": "Voleur",
+      "talents": [
+        {
+          "id": "voleur_atk",
+          "name": "Coup Sournois",
+          "cooldown": 0,
+          "color": "#8B008B",
+          "effectText": "🗡 SOURNOIS !",
+          "type": "attack",
+          "damage": 18,
+          "critChance": 0.35,
+          "critMultiplier": 3.0
+        },
+        {
+          "id": "voleur_poison",
+          "name": "Lame Empoisonnée",
+          "cooldown": 2,
+          "color": "#32CD32",
+          "effectText": "☠ POISON !",
+          "type": "attack",
+          "damage": 12,
+          "effect": "poison",
+          "poisonDamage": 8,
+          "poisonTurns": 3
+        },
+        {
+          "id": "voleur_evade",
+          "name": "Pas de l'Ombre",
+          "cooldown": 3,
+          "color": "#696969",
+          "effectText": "💨 ESQUIVE !",
+          "type": "evade",
+          "evadeTurns": 2
+        }
+      ]
+    }
+  ]
+}

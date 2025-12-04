@@ -1,0 +1,52 @@
+═══════════════════════════════════════════════════════════════
+                    MARTEAU & MANDALES - RAF
+═══════════════════════════════════════════════════════════════
+
+✅ FAIT
+───────────────────────────────────────────────────────────────
+[✓] Barre de vie du monstre (nom, niveau, barre rouge)
+[✓] Equilibrage des degats joueur (x1.5 a x2 selon classe)
+[✓] Systeme de recompenses (XP, Or, PV recuperes)
+[✓] Systeme de leveling (+10 PV max, +2 degats/niveau)
+[✓] Drop de potions de vie (15% + 3%/difficulte)
+[✓] Bouton utiliser potion (soigne 50% PV max)
+[✓] Nettoyage rencontres_global.json (3458 -> 130 lignes)
+[✓] Optimisation utils.py (code simplifie)
+[✓] Cooldown scale sur difficulte (5 a 2 pas)
+[✓] Selection dynamique des monstres par difficulte
+[✓] Viewport meta (responsive mobile) - 3 pages
+[✓] Menu : Selecteur classe avec talents affiches
+[✓] Menu : Navigation clavier (fleches gauche/droite)
+[✓] Page jeu : Affichage classe du joueur (badge)
+[✓] Retour menu : Corrige (va au menu, pas logout)
+[✓] Login : Validation avec touche Entree
+[✓] Couleurs UI : Meilleur contraste (or, blanc, ombres)
+[✓] Centrage formulaires menu
+[✓] Espacement reduit (flex-start + gap)
+[✓] Style specifique page jeu (game-container)
+[✓] Cooldowns monstres : Convertis de ms en tours
+[✓] Fonctions obsoletes : Supprime applyBoost/applyShield/applyStun
+[✓] Mana supprime : Variables, fonctions, imports, cost dans JSON
+[✓] Fuite : Bouton pour fuir (60% - 5%/difficulte)
+[✓] Indicateur de tour : Votre tour / Tour du monstre
+[✓] Effet slow du Mage : Monstre passe son tour
+[✓] Feedback visuel buffs : Icones rage/bouclier/esquive/poison
+[✓] Sauvegarde stats : API /api/save-stats en backend
+[✓] Persistance : Stats chargees au demarrage, sauvegarde auto 30s + apres combat
+[✓] Game Over : Bouton Recommencer (en plus de retour menu)
+[✓] Backend : config.py pour les stats des classes
+[✓] Backend : PlayerManager dans utils.py (load/save/create)
+[✓] Backend : Sécuriser API save-stats (validation)
+[✓] Frontend : constants.js (couleurs, équilibrage, délais)
+[✓] Frontend : Refactoring player.js -> combat_engine.js + ui_manager.js
+[✓] Frontend : api_client.js pour les appels fetch
+[✓] Equilibrage : XP exponentielle (base 150, exp 2.2)
+[✓] Equilibrage : PV monstres augmentés (pvBase dans JSON)
+[✓] Frontend : Corriger sauvegarde position/carte dans player.js
+
+🔧 A FAIRE
+───────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════
+                    Derniere MAJ: 04/12/2024 21:35
+═══════════════════════════════════════════════════════════════

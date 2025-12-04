@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu - Marteaux & Mandales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div id="parallax-smoke"></div>
+    <header class="logo-container">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Marteau Mandale" class="logo" />
+    </header>
+
+    <div id="auth-container">
+        <h1 class="runic">Bienvenue {{ username }} !</h1>
+        <p class="subtitle">Menu principal</p>
+
+        <!-- Sélecteur visuel de classe -->
+        <form action="{{ url_for('routes.nouvelle_partie') }}" method="POST">
+            <label for="classe">Choisis ta classe :</label>
+            <div id="class-selector">
+                <span class="arrow" onclick="changeClass(-1)">⯇</span>
+                <div class="class-display">
+                    <img id="class-image" class="class-image" src="{{ url_for('static', filename='img/classes/paladin.png') }}" alt="Classe" />
+                    <h3 id="class-name" class="class-name">Paladin</h3>
+                    <p id="class-desc" class="class-desc">Frappe Sacrée • Lumière Divine • Aura Protectrice</p>
+                </div>
+                <span class="arrow" onclick="changeClass(1)">⯈</span>
+            </div>
+            <input type="hidden" id="classe" name="classe" value="Paladin" />
+            <button type="submit" class="btn-primary">⚔️ Commencer l'aventure</button>
+        </form>
+
+        <div class="menu-buttons">
+            <form action="{{ url_for('routes.charger_partie') }}" method="GET">
+                <button type="submit" class="btn-secondary">📂 Charger une partie</button>
+            </form>
+
+            <form action="{{ url_for('routes.logout') }}" method="GET">
+                <button type="submit" class="btn-logout">🚪 Déconnexion</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
