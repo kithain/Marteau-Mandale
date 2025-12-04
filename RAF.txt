@@ -50,6 +50,7 @@
 [✓] Nouvelle partie commence avec 1 potion (au lieu de 0)
 [✓] UI : Détail des effets des talents (Description sous boutons)
 [✓] Popup '⚔️ COMBAT !' au début d'une rencontre
+[✓] UI : Centrage parfait de la carte (conflit JS désactivé)
 
 🔧 A FAIRE
 ───────────────────────────────────────────────────────────────

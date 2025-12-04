@@ -201,7 +201,8 @@ export function movePlayer() {
   cameraY = Math.max(0, Math.min(cameraY, mapHeight - containerHeight));
 
   // Appliquer la transformation sur la carte
-  mapInner.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
+  // mapInner.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
+  
   // Vérifier si un monstre est présent et que le combat n'est pas actif
   const monsterDiv = document.getElementById("combat-monstre");
   if (monsterDiv && !isCombatActif()) {

@@ -202,12 +202,12 @@ h1 {
      - La taille du conteneur global est 75vmin.
      - Le scale souhaité est donc : 75vmin / (var(--tile-size) * var(--visible-tiles))
      - On limite ce scale à 1 pour ne pas dépasser le zoom 100% */
-  transform: scale(clamp(calc(75vmin / (var(--tile-size) * var(--visible-tiles))), 0, 1));
-  transform-origin: top left;
+  transform: translate(-50%, -50%) scale(clamp(calc(75vmin / (var(--tile-size) * var(--visible-tiles))), 0, 1));
+  transform-origin: center;
   transition: transform 0.1s ease;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
   will-change: transform;
 }
 
