@@ -10,7 +10,8 @@
           "color": "#ff0000",
           "effectText": "⚔ CHARGE !",
           "type": "attack",
-          "damage": 25
+          "damage": 25,
+          "levelRequired": 1
         },
         {
           "id": "barbare_rage",
@@ -21,7 +22,8 @@
           "type": "buff",
           "boostType": "damage",
           "boostValue": 2.0,
-          "boostDuration": 3
+          "boostDuration": 3,
+          "levelRequired": 4
         },
         {
           "id": "barbare_def",
@@ -30,7 +32,8 @@
           "color": "#FFD700",
           "effectText": "📢 CRI !",
           "type": "stun",
-          "stunDuration": 2
+          "stunDuration": 2,
+          "levelRequired": 7
         }
       ]
     },
@@ -44,7 +47,8 @@
           "color": "#ff4500",
           "effectText": "🔥 FEU !",
           "type": "attack",
-          "damage": 28
+          "damage": 28,
+          "levelRequired": 1
         },
         {
           "id": "mage_givre",
@@ -55,7 +59,8 @@
           "type": "attack",
           "damage": 18,
           "effect": "slow",
-          "slowDuration": 1
+          "slowDuration": 1,
+          "levelRequired": 4
         },
         {
           "id": "mage_shield",
@@ -65,7 +70,8 @@
           "effectText": "🛡 BOUCLIER !",
           "type": "shield",
           "shieldValue": 30,
-          "shieldDuration": 3
+          "shieldDuration": 3,
+          "levelRequired": 7
         }
       ]
     },
@@ -79,7 +85,8 @@
           "color": "#FFD700",
           "effectText": "✨ SACRÉ !",
           "type": "attack",
-          "damage": 20
+          "damage": 20,
+          "levelRequired": 1
         },
         {
           "id": "paladin_heal",
@@ -88,7 +95,8 @@
           "color": "#00FF00",
           "effectText": "💚 SOIN !",
           "type": "heal",
-          "healAmount": 40
+          "healAmount": 40,
+          "levelRequired": 4
         },
         {
           "id": "paladin_shield",
@@ -98,7 +106,8 @@
           "effectText": "🛡 AURA !",
           "type": "shield",
           "shieldValue": 40,
-          "shieldDuration": 3
+          "shieldDuration": 3,
+          "levelRequired": 7
         }
       ]
     },
@@ -114,7 +123,8 @@
           "type": "attack",
           "damage": 18,
           "critChance": 0.35,
-          "critMultiplier": 3.0
+          "critMultiplier": 3.0,
+          "levelRequired": 1
         },
         {
           "id": "voleur_poison",
@@ -126,7 +136,8 @@
           "damage": 12,
           "effect": "poison",
           "poisonDamage": 8,
-          "poisonTurns": 3
+          "poisonTurns": 3,
+          "levelRequired": 4
         },
         {
           "id": "voleur_evade",
@@ -135,7 +146,8 @@
           "color": "#696969",
           "effectText": "💨 ESQUIVE !",
           "type": "evade",
-          "evadeTurns": 2
+          "evadeTurns": 2,
+          "levelRequired": 7
         }
       ]
     }

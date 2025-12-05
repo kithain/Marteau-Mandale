@@ -1,51 +1,56 @@
 {
   "niveau": 1,
-  "experience": 15,
-  "classe": "Paladin",
+  "experience": 0,
+  "classe": "Mage",
   "statistiques": {
-    "force": 8,
-    "intelligence": 4,
-    "agilite": 3,
-    "vie": 120
+    "force": 2,
+    "intelligence": 10,
+    "agilite": 4,
+    "vie": 80
   },
   "inventaire": [],
   "potions": 1,
   "talents": [
     {
-      "id": "paladin_atk",
-      "name": "Frappe Sacrée",
+      "id": "mage_atk",
+      "name": "Boule de Feu",
       "cooldown": 0,
-      "color": "#FFD700",
-      "effectText": "✨ SACRÉ !",
+      "color": "#ff4500",
+      "effectText": "🔥 FEU !",
       "type": "attack",
-      "damage": 20
+      "damage": 28,
+      "levelRequired": 1
     },
     {
-      "id": "paladin_heal",
-      "name": "Lumière Divine",
+      "id": "mage_givre",
+      "name": "Rayon de Givre",
       "cooldown": 3,
-      "color": "#00FF00",
-      "effectText": "💚 SOIN !",
-      "type": "heal",
-      "healAmount": 40
+      "color": "#00BFFF",
+      "effectText": "❄️ GIVRE !",
+      "type": "attack",
+      "damage": 18,
+      "effect": "slow",
+      "slowDuration": 1,
+      "levelRequired": 4
     },
     {
-      "id": "paladin_shield",
-      "name": "Aura Protectrice",
-      "cooldown": 4,
-      "color": "#FFD700",
-      "effectText": "🛡 AURA !",
+      "id": "mage_shield",
+      "name": "Bouclier Arcanique",
+      "cooldown": 3,
+      "color": "#9400D3",
+      "effectText": "🛡 BOUCLIER !",
       "type": "shield",
-      "shieldValue": 40,
-      "shieldDuration": 3
+      "shieldValue": 30,
+      "shieldDuration": 3,
+      "levelRequired": 7
     }
   ],
   "position": {
-    "x": 3,
+    "x": 5,
     "y": 8
   },
   "carte": "P7",
-  "pv": 114,
-  "pvMax": 120,
+  "pv": 80,
+  "pvMax": 80,
   "bonusDegats": 0
 }

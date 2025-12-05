@@ -84,3 +84,6 @@ Consultez le fichier `app/RAF.txt` pour voir la liste des fonctionnalités impl�
 
 ---
 *Projet développé avec passion pour les amateurs de mandales.*
+git add .
+git commit -m "UPDATE"
+git push origin master

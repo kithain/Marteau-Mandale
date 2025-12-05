@@ -93,7 +93,7 @@ export function initPlayerStats(stats) {
 }
 
 export function initialiserTalents() {
-  UI.initTalentButtons(talents, utiliserTalent);
+  UI.initTalentButtons(talents, utiliserTalent, playerLevel);
 }
 
 function updateAllUI() {
@@ -495,6 +495,10 @@ function finCombatVictoire() {
     playerPv = Math.min(playerPv + rewards.pv, playerMaxPv);
     
     const leveledUp = gagnerXp(rewards.xp);
+    
+    if (leveledUp) {
+        initialiserTalents();
+    }
     
     UI.afficherRecompenses(rewards.xp, rewards.pv, leveledUp, rewards.potion, playerLevel);
     updateAllUI();

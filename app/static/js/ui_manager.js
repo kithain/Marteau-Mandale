@@ -140,17 +140,23 @@ export function updateTalentButtons(talents, cooldowns, tourEnCours, callbackUti
     skills.forEach((talent, index) => {
       const btn = document.getElementById(`talent-btn-${index}`);
       if (btn) {
+        // Check level requirement (stored in data attribute)
+        const requiredLevel = parseInt(btn.getAttribute('data-level-required') || "1");
+        const isLevelLocked = btn.classList.contains('level-locked'); // Simple check
+
+        if (isLevelLocked) {
+             btn.disabled = true;
+             return; 
+        }
+
         const cd = cooldowns[index] || 0;
         btn.disabled = cd > 0 || tourEnCours;
         btn.textContent = cd > 0 ? `${talent.name} (${cd})` : talent.name;
-        
-        // On réattache l'event listener si besoin, mais idéalement il est attaché une fois à l'init
-        // Ici on ne fait que mettre à jour l'état
       }
     });
 }
 
-export function initTalentButtons(talents, callbackUtiliserTalent) {
+export function initTalentButtons(talents, callbackUtiliserTalent, playerLevel = 1) {
     const talentButtons = document.getElementById('talents-buttons');
     if (!talentButtons) return;
     talentButtons.innerHTML = ""; // Clean previous
@@ -161,16 +167,32 @@ export function initTalentButtons(talents, callbackUtiliserTalent) {
       const card = document.createElement('div');
       card.className = "talent-card";
 
+      const requiredLevel = talent.levelRequired || 1;
+      const isLocked = playerLevel < requiredLevel;
+
       // Bouton
       const btn = document.createElement('button');
       btn.id = `talent-btn-${index}`;
-      btn.textContent = `${index + 1}. ${talent.name}`;
+      btn.textContent = isLocked ? `Niv. ${requiredLevel}` : `${index + 1}. ${talent.name}`;
       btn.onclick = () => callbackUtiliserTalent(talent, index);
+      btn.setAttribute('data-level-required', requiredLevel);
       
+      if (isLocked) {
+          btn.disabled = true;
+          btn.classList.add('level-locked');
+          btn.style.backgroundColor = "#444";
+          btn.style.color = "#888";
+          btn.style.cursor = "not-allowed";
+      }
+
       // Description
       const desc = document.createElement('div');
       desc.className = "talent-desc";
       desc.innerHTML = genererDescriptionTalent(talent);
+      
+      if (isLocked) {
+          desc.style.opacity = "0.5";
+      }
 
       card.appendChild(btn);
       card.appendChild(desc);
